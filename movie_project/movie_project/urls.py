@@ -32,7 +32,7 @@ urlpatterns = [
     path('movies/', views.list_movies, name='list_movies'), #电影一览
     path('movies/<int:movie_id>/', views.movie_detail, name='movie_detail'), # 单个电影的详细信息
     path('movies/<int:movie_id>/update/', views.update_movie, name='update_movie'), # 更新电影
-
+    path('movies/<int:movie_id>/delete/', views.delete_movie, name='delete_movie'), # 删除电影
 ]
 
 if settings.DEBUG:

@@ -201,3 +201,19 @@ def delete_video_file(file_path):
     # 如果文件存在，删除它
     if os.path.exists(file_path):
         os.remove(file_path)
+
+def delete_movie(request, movie_id):
+    # 获取电影对象
+    movie = Movie.objects.get(pk=movie_id)
+    
+    if request.method == 'POST':
+        # 删除视频文件
+        delete_video_file(movie.resource_link)
+        
+        # 调用存储过程删除电影
+        with connection.cursor() as cursor:
+            cursor.callproc('delete_movie', [movie_id])
+        
+        return redirect('list_movies')
+    
+    return render(request, 'delete_movie_confirmation.html', {'movie': movie})

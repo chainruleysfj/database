@@ -13,6 +13,7 @@
             <li>
                 <a href="{% url 'movie_detail' movie.movie_id %}">{{ movie.moviename }}</a>
                 <a href="{% url 'update_movie' movie.movie_id %}">Edit</a> <!-- 更新按钮 -->
+                <a href="{% url 'delete_movie' movie.movie_id %}">Delete</a> <!-- 删除按钮 -->
             </li>
         {% endfor %}
     </ul>

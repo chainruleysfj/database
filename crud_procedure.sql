@@ -34,7 +34,7 @@ DROP PROCEDURE IF EXISTS delete_production_company;
 DELIMITER $$
 CREATE PROCEDURE delete_production_company(IN p_company_id INT)
 BEGIN
-    DELETE FROM movie_app_productioncompany WHERE id = p_company_id;
+    DELETE FROM movie_app_productioncompany WHERE company_id = p_company_id;
 END$$
 DELIMITER ;
 
@@ -138,3 +138,10 @@ BEGIN
 END //
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS delete_movie;
+DELIMITER //
+CREATE PROCEDURE delete_movie(IN p_movie_id INT)
+BEGIN
+    DELETE FROM movie_app_movie WHERE movie_id = p_movie_id;
+END //
+DELIMITER ;
