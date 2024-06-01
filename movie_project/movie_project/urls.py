@@ -16,16 +16,20 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-
+from django.conf import settings
+from django.conf.urls.static import static
 from movie_app import views
 
 urlpatterns = [
-   path('', views.home, name='home'),  # 添加一个根路径的视图处理器
-   path('admin/', admin.site.urls),  #管理员
-   path('add_movie/', views.add_movie, name='add_movie'), #添加电影
-   path('add_production_company/', views.add_production_company, name='add_production_company'), #添加电影公司
-   path('production_companies/', views.list_production_companies, name='list_production_companies'), #公司一览
-   path('update_production_company/<int:company_id>/', views.update_production_company, name='update_production_company'), #修改电影公司
-   path('delete_production_company/<int:company_id>/', views.delete_production_company, name='delete_production_company'), #删除电影公司
-   path('search_production_companies/', views.search_production_companies, name='search_production_companies'), #查询电影公司
+    path('', views.home, name='home'),  # 添加一个根路径的视图处理器
+    path('admin/', admin.site.urls),  #管理员
+    path('add_production_company/', views.add_production_company, name='add_production_company'), #添加电影公司
+    path('production_companies/', views.list_production_companies, name='list_production_companies'), #公司一览
+    path('update_production_company/<int:company_id>/', views.update_production_company, name='update_production_company'), #修改电影公司
+    path('delete_production_company/<int:company_id>/', views.delete_production_company, name='delete_production_company'), #删除电影公司
+    path('search_production_companies/', views.search_production_companies, name='search_production_companies'), #查询电影公司
+    path('add_movie/', views.add_movie, name='add_movie'), #添加电影
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -52,3 +52,18 @@ BEGIN
 	ORDER BY name, city;
 END //
 DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE add_movie(
+    IN p_moviename VARCHAR(100),
+    IN p_length SMALLINT,
+    IN p_releaseyear INT,
+    IN p_plot_summary TEXT,
+    IN p_resource_link VARCHAR(100),
+    IN p_production_company_id INT
+)
+BEGIN
+    INSERT INTO movie_app_movie (moviename, length, releaseyear, plot_summary, resource_link, production_company_id)
+    VALUES (p_moviename, p_length, p_releaseyear, p_plot_summary, p_resource_link, p_production_company_id);
+END //
+DELIMITER ;

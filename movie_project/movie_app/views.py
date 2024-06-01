@@ -6,82 +6,14 @@ from django.views.decorators.csrf import csrf_exempt
 from django import forms
 from django.urls import reverse
 from django.db import connection
+from django.conf import settings
 from .models import Movie, ProductionCompany
-from .forms import ProductionCompanyForm
-import json
+from .forms import ProductionCompanyForm,MovieForm
+import json,os,uuid
 
 
 def home(request):
     return render(request, 'home.html')  # 创建一个名为 home.html 的模板文件，并返回给客户端
-
-@csrf_exempt
-def add_movie(request):
-    if request.method == 'POST':
-        # 获取请求的Content-Type头
-        content_type = request.headers.get('Content-Type')
-        print(content_type)
-        print(request.body)
-        # 检查Content-Type头是否为application/json
-        if content_type != 'application/json':
-            return JsonResponse({'error': 'Invalid Content-Type'}, status=400)
-        try:
-            data = json.loads(request.body)
-            print("data ok")
-            
-            production_company = ProductionCompany.objects.get(id=data['production_company_id'])
-            print("company ok")
-            movie = Movie.objects.create(
-                moviename=data['moviename'],
-                length=data['length'],
-                releaseyear=data['releaseyear'],
-                plot_summary=data['plot_summary'],
-                resource_link=data['resource_link'],
-                production_company=data['production_company']
-            )
-            print('movie ok')
-            return JsonResponse({'message': 'Movie added successfully!'}, status=201)
-        except ProductionCompany.DoesNotExist:
-            return JsonResponse({'error': 'Production Company does not exist'}, status=400)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
-        except json.JSONDecodeError:
-            return JsonResponse({'error': 'Invalid JSON data in request body'}, status=400)
-    else:
-        return render(request, 'add_movie.html')
-
-@csrf_exempt
-def update_movie(request, id):
-    if request.method == 'PUT':
-        data = json.loads(request.body)
-        try:
-            movie = Movie.objects.get(id=id)
-            production_company = ProductionCompany.objects.get(id=data['production_company_id'])
-            movie.moviename = data['moviename']
-            movie.length = data['length']
-            movie.releaseyear = data['releaseyear']
-            movie.plot_summary = data['plot_summary']
-            movie.resource_link = data['resource_link']
-            movie.production_company = production_company
-            movie.save()
-            return JsonResponse({'message': 'Movie updated successfully!'}, status=200)
-        except Movie.DoesNotExist:
-            return JsonResponse({'error': 'Movie does not exist'}, status=400)
-        except ProductionCompany.DoesNotExist:
-            return JsonResponse({'error': 'Production Company does not exist'}, status=400)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
-
-@csrf_exempt
-def delete_movie(request, id):
-    if request.method == 'DELETE':
-        try:
-            movie = Movie.objects.get(id=id)
-            movie.delete()
-            return JsonResponse({'message': 'Movie deleted successfully!'}, status=200)
-        except Movie.DoesNotExist:
-            return JsonResponse({'error': 'Movie does not exist'}, status=400)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
 
 @csrf_exempt
 def add_production_company(request):
@@ -163,3 +95,25 @@ def search_production_companies(request):
         })
 
     return render(request, 'list_production_companies.html', {'companies': company_list})
+
+def add_movie(request):
+    if request.method == 'POST':
+        form = MovieForm(request.POST, request.FILES)
+        if form.is_valid():
+            movie = form.save(commit=False)
+            video_file = request.FILES['video_file']
+            # 生成唯一的文件名
+            unique_filename = str(uuid.uuid4()) + '.mp4'
+            # 保存视频文件到指定目录
+            file_path = os.path.join(settings.MEDIA_ROOT, 'videos', unique_filename)
+            print("File path:", file_path)  # 打印文件路径
+            with open(file_path, 'wb+') as destination:
+                for chunk in video_file.chunks():
+                    destination.write(chunk)
+            # 设置 movie 的 resource_link 为视频文件的 URL
+            movie.resource_link = os.path.join(settings.MEDIA_URL, 'videos', unique_filename)
+            movie.save()
+            return redirect('home')
+    else:
+        form = MovieForm()
+    return render(request, 'add_movie.html', {'form': form})
