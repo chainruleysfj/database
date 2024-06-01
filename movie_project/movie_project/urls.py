@@ -29,6 +29,8 @@ urlpatterns = [
     path('delete_production_company/<int:company_id>/', views.delete_production_company, name='delete_production_company'), #删除电影公司
     path('search_production_companies/', views.search_production_companies, name='search_production_companies'), #查询电影公司
     path('add_movie/', views.add_movie, name='add_movie'), #添加电影
+    path('movies/', views.list_movies, name='list_movies'), #电影一览
+    path('movies/<int:movie_id>/', views.movie_detail, name='movie_detail'), # 单个电影的详细信息
 ]
 
 if settings.DEBUG:

@@ -100,20 +100,94 @@ def add_movie(request):
     if request.method == 'POST':
         form = MovieForm(request.POST, request.FILES)
         if form.is_valid():
-            movie = form.save(commit=False)
-            video_file = request.FILES['video_file']
-            # 生成唯一的文件名
-            unique_filename = str(uuid.uuid4()) + '.mp4'
-            # 保存视频文件到指定目录
-            file_path = os.path.join(settings.MEDIA_ROOT, 'videos', unique_filename)
-            print("File path:", file_path)  # 打印文件路径
-            with open(file_path, 'wb+') as destination:
-                for chunk in video_file.chunks():
-                    destination.write(chunk)
-            # 设置 movie 的 resource_link 为视频文件的 URL
-            movie.resource_link = os.path.join(settings.MEDIA_URL, 'videos', unique_filename)
-            movie.save()
-            return redirect('home')
+            # 从表单中获取数据
+            moviename = form.cleaned_data['moviename']
+            length = form.cleaned_data['length']
+            releaseyear = form.cleaned_data['releaseyear']
+            plot_summary = form.cleaned_data['plot_summary']
+            production_company_id = form.cleaned_data['production_company'].company_id
+            # 如果上传了视频文件，保存文件并获取文件路径
+            resource_link = None
+            if 'video_file' in request.FILES:
+                video_file = request.FILES['video_file']
+                resource_link = save_video_file(video_file)
+            # 调用存储过程插入电影数据
+            with connection.cursor() as cursor:
+                cursor.callproc('add_movie', [moviename, length, releaseyear, plot_summary, resource_link, production_company_id])
+            return redirect('list_movies')
     else:
         form = MovieForm()
     return render(request, 'add_movie.html', {'form': form})
+
+def save_video_file(video_file):
+    unique_filename = str(uuid.uuid4()) + '.mp4'
+    file_path = os.path.join(settings.MEDIA_ROOT, 'videos', unique_filename)
+    with open(file_path, 'wb+') as destination:
+        for chunk in video_file.chunks():
+            destination.write(chunk)
+    return os.path.join(settings.MEDIA_URL, 'videos', unique_filename)
+
+def list_movies(request):
+    with connection.cursor() as cursor:
+        cursor.callproc('get_all_movies')
+        movies = cursor.fetchall()
+    movies_list = [
+        {
+            'movie_id': movie[0],
+            'moviename': movie[1],
+            'length': movie[2],
+            'releaseyear': movie[3],
+            'plot_summary': movie[4],
+            'resource_link': movie[5],
+            'production_company_id': movie[6]
+        } for movie in movies
+    ]
+    return render(request, 'list_movies.html', {'movies': movies_list})
+
+
+def movie_detail(request, movie_id):
+    with connection.cursor() as cursor:
+        cursor.callproc('get_movie_detail', [movie_id])
+        movie_data = cursor.fetchone()
+
+    movie = {
+        'movie_id': movie_data[0],
+        'moviename': movie_data[1],
+        'length': movie_data[2],
+        'releaseyear': movie_data[3],
+        'plot_summary': movie_data[4],
+        'resource_link': movie_data[5],
+        'production_company_id': movie_data[6]
+    }
+
+    return render(request, 'movie_detail.html', {'movie': movie})
+
+def update_movie(request, movie_id):
+    movie = Movie.objects.get(pk=movie_id)
+
+    if request.method == 'POST':
+        form = MovieForm(request.POST, request.FILES, instance=movie)
+        if form.is_valid():
+            updated_movie = form.save(commit=False)
+            # 检查是否上传了新视频文件
+            if 'video_file' in request.FILES:
+                video_file = request.FILES['video_file']
+                # 生成唯一的文件名
+                unique_filename = str(uuid.uuid4()) + '.mp4'
+                # 保存新视频文件到指定目录
+                file_path = os.path.join(settings.MEDIA_ROOT, 'videos', unique_filename)
+                with open(file_path, 'wb+') as destination:
+                    for chunk in video_file.chunks():
+                        destination.write(chunk)
+                # 删除原视频文件
+                if movie.resource_link:
+                    old_video_path = os.path.join(settings.MEDIA_ROOT, movie.resource_link.lstrip('/'))
+                    if os.path.exists(old_video_path):
+                        os.remove(old_video_path)
+                # 更新电影的视频链接
+                updated_movie.resource_link = os.path.join(settings.MEDIA_URL, 'videos', unique_filename)
+            updated_movie.save()
+            return redirect('home')
+    else:
+        form = MovieForm(instance=movie)
+    return render(request, 'update_movie.html', {'form': form})

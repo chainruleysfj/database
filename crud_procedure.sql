@@ -53,6 +53,7 @@ BEGIN
 END //
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS add_movie;
 DELIMITER //
 CREATE PROCEDURE add_movie(
     IN p_moviename VARCHAR(100),
@@ -65,5 +66,47 @@ CREATE PROCEDURE add_movie(
 BEGIN
     INSERT INTO movie_app_movie (moviename, length, releaseyear, plot_summary, resource_link, production_company_id)
     VALUES (p_moviename, p_length, p_releaseyear, p_plot_summary, p_resource_link, p_production_company_id);
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS get_all_movies;
+DELIMITER $$
+CREATE PROCEDURE get_all_movies()
+BEGIN
+    SELECT * FROM movie_app_movie;
+END$$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS search_movies;
+DELIMITER $$
+CREATE PROCEDURE search_movies(
+    IN movie_name VARCHAR(255),
+    IN city VARCHAR(255)
+)
+BEGIN
+    SELECT * FROM movie_app_movie
+    WHERE moviename LIKE CONCAT('%', movie_name, '%')
+    AND production_company_id IN (
+        SELECT company_id FROM movie_app_productioncompany WHERE city LIKE CONCAT('%', city, '%')
+    );
+END$$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS get_movie_detail;
+DELIMITER //
+CREATE PROCEDURE get_movie_detail(IN movie_id INT)
+BEGIN
+    SELECT
+        movie_id,
+        moviename,
+        length,
+        releaseyear,
+        plot_summary,
+        resource_link,
+        production_company_id
+    FROM
+        movie_app_movie
+    WHERE
+        movie_id = movie_id;
 END //
 DELIMITER ;

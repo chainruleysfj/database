@@ -1,0 +1,20 @@
+<!-- movie_detail.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ movie.moviename }} - Details</title>
+</head>
+<body>
+    <h1>{{ movie.moviename }} - Details</h1>
+    <p>Length: {{ movie.length }}</p>
+    <p>Release Year: {{ movie.releaseyear }}</p>
+    <p>Plot Summary: {{ movie.plot_summary }}</p>
+    <p>Production Company: {{ movie.production_company_id }}</p>
+    <video controls>
+        <source src="{{ movie.resource_link }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+</body>
+</html>
