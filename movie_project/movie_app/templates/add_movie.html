@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Movie Form</title>
+</head>
+<body>
+    <h1>Add Movie Form（不可用）</h1>
+    <form id="addMovieForm">
+        <label for="moviename">Movie Name:</label><br>
+        <input type="text" id="moviename" name="moviename"><br>
+        <label for="length">Length:</label><br>
+        <input type="text" id="length" name="length"><br>
+        <label for="releaseyear">Release Year:</label><br>
+        <input type="text" id="releaseyear" name="releaseyear"><br>
+        <label for="plot_summary">Plot Summary:</label><br>
+        <textarea id="plot_summary" name="plot_summary"></textarea><br>
+        <label for="resource_link">Resource Link:</label><br>
+        <input type="text" id="resource_link" name="resource_link"><br>
+        <label for="production_company_id">Production Company ID:</label><br>
+        <input type="text" id="production_company_id" name="production_company_id"><br>
+        <input type="submit" value="Submit">
+    </form>
+    <p><a href="{% url 'home' %}">home</a>.</p>
+
+    <script>
+        document.getElementById("addMovieForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            var formData = new FormData(this);
+            var jsonData = {};
+
+            // 将FormData中的数据转换为JSON对象
+            for (var pair of formData.entries()) {
+                jsonData[pair[0]] = pair[1];
+            }
+
+            // 将JSON对象转换为JSON字符串
+            var jsonString = JSON.stringify(jsonData);
+
+            fetch('/add_movie/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: jsonString
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data);
+                alert(data.message);
+            })
+            .catch(error => {
+                console.error('There was an error!', error);
+                alert("Error occurred. Please try again later.");
+            });
+        });
+    </script>
+</body>
+</html>

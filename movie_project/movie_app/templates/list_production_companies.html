@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Companies</title>
+    <style>
+        .editable input {
+            display: none;
+        }
+        .editable.editing input {
+            display: inline-block;
+        }
+        .editing .submit-button {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Production Companies</h1>
+    <ul>
+        {% for company in companies %}
+            <li class="editable" id="company-{{ company.company_id }}">
+                <span>{{ company.name }} - {{ company.city }} - {{ company.company_description }}</span>
+                <button onclick="toggleEdit(parseInt('{{ company.company_id }}'))">Edit</button>
+                <button onclick="deleteCompany(parseInt('{{ company.company_id }}'))">Delete</button>
+                <form method="post" action="{% url 'update_production_company' company.company_id %}" class="editing" onsubmit="return validateForm(this)">
+                    {% csrf_token %}
+                    <input type="text" name="name" value="{{ company.name }}" required>
+                    <input type="text" name="city" value="{{ company.city }}">
+                    <input type="text" name="company_description" value="{{ company.company_description }}">
+                    <button type="submit" class="submit-button">Submit Changes</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'add_production_company' %}">Add New Production Company</a>
+    <p><a href="{% url 'home' %}">home</a>.</p>
+
+    <script>
+        function toggleEdit(companyId) {
+            var companyElement = document.getElementById('company-' + companyId);
+            var formElement = companyElement.querySelector('form');
+            var submitButton = formElement.querySelector('.submit-button');
+
+            if (companyElement.classList.contains('editing')) {
+                companyElement.classList.remove('editing');
+                formElement.style.display = 'none';
+                submitButton.style.display = 'none'; // 隐藏提交按钮
+            } else {
+                companyElement.classList.add('editing');
+                formElement.style.display = 'block';
+                submitButton.style.display = 'block'; // 显示提交按钮
+            }
+        }
+
+        function validateForm(form) {
+            var nameInput = form.querySelector('input[name="name"]');
+            if (nameInput.value.trim() === '') {
+                alert('Name cannot be empty!');
+                return false; // 阻止表单提交
+            }
+            // 检查名字是否已经存在
+            var existingNames = Array.from(document.querySelectorAll('.editable:not(.editing) input[name="name"]')).map(input => input.value.trim());
+            if (existingNames.includes(nameInput.value.trim())) {
+                alert('Name already exists!');
+                return false; // 阻止表单提交
+            }
+            return true; // 允许表单提交
+        }
+
+        function deleteCompany(companyId) {
+            if (confirm("Are you sure you want to delete this company?")) {
+                // Send an AJAX request to delete the company
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", "/delete_production_company/" + companyId + "/", true);  // 注意末尾添加斜杠
+                xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            // Reload the page after deletion
+                            window.location.reload();
+                        } else {
+                            // Handle error
+                            console.error("Error deleting company:", xhr.statusText);
+                        }
+                    }
+                };
+                xhr.send();
+            }
+        }
+
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+使用方法：
+1.在命令行输入pip install django mysqlclient django-crispy-forms
+
+2.在movie_project\settings.py中找到
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'movie_industry',
+        'USER': 'root',
+        'PASSWORD': 'password',# 替换为实际密码
+        'HOST': 'localhost',
+        'PORT': '3306',
+    }
+},修改密码
+3.用命令行打开movie_project文件夹
+4.输入python manage.py runserver，出现
+Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+May 31, 2024 - 20:04:48
+Django version 5.0.6, using settings 'movie_project.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CTRL-BREAK.
+则无误
+4.在http://127.0.0.1:8000/，可看到页面
+
+
+
+
+
+GPT教你使用Django
+Django应用程序需要进行以下步骤：
+
+1. 创建Django项目和应用。
+2. 配置数据库连接。
+3. 创建Django模型来表示数据库表。
+4. 创建Django视图来处理HTTP请求。
+5. 创建URL映射来连接URL路径和视图。
+6. 使用Django的表单处理POST请求数据。
+
+### 1. 创建Django项目和应用
+
+首先，创建一个新的Django项目和应用：
+
+```sh
+django-admin startproject movie_project
+cd movie_project
+django-admin startapp movies
+```
+
+### 2. 配置数据库连接
+
+在`movie_project/settings.py`中，配置数据库连接：
+
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'movie_industry',
+        'USER': 'root',
+        'PASSWORD': 'your_password',
+        'HOST': 'localhost',
+        'PORT': '3306',
+    }
+}
+```
+
+### 3. 创建Django模型
+
+在`movies/models.py`中定义模型：
+
+```python
+from django.db import models
+
+class ProductionCompany(models.Model):
+    name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.name
+
+class Movie(models.Model):
+    moviename = models.CharField(max_length=100)
+    length = models.IntegerField()
+    releaseyear = models.IntegerField()
+    plot_summary = models.TextField()
+    resource_link = models.CharField(max_length=100)
+    production_company = models.ForeignKey(ProductionCompany, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.moviename
+```
+
+### 4. 创建Django视图
+
+在`movies/views.py`中定义视图函数：
+
+```python
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import Movie, ProductionCompany
+import json
+
+@csrf_exempt
+def add_movie(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        try:
+            company = ProductionCompany.objects.get(id=data['ProductionCompanyID'])
+            movie = Movie.objects.create(
+                moviename=data['Moviename'],
+                length=data['Length'],
+                releaseyear=data['Releaseyear'],
+                plot_summary=data['PlotSummary'],
+                resource_link=data['ResourceLink'],
+                production_company=company
+            )
+            return JsonResponse({'message': 'Movie added successfully!'}, status=201)
+        except ProductionCompany.DoesNotExist:
+            return JsonResponse({'error': 'Production Company does not exist'}, status=400)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def update_movie(request, id):
+    if request.method == 'PUT':
+        data = json.loads(request.body)
+        try:
+            movie = Movie.objects.get(id=id)
+            movie.moviename = data['Moviename']
+            movie.length = data['Length']
+            movie.releaseyear = data['Releaseyear']
+            movie.plot_summary = data['PlotSummary']
+            movie.resource_link = data['ResourceLink']
+            movie.production_company_id = data['ProductionCompanyID']
+            movie.save()
+            return JsonResponse({'message': 'Movie updated successfully!'}, status=200)
+        except Movie.DoesNotExist:
+            return JsonResponse({'error': 'Movie does not exist'}, status=400)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def delete_movie(request, id):
+    if request.method == 'DELETE':
+        try:
+            movie = Movie.objects.get(id=id)
+            movie.delete()
+            return JsonResponse({'message': 'Movie deleted successfully!'}, status=200)
+        except Movie.DoesNotExist:
+            return JsonResponse({'error': 'Movie does not exist'}, status=400)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+```
+
+### 5. 创建URL映射
+
+在`movies/urls.py`中定义URL模式：
+
+```python
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('add_movie/', views.add_movie, name='add_movie'),
+    path('update_movie/<int:id>/', views.update_movie, name='update_movie'),
+    path('delete_movie/<int:id>/', views.delete_movie, name='delete_movie'),
+]
+```
+
+在`movie_project/urls.py`中包含应用的URL：
+
+```python
+from django.contrib import admin
+from django.urls import include, path
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('movies/', include('movies.urls')),
+]
+```
+
+### 6. 使用Django表单处理POST请求数据
+
+确保`django.middleware.csrf.CsrfViewMiddleware`在中间件中被启用，这是默认配置。
+
+### 最终项目结构
+
+```
+movie_project/
+    manage.py
+    movie_project/
+        __init__.py
+        settings.py
+        urls.py
+        wsgi.py
+    movies/
+        __init__.py
+        admin.py
+        apps.py
+        migrations/
+            __init__.py
+        models.py
+        tests.py
+        urls.py
+        views.py
+```
+
+### 运行迁移
+
+```sh
+python manage.py makemigrations
+python manage.py migrate
+```
+
+### 创建超级用户（可选）
+
+```sh
+python manage.py createsuperuser
+```
+
+### 运行服务器
+
+```sh
+python manage.py runserver
+```
+
+这样，您将现有的Flask应用程序成功转换为Django应用程序，并增强了安全性和功能。可以通过适当的HTTP请求来测试添加、更新和删除电影的功能。
