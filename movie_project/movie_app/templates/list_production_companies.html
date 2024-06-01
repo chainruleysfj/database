@@ -18,6 +18,12 @@
 </head>
 <body>
     <h1>Production Companies</h1>
+    <!-- Search Form -->
+    <form method="GET" action="{% url 'search_production_companies' %}">
+        <input type="text" name="name" placeholder="Company Name">
+        <input type="text" name="city" placeholder="City">
+        <button type="submit">Search</button>
+    </form>
     <ul>
         {% for company in companies %}
             <li class="editable" id="company-{{ company.company_id }}">

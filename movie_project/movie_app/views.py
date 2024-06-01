@@ -144,3 +144,22 @@ def delete_production_company(request, company_id):
         return redirect('list_production_companies')
     else:
         return render(request, 'confirm_delete_production_company.html', {'company_id': company_id})
+    
+def search_production_companies(request):
+    name = request.GET.get('name', '')
+    city = request.GET.get('city', '')
+
+    with connection.cursor() as cursor:
+        cursor.callproc('search_production_companies', [name, city])
+        companies = cursor.fetchall()
+
+    company_list = []
+    for company in companies:
+        company_list.append({
+            'company_id': company[0],
+            'name': company[1],
+            'city': company[2],
+            'company_description': company[3],
+        })
+
+    return render(request, 'list_production_companies.html', {'companies': company_list})

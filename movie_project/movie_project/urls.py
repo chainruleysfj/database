@@ -27,4 +27,5 @@ urlpatterns = [
    path('production_companies/', views.list_production_companies, name='list_production_companies'), #公司一览
    path('update_production_company/<int:company_id>/', views.update_production_company, name='update_production_company'), #修改电影公司
    path('delete_production_company/<int:company_id>/', views.delete_production_company, name='delete_production_company'), #删除电影公司
+   path('search_production_companies/', views.search_production_companies, name='search_production_companies'), #查询电影公司
 ]

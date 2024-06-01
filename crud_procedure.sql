@@ -11,7 +11,7 @@ DROP PROCEDURE IF EXISTS get_all_production_companies;
 DELIMITER $$
 CREATE PROCEDURE get_all_production_companies()
 BEGIN
-    SELECT company_id, name, city, company_description FROM movie_app_productioncompany;
+    SELECT company_id, name, city, company_description FROM movie_app_productioncompany ORDER BY name, city;
 END$$
 DELIMITER ;
 
@@ -38,4 +38,17 @@ BEGIN
 END$$
 DELIMITER ;
 
-
+DROP PROCEDURE IF EXISTS search_production_companies;
+DELIMITER //
+CREATE PROCEDURE search_production_companies(
+    IN search_name VARCHAR(255),
+    IN search_city VARCHAR(255)
+)
+BEGIN
+    SELECT company_id, name, city, company_description
+    FROM movie_app_productioncompany
+    WHERE (name LIKE CONCAT('%', search_name, '%') OR search_name = '')
+      AND (city LIKE CONCAT('%', search_city, '%') OR search_city = '')
+	ORDER BY name, city;
+END //
+DELIMITER ;
