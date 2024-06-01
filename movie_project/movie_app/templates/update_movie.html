@@ -1,0 +1,22 @@
+<!-- update_movie.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Movie</title>
+</head>
+<body>
+    <h1>Update Movie</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <!-- Render the form fields -->
+        {{ form.as_p }}
+
+        <!-- Add a submit button -->
+        <button type="submit">Update</button>
+    </form>
+    <p><a href="{% url 'list_movies' %}">Back to Movie List</a></p>
+</body>
+</html>
+

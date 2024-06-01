@@ -7,6 +7,8 @@
     <title>{{ movie.moviename }} - Details</title>
 </head>
 <body>
+    <p><a href="{% url 'list_movies' %}">all movies</a>.</p>
+    <p><a href="{% url 'home' %}">home</a>.</p>
     <h1>{{ movie.moviename }} - Details</h1>
     <p>Length: {{ movie.length }}</p>
     <p>Release Year: {{ movie.releaseyear }}</p>

@@ -10,9 +10,13 @@
     <h1>List of Movies</h1>
     <ul>
         {% for movie in movies %}
-            <li><a href="{% url 'movie_detail' movie.movie_id %}">{{ movie.moviename }}</a></li>
+            <li>
+                <a href="{% url 'movie_detail' movie.movie_id %}">{{ movie.moviename }}</a>
+                <a href="{% url 'update_movie' movie.movie_id %}">Edit</a> <!-- 更新按钮 -->
+            </li>
         {% endfor %}
     </ul>
     <p><a href="{% url 'home' %}">home</a>.</p>
 </body>
 </html>
+

@@ -8,7 +8,13 @@ class ProductionCompanyForm(forms.ModelForm):
         fields = ['name', 'city', 'company_description']
 
 class MovieForm(forms.ModelForm):
-    video_file = forms.FileField(required=True, label='Video File')
+    def __init__(self, *args, **kwargs):
+        # Dynamically set the required attribute of video_file based on whether it's for updating or creating
+        is_update = kwargs.pop('is_update', False)
+        super().__init__(*args, **kwargs)
+        self.fields['video_file'].required = not is_update
+
+    video_file = forms.FileField(label='Video File')
 
     class Meta:
         model = Movie

@@ -110,3 +110,31 @@ BEGIN
         movie_id = movie_id;
 END //
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS update_movie;
+DELIMITER //
+CREATE PROCEDURE update_movie(
+    IN p_movie_id INT,
+    IN p_moviename VARCHAR(100),
+    IN p_length SMALLINT,
+    IN p_releaseyear INT,
+    IN p_plot_summary TEXT,
+    IN p_resource_link VARCHAR(255),
+    IN p_production_company_id INT
+)
+BEGIN
+    -- 更新电影信息
+    UPDATE movie_app_movie
+    SET
+        moviename = p_moviename,
+        length = p_length,
+        releaseyear = p_releaseyear,
+        plot_summary = p_plot_summary,
+        resource_link = p_resource_link,
+        production_company_id = p_production_company_id
+    WHERE
+        movie_id = p_movie_id;
+        
+END //
+DELIMITER ;
+

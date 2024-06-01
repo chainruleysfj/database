@@ -98,7 +98,7 @@ def search_production_companies(request):
 
 def add_movie(request):
     if request.method == 'POST':
-        form = MovieForm(request.POST, request.FILES)
+        form = MovieForm(request.POST, request.FILES,is_update=False)
         if form.is_valid():
             # 从表单中获取数据
             moviename = form.cleaned_data['moviename']
@@ -116,7 +116,7 @@ def add_movie(request):
                 cursor.callproc('add_movie', [moviename, length, releaseyear, plot_summary, resource_link, production_company_id])
             return redirect('list_movies')
     else:
-        form = MovieForm()
+        form = MovieForm(is_update=False)
     return render(request, 'add_movie.html', {'form': form})
 
 def save_video_file(video_file):
@@ -163,31 +163,41 @@ def movie_detail(request, movie_id):
     return render(request, 'movie_detail.html', {'movie': movie})
 
 def update_movie(request, movie_id):
+    # 获取电影对象
     movie = Movie.objects.get(pk=movie_id)
 
     if request.method == 'POST':
-        form = MovieForm(request.POST, request.FILES, instance=movie)
-        if form.is_valid():
-            updated_movie = form.save(commit=False)
-            # 检查是否上传了新视频文件
-            if 'video_file' in request.FILES:
-                video_file = request.FILES['video_file']
-                # 生成唯一的文件名
-                unique_filename = str(uuid.uuid4()) + '.mp4'
-                # 保存新视频文件到指定目录
-                file_path = os.path.join(settings.MEDIA_ROOT, 'videos', unique_filename)
-                with open(file_path, 'wb+') as destination:
-                    for chunk in video_file.chunks():
-                        destination.write(chunk)
-                # 删除原视频文件
-                if movie.resource_link:
-                    old_video_path = os.path.join(settings.MEDIA_ROOT, movie.resource_link.lstrip('/'))
-                    if os.path.exists(old_video_path):
-                        os.remove(old_video_path)
-                # 更新电影的视频链接
-                updated_movie.resource_link = os.path.join(settings.MEDIA_URL, 'videos', unique_filename)
-            updated_movie.save()
-            return redirect('home')
+        # 解析表单数据
+        moviename = request.POST['moviename']
+        length = request.POST['length']
+        releaseyear = request.POST['releaseyear']
+        plot_summary = request.POST['plot_summary']
+        production_company_id = request.POST['production_company']
+
+        # 如果上传了新的视频文件，保存并更新资源链接
+        if 'video_file' in request.FILES:
+            video_file = request.FILES['video_file']
+            resource_link = save_video_file(video_file)
+            # 删除原视频文件
+            delete_video_file(movie.resource_link)
+        else:
+            resource_link = movie.resource_link
+
+        # 调用存储过程更新电影信息
+        with connection.cursor() as cursor:
+            cursor.callproc('update_movie', [movie_id, moviename, length, releaseyear, plot_summary, resource_link, production_company_id])
+
+        return redirect('home')
     else:
-        form = MovieForm(instance=movie)
-    return render(request, 'update_movie.html', {'form': form})
+        # 如果是 GET 请求，创建一个新的表单实例，并传入电影对象数据
+        form = MovieForm(instance=movie,is_update=True)
+        return render(request, 'update_movie.html', {'form': form})
+    
+def delete_video_file(file_path):
+    # 从文件路径中提取文件名
+    filename = os.path.basename(file_path)
+    # 构建完整的文件路径
+    file_path = os.path.join(settings.MEDIA_ROOT, 'videos', filename)
+    # 如果文件存在，删除它
+    if os.path.exists(file_path):
+        os.remove(file_path)
