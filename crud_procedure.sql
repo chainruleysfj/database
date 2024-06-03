@@ -94,7 +94,7 @@ DELIMITER ;
 
 DROP PROCEDURE IF EXISTS get_movie_detail;
 DELIMITER //
-CREATE PROCEDURE get_movie_detail(IN movie_id INT)
+CREATE PROCEDURE get_movie_detail(IN p_movie_id INT)
 BEGIN
     SELECT
         movie_id,
@@ -105,9 +105,9 @@ BEGIN
         resource_link,
         production_company_id
     FROM
-        movie_app_movie
+        movie_app_movie JOIN movie_app_productioncompany ON production_company_id = company_id
     WHERE
-        movie_id = movie_id;
+        p_movie_id = movie_id;
 END //
 DELIMITER ;
 
@@ -143,5 +143,24 @@ DELIMITER //
 CREATE PROCEDURE delete_movie(IN p_movie_id INT)
 BEGIN
     DELETE FROM movie_app_movie WHERE movie_id = p_movie_id;
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS search_movies;
+DELIMITER //
+CREATE PROCEDURE search_movies(
+    IN p_keyword VARCHAR(255),
+    IN p_min_length INT,
+    IN p_max_length INT,
+    IN p_min_releaseyear INT,
+    IN p_max_releaseyear INT,
+    IN p_production_company_id INT
+)
+BEGIN
+    SELECT * FROM movie_app_movie
+    WHERE (moviename LIKE CONCAT('%', p_keyword, '%') OR plot_summary LIKE CONCAT('%', p_keyword, '%'))
+    AND (length BETWEEN p_min_length AND p_max_length)
+    AND (releaseyear BETWEEN p_min_releaseyear AND p_max_releaseyear)
+    AND (production_company_id = p_production_company_id OR p_production_company_id IS NULL);
 END //
 DELIMITER ;

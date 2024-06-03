@@ -187,7 +187,7 @@ def update_movie(request, movie_id):
         with connection.cursor() as cursor:
             cursor.callproc('update_movie', [movie_id, moviename, length, releaseyear, plot_summary, resource_link, production_company_id])
 
-        return redirect('home')
+        return redirect('list_movies')
     else:
         # 如果是 GET 请求，创建一个新的表单实例，并传入电影对象数据
         form = MovieForm(instance=movie,is_update=True)
