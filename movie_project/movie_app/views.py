@@ -127,22 +127,69 @@ def save_video_file(video_file):
             destination.write(chunk)
     return os.path.join(settings.MEDIA_URL, 'videos', unique_filename)
 
+def get_int_or_default(value, default):
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return default
+    
+
 def list_movies(request):
+    # 获取所有出品公司以供搜索表单使用
     with connection.cursor() as cursor:
-        cursor.callproc('get_all_movies')
-        movies = cursor.fetchall()
-    movies_list = [
-        {
-            'movie_id': movie[0],
-            'moviename': movie[1],
-            'length': movie[2],
-            'releaseyear': movie[3],
-            'plot_summary': movie[4],
-            'resource_link': movie[5],
-            'production_company_id': movie[6]
-        } for movie in movies
-    ]
-    return render(request, 'list_movies.html', {'movies': movies_list})
+        cursor.callproc('get_all_production_companies')
+        production_companies = cursor.fetchall()
+    production_companies_list = [
+        {'company_id': company[0], 'name': company[1], 'city': company[2], 'company_description': company[3]}
+        for company in production_companies
+        ]
+    # 如果有搜索请求，处理搜索
+    if request.method == 'GET' and (
+        'keyword' in request.GET or
+        'min_length' in request.GET or
+        'max_length' in request.GET or
+        'min_releaseyear' in request.GET or
+        'max_releaseyear' in request.GET or
+        'production_company' in request.GET
+    ):
+        keyword = request.GET.get('keyword', '')
+        min_length = get_int_or_default(request.GET.get('min_length'), 0)
+        max_length = get_int_or_default(request.GET.get('max_length'), 9999)
+        min_releaseyear = get_int_or_default(request.GET.get('min_releaseyear'), 0)
+        max_releaseyear = get_int_or_default(request.GET.get('max_releaseyear'), 9999)
+        production_company_id = get_int_or_default(request.GET.get('production_company'), None)
+
+        with connection.cursor() as cursor:
+            cursor.callproc('search_movies', [
+                keyword, 
+                min_length, 
+                max_length, 
+                min_releaseyear, 
+                max_releaseyear, 
+                production_company_id
+            ])
+            movies = cursor.fetchall()
+
+        movies_list = [{'movie_id': movie[0], 'moviename': movie[1], 'length': movie[2], 'releaseyear': movie[3], 'plot_summary': movie[4], 'resource_link': movie[5], 'production_company_id': movie[6]} for movie in movies]
+    else:
+        with connection.cursor() as cursor:
+            cursor.callproc('get_all_movies')
+            movies = cursor.fetchall()
+
+        movies_list = [
+            {
+                'movie_id': movie[0],
+                'moviename': movie[1],
+                'length': movie[2],
+                'releaseyear': movie[3],
+                'plot_summary': movie[4],
+                'resource_link': movie[5],
+                'production_company_id': movie[6]
+            } for movie in movies
+        ]
+        
+    return render(request, 'list_movies.html', {'movies': movies_list, 'production_companies': production_companies_list})
+
 
 
 def movie_detail(request, movie_id):

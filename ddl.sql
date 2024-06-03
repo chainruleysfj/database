@@ -98,3 +98,4 @@ CREATE TABLE IF NOT EXISTS Role_Actor_Movie
     Foreign key (personID) references person(personID),
 	Foreign key (RoleID) references roles(RoleID)
     );
+

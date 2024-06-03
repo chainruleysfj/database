@@ -8,6 +8,33 @@
 </head>
 <body>
     <h1>List of Movies</h1>
+        <!-- Search Form -->
+        <form method="get" action="{% url 'search_movies' %}">
+            <label for="keyword">Keyword:</label><br>
+            <input type="text" id="keyword" name="keyword"><br><br>
+    
+            <label for="min_length">Minimum Length:</label><br>
+            <input type="number" id="min_length" name="min_length" min="0"><br><br>
+    
+            <label for="max_length">Maximum Length:</label><br>
+            <input type="number" id="max_length" name="max_length" min="0"><br><br>
+    
+            <label for="min_releaseyear">Minimum Release Year:</label><br>
+            <input type="number" id="min_releaseyear" name="min_releaseyear" min="0"><br><br>
+    
+            <label for="max_releaseyear">Maximum Release Year:</label><br>
+            <input type="number" id="max_releaseyear" name="max_releaseyear" min="0"><br><br>
+    
+            <label for="production_company">Production Company:</label><br>
+            <select id="production_company" name="production_company">
+                <option value="">-- Select Production Company --</option>
+                {% for company in production_companies %}
+                    <option value="{{ company.company_id }}">{{ company.name }}</option>
+                {% endfor %}
+            </select><br><br>
+    
+            <button type="submit">Search</button>
+        </form>
     <ul>
         {% for movie in movies %}
             <li>
