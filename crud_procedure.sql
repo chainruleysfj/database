@@ -103,7 +103,7 @@ BEGIN
         releaseyear,
         plot_summary,
         resource_link,
-        production_company_id
+        name
     FROM
         movie_app_movie JOIN movie_app_productioncompany ON production_company_id = company_id
     WHERE
