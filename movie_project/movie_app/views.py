@@ -7,7 +7,7 @@ from django import forms
 from django.urls import reverse
 from django.db import connection
 from django.conf import settings
-from .models import Movie, ProductionCompany
+from .models import Movie, ProductionCompany, Person
 from .forms import ProductionCompanyForm,MovieForm,PersonForm
 import json,os,uuid
 
@@ -55,7 +55,7 @@ def update_production_company(request, company_id):
 
     company = None
     with connection.cursor() as cursor:
-        cursor.execute("SELECT id, name, city, company_description FROM movie_app_productioncompany WHERE id = %s", [company_id])
+        cursor.callproc('get_person_by_id', [company_id])
         company = cursor.fetchone()
     
     if company is None:
@@ -271,3 +271,33 @@ def add_person(request):
     else:
         form = PersonForm()
     return render(request, 'add_person.html', {'form': form})
+
+def list_persons(request):
+    with connection.cursor() as cursor:
+        cursor.callproc('get_all_persons')
+        persons = cursor.fetchall()
+    persons_list = [
+        {'personID': person[0], 'name': person[1], 'birth_date': person[2], 'gender': person[3], 'marital_status': person[4]} 
+        for person in persons
+    ]
+    return render(request, 'list_persons.html', {'persons': persons_list})
+
+def update_person(request, person_id):
+    if request.method == 'POST':
+        # 获取POST请求中的数据
+        name = request.POST.get('name')
+        birth_date = request.POST.get('birth_date')
+        gender = request.POST.get('gender')
+        marital_status = request.POST.get('marital_status')
+
+        # 调用存储过程更新人物信息
+        with connection.cursor() as cursor:
+            cursor.callproc('update_person', [person_id, name, birth_date, gender, marital_status])
+
+        # 重定向到人物一览页面
+        return redirect('list_persons')
+    else:
+        # 如果不是POST请求，返回错误响应
+        return JsonResponse({'error': 'Invalid request method'})
+
+

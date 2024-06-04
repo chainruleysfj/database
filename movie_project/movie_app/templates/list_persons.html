@@ -1,0 +1,66 @@
+<!-- list_persons.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>List of Persons</title>
+    
+</head>
+<body>
+    <h1>List of Persons</h1>
+    <ul>
+        {% for person in persons %}
+            <li>
+                <span class="editable" id="person-{{ person.person_id }}">
+                    <span id="name-{{ person.person_id }}" contenteditable="false">{{ person.name }}</span> -
+                    <span id="birth_date-{{ person.person_id }}" contenteditable="false">{{ person.birth_date }}</span> -
+                    <span id="gender-{{ person.person_id }}" contenteditable="false">{{ person.gender }}</span> -
+                    <span id="marital_status-{{ person.person_id }}" contenteditable="false">{{ person.marital_status }}</span>
+                </span>
+                <button onclick="toggleEdit('{{ person.person_id }}')">Edit</button>
+                <button onclick="saveChanges('{{ person.person_id }}')">Save</button>
+            </li>
+        {% endfor %}
+    </ul>
+    <p><a href="{% url 'home' %}">home</a>.</p>
+    <p><a href="{% url 'add_person' %}">add a new person</a>.</p>
+
+    <script>
+        function toggleEdit(personId) {
+            var nameElement = document.getElementById('name-' + personId);
+            var birthDateElement = document.getElementById('birth_date-' + personId);
+            var genderElement = document.getElementById('gender-' + personId);
+            var maritalStatusElement = document.getElementById('marital_status-' + personId);
+
+            nameElement.contentEditable = (nameElement.contentEditable === 'true') ? 'false' : 'true';
+            birthDateElement.contentEditable = (birthDateElement.contentEditable === 'true') ? 'false' : 'true';
+            genderElement.contentEditable = (genderElement.contentEditable === 'true') ? 'false' : 'true';
+            maritalStatusElement.contentEditable = (maritalStatusElement.contentEditable === 'true') ? 'false' : 'true';
+        }
+
+        function saveChanges(personId) {
+            var name = document.getElementById('name-' + personId).innerText;
+            var birthDate = document.getElementById('birth_date-' + personId).innerText;
+            var gender = document.getElementById('gender-' + personId).innerText;
+            var maritalStatus = document.getElementById('marital_status-' + personId).innerText;
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/update_person/" + personId + "/", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    console.log(xhr.responseText);
+                }
+            };
+            var data = JSON.stringify({
+                "name": name,
+                "birth_date": birthDate,
+                "gender": gender,
+                "marital_status": maritalStatus
+            });
+            xhr.send(data);
+        }
+    </script>
+</body>
+</html>

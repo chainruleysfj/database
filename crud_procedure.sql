@@ -15,6 +15,16 @@ BEGIN
 END$$
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS get_person_by_id;
+DELIMITER //
+CREATE PROCEDURE get_person_by_id(
+    IN p_person_id INT
+)
+BEGIN
+    SELECT * FROM movie_app_person WHERE personID = p_person_id;
+END //
+DELIMITER ;
+
 DROP PROCEDURE IF EXISTS update_production_company;
 DELIMITER $$
 CREATE PROCEDURE update_production_company(
@@ -178,4 +188,73 @@ BEGIN
     VALUES (p_name, p_birth_date, p_gender, p_marital_status);
 END //
 DELIMITER ;
+
+DELIMITER //
+
+DROP PROCEDURE IF EXISTS get_all_persons;
+CREATE PROCEDURE get_all_persons()
+BEGIN
+    SELECT personID, Name, birth_date, Gender,  marital_status
+    FROM movie_app_person;
+END //
+DELIMITER ;
+
+
+DROP PROCEDURE IF EXISTS update_person;
+DELIMITER //
+CREATE PROCEDURE update_person(
+    IN p_person_id INT,
+    IN p_name VARCHAR(100),
+    IN p_birth_date DATE,
+    IN p_gender ENUM('M','F','U'),
+    IN p_marital_status ENUM('S','M','W','U')
+)
+BEGIN
+    UPDATE movie_app_person
+    SET Name = p_name,
+        birth_date = p_birth_date,
+        Gender = p_gender,
+        marital_status = p_marital_status
+    WHERE personID = p_person_id;
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS delete_person;
+DELIMITER //
+CREATE PROCEDURE delete_person(
+    IN p_person_id INT
+)
+BEGIN
+    DELETE FROM movie_app_person WHERE personID = p_person_id;
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS search_persons;
+DELIMITER //
+CREATE PROCEDURE search_persons(
+    IN p_name VARCHAR(100),
+    IN p_birth_date DATE,
+    IN p_gender ENUM('M','F','U'),
+    IN p_marital_status ENUM('S','M','W','U')
+)
+BEGIN
+    SELECT personID, Name, birth_date, Gender, marital_status
+    FROM movie_app_person
+    WHERE (p_name IS NULL OR Name LIKE CONCAT('%', p_name, '%'))
+    AND (p_birth_date IS NULL OR birth_date = p_birth_date)
+    AND (p_gender IS NULL OR Gender = p_gender)
+    AND (p_marital_status IS NULL OR marital_status = p_marital_status);
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS get_person_by_id;
+DELIMITER //
+CREATE PROCEDURE get_person_by_id(
+    IN p_person_id INT
+)
+BEGIN
+    SELECT * FROM movie_app_person WHERE personID = p_person_id;
+END //
+DELIMITER ;
+
 
