@@ -23,3 +23,27 @@ class Movie(models.Model):
 
     def __str__(self):
         return self.moviename
+
+
+class Person(models.Model):
+    GENDER_CHOICES = [
+        ('M', 'Male'),
+        ('F', 'Female'),
+        ('U', 'Unknown'),
+    ]
+
+    MARITAL_STATUS_CHOICES = [
+        ('S', 'Single'),
+        ('M', 'Married'),
+        ('W', 'Widowed'),
+        ('U', 'Unknown'),
+    ]
+
+    personID = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=50)
+    birth_date = models.DateField(null=True, blank=True)
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='U')
+    marital_status = models.CharField(max_length=1, choices=MARITAL_STATUS_CHOICES, default='U')
+
+    def __str__(self):
+        return self.name

@@ -164,3 +164,18 @@ BEGIN
     AND (production_company_id = p_production_company_id OR p_production_company_id IS NULL);
 END //
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS add_person;
+DELIMITER //
+CREATE PROCEDURE add_person(
+    IN p_name VARCHAR(50),
+    IN p_birth_date DATE,
+    IN p_gender ENUM('M', 'F', 'U'),
+    IN p_marital_status ENUM('S', 'M', 'W', 'U')
+)
+BEGIN
+    INSERT INTO movie_app_person (Name, birth_date, Gender, marital_status)
+    VALUES (p_name, p_birth_date, p_gender, p_marital_status);
+END //
+DELIMITER ;
+

@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.db import connection
 from django.conf import settings
 from .models import Movie, ProductionCompany
-from .forms import ProductionCompanyForm,MovieForm
+from .forms import ProductionCompanyForm,MovieForm,PersonForm
 import json,os,uuid
 
 
@@ -212,7 +212,6 @@ def movie_detail(request, movie_id):
 def update_movie(request, movie_id):
     # 获取电影对象
     movie = Movie.objects.get(pk=movie_id)
-
     if request.method == 'POST':
         # 解析表单数据
         moviename = request.POST['moviename']
@@ -220,7 +219,6 @@ def update_movie(request, movie_id):
         releaseyear = request.POST['releaseyear']
         plot_summary = request.POST['plot_summary']
         production_company_id = request.POST['production_company']
-
         # 如果上传了新的视频文件，保存并更新资源链接
         if 'video_file' in request.FILES:
             video_file = request.FILES['video_file']
@@ -229,11 +227,9 @@ def update_movie(request, movie_id):
             delete_video_file(movie.resource_link)
         else:
             resource_link = movie.resource_link
-
         # 调用存储过程更新电影信息
         with connection.cursor() as cursor:
             cursor.callproc('update_movie', [movie_id, moviename, length, releaseyear, plot_summary, resource_link, production_company_id])
-
         return redirect('list_movies')
     else:
         # 如果是 GET 请求，创建一个新的表单实例，并传入电影对象数据
@@ -252,15 +248,26 @@ def delete_video_file(file_path):
 def delete_movie(request, movie_id):
     # 获取电影对象
     movie = Movie.objects.get(pk=movie_id)
-    
     if request.method == 'POST':
         # 删除视频文件
         delete_video_file(movie.resource_link)
-        
         # 调用存储过程删除电影
         with connection.cursor() as cursor:
             cursor.callproc('delete_movie', [movie_id])
-        
         return redirect('list_movies')
-    
     return render(request, 'delete_movie_confirmation.html', {'movie': movie})
+
+def add_person(request):
+    if request.method == 'POST':
+        form = PersonForm(request.POST)
+        if form.is_valid():
+            name = form.cleaned_data['name']
+            birth_date = form.cleaned_data.get('birth_date') or None
+            gender = form.cleaned_data['gender']
+            marital_status = form.cleaned_data['marital_status']
+            with connection.cursor() as cursor:
+                cursor.callproc('add_person', [name, birth_date, gender, marital_status])
+            return redirect('home')
+    else:
+        form = PersonForm()
+    return render(request, 'add_person.html', {'form': form})

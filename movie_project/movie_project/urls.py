@@ -34,6 +34,7 @@ urlpatterns = [
     path('movies/<int:movie_id>/update/', views.update_movie, name='update_movie'), # 更新电影
     path('movies/<int:movie_id>/delete/', views.delete_movie, name='delete_movie'), # 删除电影
     path('movies/search/', views.list_movies, name='search_movies'),  # 查询电影
+    path('add_person/', views.add_person, name='add_person'), #添加人物
 ]
 
 if settings.DEBUG:

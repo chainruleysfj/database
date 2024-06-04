@@ -22,7 +22,7 @@ create table if not exists Movie
 
 create table if not exists person # 将演员表与导演表整合为一张person表
 	(personID int unsigned primary key auto_increment,
-    Name varchar(50),
+    Name varchar(50) not null,
     BirthDate date,
     Gender enum('M','F','U') comment'M for Male,F for Famale,U for Unkown',
     MaritalStatus enum('S','M','W','U') comment"Marital status: S=Single, M=Married, W=Widowed, U=Unknown"

@@ -1,6 +1,6 @@
 # forms.py
 from django import forms
-from .models import ProductionCompany,Movie
+from .models import ProductionCompany,Movie,Person
 
 class ProductionCompanyForm(forms.ModelForm):
     class Meta:
@@ -19,3 +19,16 @@ class MovieForm(forms.ModelForm):
     class Meta:
         model = Movie
         fields = ['moviename', 'length', 'releaseyear', 'plot_summary', 'production_company']
+
+
+class PersonForm(forms.ModelForm):
+    class Meta:
+        model = Person
+        fields = ['name', 'birth_date', 'gender', 'marital_status']
+        widgets = {
+            'birth_date': forms.DateInput(attrs={'type': 'date'}),
+            'gender': forms.Select(choices=[('M', 'Male'), ('F', 'Female'), ('U', 'Unknown')]),
+            'marital_status': forms.Select(choices=[('S', 'Single'), ('M', 'Married'), ('W', 'Widowed'), ('U', 'Unknown')]),
+        }
+
+
