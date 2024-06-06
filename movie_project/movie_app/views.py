@@ -301,3 +301,44 @@ def update_person(request, person_id):
         return redirect('list_persons')
     else:
         return JsonResponse({'error': 'Invalid request method'})
+    
+@csrf_exempt
+def delete_person(request, person_id):
+    if request.method == 'POST':
+        with connection.cursor() as cursor:
+            cursor.callproc('delete_person', [person_id])
+
+        return JsonResponse({'status': 'success'})
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    
+def search_persons(request):
+    name = request.GET.get('name', '')
+    start_birth_date = request.GET.get('start_birth_date', None)
+    end_birth_date = request.GET.get('end_birth_date', None)
+    gender = request.GET.get('gender', None)
+    marital_status = request.GET.get('marital_status', None)
+
+    # Convert empty string to None for birth_date, gender, and marital_status
+    if start_birth_date == '':
+        start_birth_date = None
+    if end_birth_date == '':
+        end_birth_date = None
+    if gender == '':
+        gender = None
+    if marital_status == '':
+        marital_status = None
+
+    with connection.cursor() as cursor:
+        cursor.callproc('search_persons', [name, start_birth_date, end_birth_date, gender, marital_status])
+        persons = cursor.fetchall()
+    persons_list = [
+        {'personID': person[0], 'name': person[1], 'birth_date': person[2], 'gender': person[3], 'marital_status': person[4]} 
+        for person in persons
+    ]
+    gender_map = {'M': 'Male', 'F': 'Female', 'U': 'Unknown'}
+    marital_status_map = {'S': 'Single', 'M': 'Married', 'W': 'Widowed', 'U': 'Unknown'}
+    for person in persons_list:
+        person['gender'] = gender_map.get(person['gender'], 'Unknown')
+        person['marital_status'] = marital_status_map.get(person['marital_status'], 'Unknown')
+    return render(request, 'list_persons.html', {'persons': persons_list})

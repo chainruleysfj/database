@@ -233,19 +233,22 @@ DROP PROCEDURE IF EXISTS search_persons;
 DELIMITER //
 CREATE PROCEDURE search_persons(
     IN p_name VARCHAR(100),
-    IN p_birth_date DATE,
+    IN p_start_birth_date DATE,
+    IN p_end_birth_date DATE,
     IN p_gender ENUM('M','F','U'),
     IN p_marital_status ENUM('S','M','W','U')
 )
 BEGIN
     SELECT personID, Name, birth_date, Gender, marital_status
     FROM movie_app_person
-    WHERE (p_name IS NULL OR Name LIKE CONCAT('%', p_name, '%'))
-    AND (p_birth_date IS NULL OR birth_date = p_birth_date)
-    AND (p_gender IS NULL OR Gender = p_gender)
-    AND (p_marital_status IS NULL OR marital_status = p_marital_status);
+    WHERE (p_name IS NULL OR p_name = '' OR Name LIKE CONCAT('%', p_name, '%'))
+    AND (p_start_birth_date IS NULL OR birth_date >= p_start_birth_date)
+    AND (p_end_birth_date IS NULL OR birth_date <= p_end_birth_date)
+    AND (p_gender IS NULL OR p_gender = '' OR Gender = p_gender)
+    AND (p_marital_status IS NULL OR p_marital_status = '' OR marital_status = p_marital_status);
 END //
 DELIMITER ;
+
 
 DROP PROCEDURE IF EXISTS get_person_by_id;
 DELIMITER //

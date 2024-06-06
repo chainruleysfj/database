@@ -37,6 +37,8 @@ urlpatterns = [
     path('add_person/', views.add_person, name='add_person'), #添加人物
     path('persons/', views.list_persons, name='list_persons'), #人物一览
     path('update_person/<int:person_id>/', views.update_person, name='update_person'), #更新人物
+    path('delete_person/<int:person_id>/', views.delete_person, name='delete_person'), #删除人物
+    path('search_persons/', views.search_persons, name='search_persons'), #查询人物
 ]
 
 if settings.DEBUG:
