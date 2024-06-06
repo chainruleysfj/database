@@ -15,13 +15,13 @@ BEGIN
 END$$
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS get_person_by_id;
+DROP PROCEDURE IF EXISTS get_company_by_id;
 DELIMITER //
-CREATE PROCEDURE get_person_by_id(
-    IN p_person_id INT
+CREATE PROCEDURE get_company_by_id(
+    IN p_company_id INT
 )
 BEGIN
-    SELECT * FROM movie_app_person WHERE personID = p_person_id;
+    SELECT * FROM movie_app_productioncompany WHERE company_id = p_company_id;
 END //
 DELIMITER ;
 

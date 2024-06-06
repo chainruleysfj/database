@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 
 # Create your views here.
-from django.http import JsonResponse,HttpResponse,HttpResponseRedirect
+from django.http import JsonResponse,HttpResponse,HttpResponseRedirect,Http404
 from django.views.decorators.csrf import csrf_exempt
 from django import forms
 from django.urls import reverse
@@ -55,7 +55,7 @@ def update_production_company(request, company_id):
 
     company = None
     with connection.cursor() as cursor:
-        cursor.callproc('get_person_by_id', [company_id])
+        cursor.callproc('get_company_by_id', [company_id])
         company = cursor.fetchone()
     
     if company is None:
@@ -282,22 +282,17 @@ def list_persons(request):
     ]
     return render(request, 'list_persons.html', {'persons': persons_list})
 
+@csrf_exempt
 def update_person(request, person_id):
     if request.method == 'POST':
-        # 获取POST请求中的数据
         name = request.POST.get('name')
         birth_date = request.POST.get('birth_date')
         gender = request.POST.get('gender')
         marital_status = request.POST.get('marital_status')
 
-        # 调用存储过程更新人物信息
         with connection.cursor() as cursor:
             cursor.callproc('update_person', [person_id, name, birth_date, gender, marital_status])
 
-        # 重定向到人物一览页面
         return redirect('list_persons')
     else:
-        # 如果不是POST请求，返回错误响应
         return JsonResponse({'error': 'Invalid request method'})
-
-
