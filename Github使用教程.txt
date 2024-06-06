@@ -1,0 +1,116 @@
+Github使用教程
+一、为什么要使用Github?
+多人开发同一项目时，使用Github，可以便利地进行许多操作：
+·在不同时空进行代码提交与下载
+·历史回滚
+·不同功能的同时开发
+·记录不同版本间的代码差异
+·发现与解决代码冲突
+·代码合并
+
+摘自《Github入门与实践》
+在此讲解一下 GitHub 与 Git 注 a 的区别。GitHub 与 Git 是完
+全不同的两个东西。本书中，自始至终都以 GitHub 和 Git 的方
+式区分描述。
+在 Git 中，开发者将源代码存入名叫“Git 仓库”的资料库中
+并加以使用。而 GitHub 则是在网络上提供 Git 仓库的一项服务。
+也就是说，GitHub 上公开的软件源代码全都由 Git 进行管
+理。理解 Git，是熟练运用 GitHub 的关键所在。Git 的相关知识，
+我们将在第 2 章中为您详细讲解。
+
+二、Git的下载与设置
+1.git下载
+参考 https://blog.csdn.net/weixin_42242910/article/details/136297201
+
+2.git初始设置
+参考《Github入门与实践》P24~25
+
+3.Github注册
+参考《Github入门与实践》P28
+
+4.ssh key
+作用：避免每次通过本地的git bash和github交流时都要输入账号密码
+参考《Github入门与实践》P29~30
+如果在#添加公开密钥完成后，于“用手中的私人密钥与 GitHub 进行认证和
+通信”报错，
+可以参考 https://blog.csdn.net/benisarookie/article/details/113114604
+先在git bash输入
+
+ssh-agent bash
+ssh-add ~/.ssh/id_rsa
+
+再输入设置ssh时的passphrase，然后再尝试
+
+三、Github工作流程
+1.clone仓库
+参考《Github入门与实践》P35
+在git bash输入
+
+cd 希望开发项目的文件夹，注意路径使用/而非\
+git clone git@github.com:chainruleysfj/database.git
+
+即可为本地的这个文件夹同步一个远程仓库。
+
+2.branch
+Github可以用branch实现不同功能的同时开发。
+在git bash输入
+git checkout 分支名
+即可在源代码的基础上开创一个新分支。注意，checkout命令会更改文件夹的内容，所以不要轻易使用。
+
+3.提交代码
+在新建或更改文件后，在git bash输入
+
+git add 对应文件名
+
+来告诉Git进行的修改，在达到某个阶段，如实现了一个新功能时，
+可以在git bash输入
+
+git commit -m"commit的相关说明"
+
+来让Git捆绑之前的所有add为一个commit.一个commit就可以说是一个版本。
+为了把本地的版本同步到远程仓库Github，可以在git bash输入
+
+git push
+
+注意，最好不要直接push到clone时默认的main分支，而是先checkout一个新分支，push这个分支。
+
+4.更新代码：
+输入
+
+git pull
+
+即可更新#对应分支的最新代码到本地。
+如果希望把别的分支（如main）的更新加到自己的分支上，先checkout到其他分支，
+git pull，然后checkout到自己的分支，输入
+
+git merge main
+
+即可更新。再git push,即可把本地的merge同步到远程仓库。如果出现代码冲突，见下。
+
+5.代码冲突
+更新代码时，可能出现代码冲突。以本项目为例，python的预编译文件__pycache__经常冲突，因为是二进制文件，
+git不能直接合并。如果出现冲突，使用
+
+git rm 对应冲突的pyc文件的路径，注意不是__pycache__文件夹，是里面的文件
+
+将冲突的pyc文件删除即可。
+通常，普通文件(.py,.c等等)出现冲突时，git 会暂停merge，打开本地的冲突文件，会以=======
+为分隔，同时显现两个分支的内容。手动解决冲突（如直接删掉某个分支的内容，保留另一个）后，
+
+git add 冲突文件
+git commit
+
+即可解决。
+
+6.代码日志
+
+输入git log即可查看，输入git log --graph可以看图表的模式。git show可以看最近的一次commit
+
+
+四、结语
+更多内容，参考《Github入门与实践》
+
+
+
+
+
