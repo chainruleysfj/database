@@ -18,12 +18,12 @@
                 <span class="person-info">
                     {{ person.name }} -
                     {{ person.birth_date|date:"Y-m-d" }} -
-                    {{ person.gender }} -
-                    {{ person.marital_status }}
+                    {{ person.gender|title }} -
+                    {{ person.marital_status|title }}
                 </span>
                 <button onclick="toggleEdit('{{ person.personID }}')">Edit</button>
-                <button onclick="saveChanges('{{ person.personID }}')">Save</button>
-                <form method="post" action="{% url 'update_person' person.personID %}" class="editing" id="form-{{ person.personID }}">
+                <button class="save-button" onclick="saveChanges('{{ person.personID }}')" style="display:none;">Save</button>
+                <form method="post" action="{% url 'update_person' person.personID %}" class="editing">
                     {% csrf_token %}
                     <input type="text" name="name" value="{{ person.name }}" required>
                     <input type="date" name="birth_date" value="{{ person.birth_date|date:'Y-m-d' }}" required>
@@ -47,14 +47,26 @@
 
     <script>
         function toggleEdit(personId) {
-            var form = document.getElementById('form-' + personId);
+            var form = document.querySelector('#person-' + personId + ' .editing');
             var info = document.querySelector('#person-' + personId + ' .person-info');
-            form.style.display = (form.style.display === 'none') ? 'block' : 'none';
-            info.style.display = (form.style.display === 'none') ? 'block' : 'none';
+            var editButton = document.querySelector('#person-' + personId + ' button');
+            var saveButton = document.querySelector('#person-' + personId + ' .save-button');
+
+            if (form.style.display === 'none' || form.style.display === '') {
+                form.style.display = 'block';
+                info.style.display = 'none';
+                saveButton.style.display = 'inline';
+                editButton.style.display = 'none';
+            } else {
+                form.style.display = 'none';
+                info.style.display = 'block';
+                saveButton.style.display = 'none';
+                editButton.style.display = 'inline';
+            }
         }
 
         function saveChanges(personId) {
-            var form = document.getElementById('form-' + personId);
+            var form = document.querySelector('#person-' + personId + ' .editing');
             var formData = new FormData(form);
 
             var xhr = new XMLHttpRequest();
@@ -62,7 +74,6 @@
             xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4 && xhr.status === 200) {
-                    // 刷新页面或更新页面上的信息
                     location.reload();
                 } else if (xhr.readyState === 4) {
                     console.error("Error: " + xhr.responseText);

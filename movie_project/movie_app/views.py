@@ -280,6 +280,11 @@ def list_persons(request):
         {'personID': person[0], 'name': person[1], 'birth_date': person[2], 'gender': person[3], 'marital_status': person[4]} 
         for person in persons
     ]
+    gender_map = {'M': 'Male', 'F': 'Female', 'U': 'Unknown'}
+    marital_status_map = {'S': 'Single', 'M': 'Married', 'W': 'Widowed', 'U': 'Unknown'}
+    for person in persons_list:
+        person['gender'] = gender_map.get(person['gender'], 'Unknown')
+        person['marital_status'] = marital_status_map.get(person['marital_status'], 'Unknown')
     return render(request, 'list_persons.html', {'persons': persons_list})
 
 @csrf_exempt
