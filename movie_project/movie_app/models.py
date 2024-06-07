@@ -24,7 +24,6 @@ class Movie(models.Model):
     def __str__(self):
         return self.moviename
 
-
 class Person(models.Model):
     GENDER_CHOICES = [
         ('M', 'Male'),
@@ -47,3 +46,10 @@ class Person(models.Model):
 
     def __str__(self):
         return self.name
+    
+class DirectorMovie(models.Model):
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='directors')
+    director = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='movies_directed')
+
+    class Meta:
+        unique_together = ('movie', 'director')  # 确保电影和导演的组合是唯一的

@@ -14,6 +14,8 @@ class MovieForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['video_file'].required = not is_update
 
+    directors = forms.ModelMultipleChoiceField(queryset=Person.objects.all(), widget=forms.CheckboxSelectMultiple, required=False)
+    
     video_file = forms.FileField(label='Video File')
 
     class Meta:

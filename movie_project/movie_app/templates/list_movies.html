@@ -38,7 +38,12 @@
     <ul>
         {% for movie in movies %}
             <li>
-                <a href="{% url 'movie_detail' movie.movie_id %}">{{ movie.moviename }}</a>
+                <strong>{{ movie.moviename }}</strong><br>
+                Length: {{ movie.length }} minutes<br>
+                Release Year: {{ movie.releaseyear }}<br>
+                Production Company: {{ movie.production_company_name }}<br>
+                Directors: {{ movie.directors|default_if_none:"N/A" }}<br>
+                <a href="{% url 'movie_detail' movie.movie_id %}">Details</a>
                 <a href="{% url 'update_movie' movie.movie_id %}">Edit</a> <!-- 更新按钮 -->
                 <a href="{% url 'delete_movie' movie.movie_id %}">Delete</a> <!-- 删除按钮 -->
             </li>
