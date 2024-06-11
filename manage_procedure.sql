@@ -43,7 +43,7 @@ BEGIN
     LEFT JOIN movie_app_productioncompany pc ON m.production_company_id = pc.company_id
     WHERE (p_keyword IS NULL OR m.moviename LIKE CONCAT('%', p_keyword, '%'))
     AND m.length BETWEEN p_min_length AND p_max_length
-    AND m.releaseyear BETWEEN p_min_releaseyear AND p_max_releaseyear
+    AND ((m.releaseyear BETWEEN p_min_releaseyear AND p_max_releaseyear) OR m.releaseyear is null)
     AND (p_production_company_id IS NULL OR m.production_company_id = p_production_company_id)
     GROUP BY m.Movie_ID;
 END //

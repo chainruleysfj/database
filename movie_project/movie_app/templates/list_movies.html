@@ -5,36 +5,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>List of Movies</title>
+    <style>
+        /* 添加CSS样式 */
+        .search-form label,
+        .search-form input,
+        .search-form select,
+        .search-form button {
+            display: inline-block;
+            margin-right: 5px; /* 元素之间的间距 */
+            margin-bottom: 5px; /* 垂直间距 */
+        }
+        .search-form label {
+            margin-bottom: 0; /* 标签不需要垂直间距 */
+        }
+        /* 根据需要调整宽度 */
+        .search-form input[type="text"],
+        .search-form input[type="number"],
+        .search-form select {
+            width: 150px; /* 可以调整这个宽度以适应你的布局 */
+        }
+        /* 确保按钮有足够的空间 */
+        .search-form button {
+            margin-left: 10px;
+        }
+    </style>
 </head>
 <body>
     <h1>List of Movies</h1>
-        <!-- Search Form -->
-        <form method="get" action="{% url 'search_movies' %}">
-            <label for="keyword">Keyword:</label><br>
-            <input type="text" id="keyword" name="keyword"><br><br>
-    
-            <label for="min_length">Minimum Length:</label><br>
-            <input type="number" id="min_length" name="min_length" min="0"><br><br>
-    
-            <label for="max_length">Maximum Length:</label><br>
-            <input type="number" id="max_length" name="max_length" min="0"><br><br>
-    
-            <label for="min_releaseyear">Minimum Release Year:</label><br>
-            <input type="number" id="min_releaseyear" name="min_releaseyear" min="0"><br><br>
-    
-            <label for="max_releaseyear">Maximum Release Year:</label><br>
-            <input type="number" id="max_releaseyear" name="max_releaseyear" min="0"><br><br>
-    
-            <label for="production_company">Production Company:</label><br>
+    <!-- Search Form -->
+    <form method="get" action="{% url 'search_movies' %}" class="search-form">
+        <div>
+            <label for="keyword">Keyword:</label>
+            <input type="text" id="keyword" name="keyword">
+        </div>
+        
+        <div>
+            <label for="min_length">Minimum Length:</label>
+            <input type="number" id="min_length" name="min_length" min="0">
+        </div>
+        
+        <div>
+            <label for="max_length">Maximum Length:</label>
+            <input type="number" id="max_length" name="max_length" min="0">
+        </div>
+        
+        <div>
+            <label for="min_releaseyear">Minimum Release Year:</label>
+            <input type="number" id="min_releaseyear" name="min_releaseyear" min="0">
+        </div>
+        
+        <div>
+            <label for="max_releaseyear">Maximum Release Year:</label>
+            <input type="number" id="max_releaseyear" name="max_releaseyear" min="0">
+        </div>
+        
+        <div>
+            <label for="production_company">Production Company:</label>
             <select id="production_company" name="production_company">
                 <option value="">-- Select Production Company --</option>
                 {% for company in production_companies %}
                     <option value="{{ company.company_id }}">{{ company.name }}</option>
                 {% endfor %}
-            </select><br><br>
-    
-            <button type="submit">Search</button>
-        </form>
+            </select>
+        </div>
+        
+        <button type="submit">Search</button>
     <ul>
         {% for movie in movies %}
             <li>
