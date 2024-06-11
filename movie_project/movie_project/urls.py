@@ -39,6 +39,7 @@ urlpatterns = [
     path('update_person/<int:person_id>/', views.update_person, name='update_person'), #更新人物
     path('delete_person/<int:person_id>/', views.delete_person, name='delete_person'), #删除人物
     path('search_persons/', views.search_persons, name='search_persons'), #查询人物
+    path('search_person_by_name/', views.search_person_by_name, name='search_person_by_name'), #按姓名查询人物
 ]
 
 if settings.DEBUG:

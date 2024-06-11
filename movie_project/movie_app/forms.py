@@ -14,8 +14,6 @@ class MovieForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['video_file'].required = not is_update
 
-    directors = forms.ModelMultipleChoiceField(queryset=Person.objects.all(), widget=forms.CheckboxSelectMultiple, required=False)
-    
     video_file = forms.FileField(label='Video File')
 
     class Meta:
@@ -32,5 +30,6 @@ class PersonForm(forms.ModelForm):
             'gender': forms.Select(choices=[('M', 'Male'), ('F', 'Female'), ('U', 'Unknown')]),
             'marital_status': forms.Select(choices=[('S', 'Single'), ('M', 'Married'), ('W', 'Widowed'), ('U', 'Unknown')]),
         }
+        
 
 

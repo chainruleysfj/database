@@ -100,6 +100,7 @@ def add_movie(request):
     if request.method == 'POST':
         form = MovieForm(request.POST, request.FILES,is_update=False)
         if form.is_valid():
+            print("电影表单无误")
             # 从表单中获取数据
             moviename = form.cleaned_data['moviename']
             length = form.cleaned_data['length']
@@ -117,16 +118,27 @@ def add_movie(request):
                 cursor.callproc('get_last_insert_movie_id')
                 movie_id = cursor.fetchone()[0]
             # 获取选中的导演
-            directors = form.cleaned_data['directors']
-            # 调用存储过程关联电影和导演
-            with connection.cursor() as cursor:
-                for director in directors:
-                    cursor.callproc('add_director_movie', [movie_id, director.personID])
-                
+            director_ids = request.POST.get('directors', '')
+            # 插入导演数据
+            if director_ids:
+                director_ids_list = director_ids.split(',')
+                with connection.cursor() as cursor:
+                    for director_id in director_ids_list:
+                        cursor.callproc('add_director_movie', [movie_id, int(director_id)])
+
             return redirect('list_movies')
+        print("电影表单有误")
     else:
         form = MovieForm(is_update=False)
     return render(request, 'add_movie.html', {'form': form})
+
+def search_person_by_name(request):
+    query = request.GET.get('query', '')
+    with connection.cursor() as cursor:
+        cursor.callproc('search_person_by_name', [query])
+        results = cursor.fetchall()
+    directors = [{'person_id': result[0], 'name': result[1]} for result in results]
+    return JsonResponse(directors, safe=False)
 
 def save_video_file(video_file):
     unique_filename = str(uuid.uuid4()) + '.mp4'

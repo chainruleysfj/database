@@ -57,4 +57,15 @@ BEGIN
 END //
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS search_person_by_name;
+DELIMITER //
+CREATE PROCEDURE search_person_by_name(
+    IN p_name VARCHAR(100)
+)
+BEGIN
+    SELECT personID, name 
+    FROM movie_app_person 
+    WHERE name LIKE CONCAT('%', p_name, '%');
+END //
+DELIMITER ;
 

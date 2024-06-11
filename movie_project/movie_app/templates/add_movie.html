@@ -1,17 +1,130 @@
-<!-- add_movie.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Movie</title>
+    <script>
+        let selectedDirectors = [];
+
+        var addPersonUrl = '{% url "add_person" %}';
+
+        function searchDirectors() {
+            const query = document.getElementById('director-search').value;
+            fetch(`/search_person_by_name/?query=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    const searchResults = document.getElementById('search-results');
+                    searchResults.innerHTML = '';
+
+                    if (data.length === 0) {
+                        // 使用变量addPersonUrl来插入URL
+                        searchResults.innerHTML = 'No matching directors found. Please check the search criteria or <a href="' + addPersonUrl + '">add a new director</a>.';
+                    } else {
+                        data.forEach(director => {
+                            if (!selectedDirectors.includes(director.person_id)) {
+                                const directorElement = document.createElement('div');
+                                directorElement.id = `director-${director.person_id}`;
+                                directorElement.innerHTML = `
+                                    ${director.name}
+                                    <button type="button" onclick="selectDirector(${director.person_id}, '${director.name}')">✔</button>
+                                `;
+                                searchResults.appendChild(directorElement);
+                            }
+                        });
+                    }
+                });
+        }
+
+        function selectDirector(person_id, name) {
+            selectedDirectors.push(person_id);
+            updateSelectedDirectors();
+
+            const directorElement = document.getElementById(`director-${person_id}`);
+            directorElement.style.display = 'none';
+        }
+
+        function deselectDirector(person_id) {
+            selectedDirectors = selectedDirectors.filter(id => id !== person_id);
+            updateSelectedDirectors();
+
+            const directorElement = document.getElementById(`director-${person_id}`);
+            if (directorElement) {
+                directorElement.style.display = 'block';
+            }
+        }
+
+        function updateSelectedDirectors() {
+            const selectedDirectorsContainer = document.getElementById('selected-directors');
+            selectedDirectorsContainer.innerHTML = '';
+
+            selectedDirectors.forEach(person_id => {
+                const directorElement = document.createElement('div');
+                directorElement.innerHTML = `
+                    ${document.querySelector(`#director-${person_id}`).innerText}
+                    <button type="button" onclick="deselectDirector(${person_id})">✘</button>
+                `;
+                selectedDirectorsContainer.appendChild(directorElement);
+            });
+        }
+    </script>
 </head>
 <body>
     <h1>Add Movie</h1>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Submit</button>
+        {{ form.non_field_errors }}
+        <div>
+            {{ form.moviename.label_tag }}<br>
+            {{ form.moviename }}<br>
+            {{ form.moviename.errors }}
+        </div>
+        <div>
+            {{ form.length.label_tag }}<br>
+            {{ form.length }}<br>
+            {{ form.length.errors }}
+        </div>
+        <div>
+            {{ form.releaseyear.label_tag }}<br>
+            {{ form.releaseyear }}<br>
+            {{ form.releaseyear.errors }}
+        </div>
+        <div>
+            {{ form.plot_summary.label_tag }}<br>
+            {{ form.plot_summary }}<br>
+            {{ form.plot_summary.errors }}
+        </div>
+        <div>
+            {{ form.production_company.label_tag }}<br>
+            {{ form.production_company }}<br>
+            {{ form.production_company.errors }}
+        </div>
+        <div>
+            {{ form.video_file.label_tag }}<br>
+            {{ form.video_file }}<br>
+            {{ form.video_file.errors }}
+        </div>
+        
+        <div>
+            <h3>Selected Directors:</h3>
+            <div id="selected-directors">
+                <!-- 已选导演将动态填充在这里 -->
+            </div>
+        </div>
+
+        <div>
+            <label for="director-search">Search Director:</label>
+            <input type="text" id="director-search" name="director-search">
+            <button type="button" onclick="searchDirectors()">Search</button>
+        </div>
+
+        <div id="search-results">
+            <!-- 搜索结果将动态填充在这里 -->
+        </div>
+
+        <input type="hidden" name="directors" id="directors-input" value="">
+        
+        <button type="submit" onclick="document.getElementById('directors-input').value = selectedDirectors.join(',')">Submit</button>
     </form>
     <p><a href="{% url 'home' %}">home</a>.</p>
 </body>
