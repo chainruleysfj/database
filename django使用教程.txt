@@ -125,6 +125,7 @@ python manage.py createsuperuser
 在movie_app文件夹中，自行创建一个名为templates的文件夹，用于存储前端代码。前端我写了几个试运行的，后期还要改。
 
 三、启动服务器
+1.本地运行
 确保命令行工作文件夹位于manage.py所在文件夹
 在命令行运行python manage.py runserver即可。
 现在，可在http://127.0.0.1:8000/访问服务器。
@@ -133,5 +134,24 @@ python manage.py createsuperuser
 页面。
 注：如果使用我在github上建立的仓库，先在数据库执行crud_procedure.sql文件，以正常调用对应存储过程。
 注：在命令行输入ctrl+c以退出服务器。
+
+2.局域网运行
+将settings.py中的ALLOWED_HOSTS改为 
+
+ALLOWED_HOSTS = ['*']
+
+然后在命令行输入
+
+ipconfig
+
+获取本机（启动服务器的机器）IP，记录之后在项目文件夹运行
+
+python manage.py runserver 0.0.0.0:8000
+
+之后在其他位于同一局域网的机器访问
+
+http://你的IP地址:8000
+
+即可。
 
 如果还有什么疏漏，遗漏了某些问题，或者某些地方有误，可以联系我修改。
