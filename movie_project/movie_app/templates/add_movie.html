@@ -67,6 +67,10 @@
                 selectedDirectorsContainer.appendChild(directorElement);
             });
         }
+
+        document.addEventListener('DOMContentLoaded', (event) => {  
+            searchDirectors(); // 在页面加载时执行一次空搜索
+        }); 
     </script>
 </head>
 <body>

@@ -69,3 +69,23 @@ BEGIN
 END //
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS delete_directors_for_movie;
+DELIMITER //
+CREATE PROCEDURE delete_directors_for_movie(
+    IN p_movie_id INT
+)
+BEGIN
+    DELETE FROM movie_app_directormovie WHERE movie_ID = p_movie_id;
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS get_directors_for_movie;
+DELIMITER //  
+CREATE PROCEDURE get_directors_for_movie(IN p_movie_id INT)  
+BEGIN  
+    SELECT p.personID, p.name   
+    FROM movie_app_directormovie dm  
+    JOIN movie_app_person p ON dm.person_id = p.personID  
+    WHERE dm.movie_id = p_movie_id;  
+END //  
+DELIMITER ;

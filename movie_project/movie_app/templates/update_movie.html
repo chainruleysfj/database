@@ -1,23 +1,153 @@
-<!-- update_movie.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Update Movie</title>
+    <script>
+        // 使用JSON.parse()来解析传递的JSON字符串，并且使用|escapejs过滤器来确保正确的JavaScript字符串
+        let selectedDirectors = JSON.parse('{{ selected_directors_json|escapejs }}');
+        console.log(selectedDirectors);
+
+        var addPersonUrl = '{% url "add_person" %}';
+        
+
+        function searchDirectors() {
+            const query = document.getElementById('director-search').value;
+            fetch(`/search_person_by_name/?query=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    const searchResults = document.getElementById('search-results');
+                    searchResults.innerHTML = '';
+
+                    if (data.length === 0) {
+                        searchResults.innerHTML = 'No matching directors found. Please check the search criteria or <a href="' + addPersonUrl + '">add a new director</a>.';
+                    } else {
+                        data.forEach(director => {
+                            // 检查导演是否已被选择
+                            const isSelected = selectedDirectors.includes(director.person_id);
+                            // 创建导演条目
+                            const directorElement = document.createElement('div');
+                            directorElement.id = `director-${director.person_id}`;
+                            directorElement.innerHTML = `
+                                ${director.name}
+                                <button type="button" onclick="${isSelected ? `deselectDirector(${director.person_id})` : `selectDirector(${director.person_id}, '${director.name}')`}">${isSelected ? '✔' : '✔'}</button>
+                            `;
+                            searchResults.appendChild(directorElement);
+                        });
+                        // 更新已选择导演的名字
+                        updateSelectedDirectors();
+                    }
+                    
+                });
+        }
+
+        function selectDirector(person_id, name) {
+            selectedDirectors.push(person_id);
+            updateSelectedDirectors();
+            const directorElement = document.getElementById(`director-${person_id}`);
+            directorElement.style.display = 'none';
+        }
+
+        function deselectDirector(person_id) {
+            selectedDirectors = selectedDirectors.filter(id => id !== person_id);
+            updateSelectedDirectors();
+            searchDirectors()
+            const directorElement = document.getElementById(`director-${person_id}`);
+            if (directorElement) {
+                directorElement.style.display = 'block';
+            }
+        }
+
+        function updateSelectedDirectors() {
+            const selectedDirectorsContainer = document.getElementById('selected-directors');
+            selectedDirectorsContainer.innerHTML = '';
+
+            selectedDirectors.forEach(person_id => {
+                // 获取导演的名字
+                console.log(person_id);
+                const directorName = document.querySelector(`#director-${person_id}`)?.innerText || '';
+                console.log(directorName);
+                // 创建导演条目
+                const directorElement = document.createElement('div');
+                directorElement.id = `selected-director-${person_id}`;
+                directorElement.innerHTML = `
+                    ${directorName}
+                    <button type="button" onclick="deselectDirector(${person_id})">✘</button>
+                `;
+                selectedDirectorsContainer.appendChild(directorElement);
+            });
+        }
+
+        function updateFormDirectors() {  
+            document.getElementById('directors-input').value = selectedDirectors.join(',');  
+        }  
+
+        document.addEventListener('DOMContentLoaded', (event) => {  
+            searchDirectors(); // 在页面加载时执行一次空搜索
+
+            updateFormDirectors(); // 确保在DOM加载完成后更新表单的directors字段值  
+        });  
+    </script>
 </head>
 <body>
     <h1>Update Movie</h1>
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <!-- Render the form fields -->
-        {{ form.as_p }}
+        {{ form.non_field_errors }}
+        <div>
+            {{ form.moviename.label_tag }}<br>
+            {{ form.moviename }}<br>
+            {{ form.moviename.errors }}
+        </div>
+        <div>
+            {{ form.length.label_tag }}<br>
+            {{ form.length }}<br>
+            {{ form.length.errors }}
+        </div>
+        <div>
+            {{ form.releaseyear.label_tag }}<br>
+            {{ form.releaseyear }}<br>
+            {{ form.releaseyear.errors }}
+        </div>
+        <div>
+            {{ form.plot_summary.label_tag }}<br>
+            {{ form.plot_summary }}<br>
+            {{ form.plot_summary.errors }}
+        </div>
+        <div>
+            {{ form.production_company.label_tag }}<br>
+            {{ form.production_company }}<br>
+            {{ form.production_company.errors }}
+        </div>
+        <div>
+            {{ form.video_file.label_tag }}<br>
+            {{ form.video_file }}<br>
+            {{ form.video_file.errors }}
+        </div>
+        
+        <div>
+            <h3>Selected Directors:</h3>
+            <div id="selected-directors">
+                <!-- 已选导演将动态填充在这里 -->
+            </div>
+        </div>
 
-        <!-- Add a submit button -->
-        <button type="submit">Update</button>
+        <div>
+            <label for="director-search">Search Director:</label>
+            <input type="text" id="director-search" name="director-search">
+            <button type="button" onclick="searchDirectors()">Search</button>
+        </div>
+
+        <div id="search-results">
+            <!-- 搜索结果将动态填充在这里 -->
+        </div>
+
+        <input type="hidden" name="directors" id="directors-input" value="">
+        
+        <button type="submit" onclick="updateFormDirectors()">Update</button>
     </form>
     <p><a href="{% url 'list_movies' %}">Back to Movie List</a></p>
     <p><a href="{% url 'home' %}">home</a>.</p>
 </body>
 </html>
-

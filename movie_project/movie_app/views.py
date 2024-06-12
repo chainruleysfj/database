@@ -296,7 +296,7 @@ def update_movie(request, movie_id):
         # 解析表单数据
         moviename = request.POST['moviename']
         length = request.POST['length']
-        releaseyear = request.POST['releaseyear']
+        releaseyear = get_int_or_default(request.POST['releaseyear'],None)
         plot_summary = request.POST['plot_summary']
         production_company_id = request.POST['production_company']
         # 如果上传了新的视频文件，保存并更新资源链接
@@ -310,11 +310,35 @@ def update_movie(request, movie_id):
         # 调用存储过程更新电影信息
         with connection.cursor() as cursor:
             cursor.callproc('update_movie', [movie_id, moviename, length, releaseyear, plot_summary, resource_link, production_company_id])
+        # 获取选中的导演
+            director_ids = request.POST.get('directors', '')
+            # 插入导演数据
+            director_ids_list = director_ids.split(',') if director_ids else []
+            with connection.cursor() as cursor:
+                cursor.callproc('delete_directors_for_movie', [movie_id])
+                for director_id in director_ids_list:
+                    cursor.callproc('add_director_movie', [movie_id, int(director_id)])
         return redirect('list_movies')
     else:
         # 如果是 GET 请求，创建一个新的表单实例，并传入电影对象数据
         form = MovieForm(instance=movie,is_update=True)
-        return render(request, 'update_movie.html', {'form': form})
+        # 获取当前电影已关联的导演ID列表  
+        # 假设你有一个方法可以从数据库中获取这些ID，例如 get_directors_for_movie(movie_id)  
+        with connection.cursor() as cursor:  
+            # 调用存储过程，这里不需要输出参数  
+            cursor.callproc('get_directors_for_movie', [movie_id])  
+              
+            # fetchall()获取查询结果的所有行  
+            rows = cursor.fetchall()  
+            selected_directors = [row[0] for row in rows]  # 假设每行只有一个值，即导演ID  
+            
+        selected_directors_json = json.dumps(selected_directors)
+        print(selected_directors_json)
+        return render(request, 'update_movie.html', {  
+            'form': form,  
+            'selected_directors_json': selected_directors_json,  
+        })
+        
     
 def delete_video_file(file_path):
     # 从文件路径中提取文件名
