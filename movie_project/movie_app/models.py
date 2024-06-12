@@ -48,8 +48,9 @@ class Person(models.Model):
         return self.name
     
 class DirectorMovie(models.Model):
+    id = models.AutoField(primary_key=True)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='directors')
-    director = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='movies_directed')
+    person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='movies_directed')
 
     class Meta:
-        unique_together = ('movie', 'director')  # 确保电影和导演的组合是唯一的
+        unique_together = ('movie_id', 'person_id')  # 确保电影和导演的组合是唯一的

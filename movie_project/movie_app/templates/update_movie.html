@@ -7,7 +7,6 @@
     <script>
         // 使用JSON.parse()来解析传递的JSON字符串，并且使用|escapejs过滤器来确保正确的JavaScript字符串
         let selectedDirectors = JSON.parse('{{ selected_directors_json|escapejs }}');
-        console.log(selectedDirectors);
 
         var addPersonUrl = '{% url "add_person" %}';
         
@@ -65,9 +64,7 @@
 
             selectedDirectors.forEach(person_id => {
                 // 获取导演的名字
-                console.log(person_id);
                 const directorName = document.querySelector(`#director-${person_id}`)?.innerText || '';
-                console.log(directorName);
                 // 创建导演条目
                 const directorElement = document.createElement('div');
                 directorElement.id = `selected-director-${person_id}`;

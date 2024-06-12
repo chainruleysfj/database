@@ -7,6 +7,7 @@ from django import forms
 from django.urls import reverse
 from django.db import connection
 from django.conf import settings
+from django.template.defaultfilters import urlencode
 from .models import Movie, ProductionCompany, Person
 from .forms import ProductionCompanyForm,MovieForm,PersonForm
 import json,os,uuid
@@ -255,8 +256,11 @@ def list_movies(request):
             cursor.callproc('get_all_movies_with_directors_and_companies')
             movies = cursor.fetchall()
 
-    movies_list = [
-        {
+    movies_list = []
+    for movie in movies:
+        # 对导演名进行预处理，将其拆分为列表
+        directors_list = movie[7].split(',') if movie[7] else []
+        movies_list.append({
             'movie_id': movie[0],
             'moviename': movie[1],
             'length': movie[2],
@@ -264,10 +268,8 @@ def list_movies(request):
             'plot_summary': movie[4],
             'resource_link': movie[5],
             'production_company_name': movie[6],
-            'directors': movie[7]
-        }
-        for movie in movies
-    ]
+            'directors_list': directors_list  # 添加预处理后的导演名列表
+        })
 
     return render(request, 'list_movies.html', {'movies': movies_list, 'production_companies': production_companies_list})
 
@@ -357,7 +359,7 @@ def delete_movie(request, movie_id):
         delete_video_file(movie.resource_link)
         # 调用存储过程删除电影
         with connection.cursor() as cursor:
-            cursor.callproc('delete_movie', [movie_id])
+            cursor.callproc('delete_movie_and_directormovie', [movie_id])
         return redirect('list_movies')
     return render(request, 'delete_movie_confirmation.html', {'movie': movie})
 
@@ -446,3 +448,48 @@ def search_persons(request):
         person['gender'] = gender_map.get(person['gender'], 'Unknown')
         person['marital_status'] = marital_status_map.get(person['marital_status'], 'Unknown')
     return render(request, 'list_persons.html', {'persons': persons_list})
+
+def all_directors(request):
+    search_director = request.GET.get('search_director', '')
+    search_movie = request.GET.get('search_movie', '')
+    with connection.cursor() as cursor:
+        cursor.callproc('get_all_directors_and_directmovie')
+        results = cursor.fetchall()
+
+    directors_with_movies = []
+    all_directors_map = {}
+
+    # 处理存储过程的结果
+    for row in results:
+        director_id = row[0]
+        director_name = row[1]
+        movies = [movie.strip().split(':') for movie in row[2].split(', ')] if row[2] else []
+        all_directors_map[director_id] = {
+            'id': director_id,
+            'name': director_name,
+            'movies': [{'id': movie[0], 'name': movie[1]} for movie in movies]
+        }
+
+    # 根据搜索条件筛选导演和电影
+    filtered_directors = []
+    for director in all_directors_map.values():
+        director_name_lower = director['name'].lower()
+        matches_director = search_director.lower() in director_name_lower if search_director else True
+        matches_movie = any(search_movie.lower() in movie['name'].lower() for movie in director['movies']) if search_movie else True
+        if matches_director and matches_movie:
+            filtered_directors.append(director)
+            
+
+    # 准备要传递给模板的导演及其电影
+    for director in filtered_directors:
+        directors_with_movies.append({
+            'id': director['id'],
+            'name': director['name'],
+            'movies': director['movies']
+        })
+
+    return render(request, 'all_directors.html', {
+        'directors_with_movies': directors_with_movies,
+        'search_director': search_director,
+        'search_movie': search_movie
+    })

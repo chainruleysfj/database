@@ -77,7 +77,14 @@
                 Length: {{ movie.length }} minutes<br>
                 Release Year: {{ movie.releaseyear }}<br>
                 Production Company: {{ movie.production_company_name }}<br>
-                Directors: {{ movie.directors|default_if_none:"N/A" }}<br>
+                Directors: 
+                {% if movie.directors_list %}
+                    {% for director in movie.directors_list %}
+                        <a href="{% url 'all_directors' %}?search_director={{ director|urlencode }}">{{ director }}</a>{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                {% else %}
+                    N/A
+                {% endif %}<br>
                 <a href="{% url 'movie_detail' movie.movie_id %}">Details</a>
                 <a href="{% url 'update_movie' movie.movie_id %}">Edit</a> <!-- 更新按钮 -->
                 <a href="{% url 'delete_movie' movie.movie_id %}">Delete</a> <!-- 删除按钮 -->

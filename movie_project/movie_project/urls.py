@@ -40,6 +40,7 @@ urlpatterns = [
     path('delete_person/<int:person_id>/', views.delete_person, name='delete_person'), #删除人物
     path('search_persons/', views.search_persons, name='search_persons'), #查询人物
     path('search_person_by_name/', views.search_person_by_name, name='search_person_by_name'), #按姓名查询人物
+    path('all_directors/', views.all_directors, name='all_directors'), #查看导演
 ]
 
 if settings.DEBUG:

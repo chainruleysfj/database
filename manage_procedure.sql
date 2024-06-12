@@ -89,3 +89,25 @@ BEGIN
     WHERE dm.movie_id = p_movie_id;  
 END //  
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS delete_movie_and_directormovie;
+DELIMITER //
+CREATE PROCEDURE delete_movie_and_directormovie(IN p_movie_id INT)
+BEGIN
+	DELETE FROM movie_app_directormovie dm WHERE dm.movie_id = p_movie_id;
+    DELETE FROM movie_app_movie m WHERE m.movie_id = p_movie_id;
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS get_all_directors_and_directmovie;
+DELIMITER //
+CREATE PROCEDURE get_all_directors_and_directmovie()
+BEGIN
+    SELECT p.personID, p.name AS director, 
+           GROUP_CONCAT(CONCAT(m.Movie_ID, ':', m.moviename) SEPARATOR ', ') AS movies
+    FROM movie_app_directormovie dm
+    LEFT JOIN movie_app_movie m ON m.Movie_ID = dm.Movie_ID
+    LEFT JOIN movie_app_person p ON dm.person_ID = p.personID
+    GROUP BY p.personID;
+END //
+DELIMITER ;
