@@ -125,6 +125,9 @@ python manage.py createsuperuser
 在movie_app文件夹中，自行创建一个名为templates的文件夹，用于存储前端代码。前端我写了几个试运行的，后期还要改。
 
 三、启动服务器
+0.执行存储过程
+在数据库直接执行所有类似..._procedure的sql文件
+
 1.本地运行
 确保命令行工作文件夹位于manage.py所在文件夹
 在命令行运行python manage.py runserver即可。
