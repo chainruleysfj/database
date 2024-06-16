@@ -162,3 +162,19 @@ BEGIN
     DELETE FROM movie_app_MovieGenreAssociation WHERE Movie_ID = movie_id AND p_Genre_ID = p_genre_id;
 END //
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS add_movie_genre_association;
+DELIMITER //
+CREATE PROCEDURE add_movie_genre_association(IN p_movie_id INT, IN p_genre_id SMALLINT UNSIGNED)
+BEGIN
+    INSERT INTO MovieGenreAssociation (Movie_ID, Genre_ID) VALUES (p_movie_id, p_genre_id);
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS delete_movie_genre_association;
+DELIMITER //
+CREATE PROCEDURE delete_movie_genre_association(IN p_movie_id INT, IN p_genre_id SMALLINT UNSIGNED)
+BEGIN
+    DELETE FROM MovieGenre_Association WHERE Movie_ID = p_movie_id AND Genre_ID = p_genre_id;
+END //
+DELIMITER ;
