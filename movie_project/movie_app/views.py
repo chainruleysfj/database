@@ -412,7 +412,7 @@ def update_person(request, person_id):
 def delete_person(request, person_id):
     if request.method == 'POST':
         with connection.cursor() as cursor:
-            cursor.callproc('delete_person', [person_id])
+            cursor.callproc('delete_person_and_directormovie', [person_id])
 
         return JsonResponse({'status': 'success'})
     else:

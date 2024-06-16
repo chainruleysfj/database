@@ -111,3 +111,14 @@ BEGIN
     GROUP BY p.personID;
 END //
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS delete_person_and_directormovie;
+DELIMITER //
+CREATE PROCEDURE delete_person_and_directormovie(
+    IN p_person_id INT
+)
+BEGIN
+	DELETE FROM movie_app_directormovie dm WHERE dm.person_ID = p_person_id;
+    DELETE FROM movie_app_person WHERE personID = p_person_id;
+END //
+DELIMITER ;
