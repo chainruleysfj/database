@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.db import connection
 from django.conf import settings
 from django.template.defaultfilters import urlencode
-from .models import Movie, ProductionCompany, Person
+from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation
 from .forms import ProductionCompanyForm,MovieForm,PersonForm
 import json,os,uuid
 
@@ -450,6 +450,7 @@ def search_persons(request):
     return render(request, 'list_persons.html', {'persons': persons_list})
 
 def all_directors(request):
+
     search_director = request.GET.get('search_director', '')
     search_movie = request.GET.get('search_movie', '')
     with connection.cursor() as cursor:
@@ -493,3 +494,29 @@ def all_directors(request):
         'search_director': search_director,
         'search_movie': search_movie
     })
+
+def manage_genres(request):
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        genre_name = request.POST.get('genre_name', '')
+        genre_id = request.POST.get('genre_id', None)
+        
+        if action == 'add' and genre_name:
+            with connection.cursor() as cursor:
+                cursor.callproc('add_movie_genre', [genre_name])
+        
+        elif action == 'delete' and genre_id:
+            with connection.cursor() as cursor:
+                cursor.callproc('delete_movie_genre', [genre_id])
+
+        return redirect('manage_genres')
+
+    with connection.cursor() as cursor:
+        cursor.callproc('select_all_genre')
+        genres = cursor.fetchall()
+    
+    return render(request, 'manage_genres.html', {'genres': genres})
+
+
+
+

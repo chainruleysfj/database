@@ -122,3 +122,43 @@ BEGIN
     DELETE FROM movie_app_person WHERE personID = p_person_id;
 END //
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS select_all_genre;
+DELIMITER //
+CREATE PROCEDURE select_all_genre()
+BEGIN
+    SELECT * FROM movie_app_MovieGenre;
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS add_movie_genre;
+DELIMITER //
+CREATE PROCEDURE add_movie_genre(IN p_genre_name VARCHAR(10))
+BEGIN
+    INSERT INTO movie_app_MovieGenre (genre_name) VALUES (p_genre_name);
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS delete_movie_genre;
+DELIMITER //
+CREATE PROCEDURE delete_movie_genre(IN p_genre_id SMALLINT UNSIGNED)
+BEGIN
+    DELETE FROM movie_app_MovieGenre WHERE genre_id = p_genre_id;
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS add_movie_genre_association;
+DELIMITER //
+CREATE PROCEDURE add_movie_genre_association(IN p_movie_id INT, IN p_genre_id SMALLINT UNSIGNED)
+BEGIN
+    INSERT INTO movie_app_MovieGenreAssociation (Movie_ID, Genre_ID) VALUES (p_movie_id, p_genre_id);
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS delete_movie_genre_association;
+DELIMITER //
+CREATE PROCEDURE delete_movie_genre_association(IN p_movie_id INT, IN p_genre_id SMALLINT UNSIGNED)
+BEGIN
+    DELETE FROM movie_app_MovieGenreAssociation WHERE Movie_ID = movie_id AND p_Genre_ID = p_genre_id;
+END //
+DELIMITER ;

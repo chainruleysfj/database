@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Genres</title>
+</head>
+<body>
+    <h1>Manage Genres</h1>
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" name="genre_name" placeholder="New Genre Name">
+        <button type="submit" name="action" value="add">Add Genre</button>
+    </form>
+    <ul>
+        {% for genre in genres %}
+            <li>
+                {{ genre.1 }} <!-- genre_name -->
+                <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="genre_id" value="{{ genre.0 }}"> <!-- genre_id -->
+                    <button type="submit" name="action" value="delete">Delete</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

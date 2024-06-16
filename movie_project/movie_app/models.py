@@ -54,3 +54,17 @@ class DirectorMovie(models.Model):
 
     class Meta:
         unique_together = ('movie_id', 'person_id')  # 确保电影和导演的组合是唯一的
+
+class MovieGenre(models.Model):
+    genre_id = models.AutoField(primary_key=True)  # 对应 GenreID
+    genre_name = models.CharField(max_length=10, unique=True)  # 对应 GenreName
+
+    def __str__(self):
+        return self.genre_name
+    
+class MovieGenreAssociation(models.Model):
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    genre = models.ForeignKey(MovieGenre, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('movie', 'genre')
