@@ -130,3 +130,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # 存储电影视频
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# #用户登录自定义
+# AUTHENTICATION_BACKENDS = [
+#     'movie_app.backends.CustomUserBackend',  # 替换为实际的路径
+#     'django.contrib.auth.backends.ModelBackend',  # 默认的认证后端保留
+# ]

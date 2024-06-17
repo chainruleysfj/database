@@ -21,7 +21,7 @@ from django.conf.urls.static import static
 from movie_app import views
 
 urlpatterns = [
-    path('', views.home, name='home'),  # 添加一个根路径的视图处理器
+    path('home/', views.home, name='home'),  # 添加一个根路径的视图处理器
     path('admin/', admin.site.urls),  #管理员
     path('add_production_company/', views.add_production_company, name='add_production_company'), #添加电影公司
     path('production_companies/', views.list_production_companies, name='list_production_companies'), #公司一览
@@ -42,6 +42,8 @@ urlpatterns = [
     path('search_person_by_name/', views.search_person_by_name, name='search_person_by_name'), #按姓名查询人物
     path('all_directors/', views.all_directors, name='all_directors'), #查看导演
     path('manage_genres/', views.manage_genres, name='manage_genres'), #管理电影类型
+    path('register/', views.register_view, name='register'), #用户注册
+    path('', views.login_view, name='login'), #用户登录
 ]
 
 if settings.DEBUG:

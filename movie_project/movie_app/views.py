@@ -8,9 +8,14 @@ from django.urls import reverse
 from django.db import connection,transaction
 from django.conf import settings
 from django.template.defaultfilters import urlencode
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password,check_password
+from django.contrib.auth import authenticate, login
+from django.contrib.auth import get_user_model
+from django.contrib.auth.backends import ModelBackend
+from django.contrib import messages
+from django.contrib.auth.models import User
 from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation,Users
-from .forms import ProductionCompanyForm,MovieForm,PersonForm
+from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm
 import json,os,uuid
 
 
@@ -596,6 +601,37 @@ def manage_genres(request):
     
     return render(request, 'manage_genres.html', {'genres': genres})
 
+@csrf_exempt
+def register_view(request):
+    if request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            try:
+                user = User.objects.create_user(username=username, password=password)
+                user.save()
+                messages.success(request, 'Registration successful.')
+                return redirect('login')
+            except Exception as e:
+                messages.error(request, f'Error: {str(e)}')
+    else:
+        form = RegisterForm()
 
+    return render(request, 'register.html', {'form': form})
+
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            return redirect('home')
+        else:
+            messages.error(request, 'Invalid username or password.')
+
+    return render(request, 'login.html')
 
 
