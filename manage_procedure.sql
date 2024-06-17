@@ -143,6 +143,7 @@ DROP PROCEDURE IF EXISTS delete_movie_genre;
 DELIMITER //
 CREATE PROCEDURE delete_movie_genre(IN p_genre_id SMALLINT UNSIGNED)
 BEGIN
+	DELETE FROM movie_app_MovieGenreAssociation WHERE Genre_ID = p_genre_id;
     DELETE FROM movie_app_MovieGenre WHERE genre_id = p_genre_id;
 END //
 DELIMITER ;
@@ -159,7 +160,7 @@ DROP PROCEDURE IF EXISTS delete_movie_genre_association;
 DELIMITER //
 CREATE PROCEDURE delete_movie_genre_association(IN p_movie_id INT, IN p_genre_id SMALLINT UNSIGNED)
 BEGIN
-    DELETE FROM movie_app_MovieGenreAssociation WHERE Movie_ID = movie_id AND p_Genre_ID = p_genre_id;
+    DELETE FROM movie_app_MovieGenreAssociation WHERE Movie_ID = p_movie_id AND Genre_ID = p_genre_id;
 END //
 DELIMITER ;
 
@@ -167,7 +168,7 @@ DROP PROCEDURE IF EXISTS add_movie_genre_association;
 DELIMITER //
 CREATE PROCEDURE add_movie_genre_association(IN p_movie_id INT, IN p_genre_id SMALLINT UNSIGNED)
 BEGIN
-    INSERT INTO MovieGenreAssociation (Movie_ID, Genre_ID) VALUES (p_movie_id, p_genre_id);
+    INSERT INTO movie_app_MovieGenreAssociation (Movie_ID, Genre_ID) VALUES (p_movie_id, p_genre_id);
 END //
 DELIMITER ;
 
@@ -175,6 +176,36 @@ DROP PROCEDURE IF EXISTS delete_movie_genre_association;
 DELIMITER //
 CREATE PROCEDURE delete_movie_genre_association(IN p_movie_id INT, IN p_genre_id SMALLINT UNSIGNED)
 BEGIN
-    DELETE FROM MovieGenre_Association WHERE Movie_ID = p_movie_id AND Genre_ID = p_genre_id;
+    DELETE FROM movie_app_MovieGenreAssociation WHERE Movie_ID = p_movie_id AND Genre_ID = p_genre_id;
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS get_movie_genre_association;
+DELIMITER //
+CREATE PROCEDURE get_movie_genre_association(IN p_movie_id INT)
+BEGIN
+    SELECT genre_id FROM movie_app_MovieGenreAssociation WHERE Movie_ID = p_movie_id ;
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS delete_movie_and_directormovie_and_genre;
+DELIMITER //
+CREATE PROCEDURE delete_movie_and_directormovie_and_genre(IN p_movie_id INT)
+BEGIN
+	DELETE FROM movie_app_MovieGenreAssociation mga WHERE mga.movie_id = p_movie_id;
+	DELETE FROM movie_app_directormovie dm WHERE dm.movie_id = p_movie_id;
+    DELETE FROM movie_app_movie m WHERE m.movie_id = p_movie_id;
+END //
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS get_movie_genre_association_with_name;
+DELIMITER //
+CREATE PROCEDURE get_movie_genre_association_with_name(IN p_movie_id INT)
+BEGIN
+    SELECT mg.genre_id , mg.genre_name 
+    FROM movie_app_MovieGenreAssociation mga
+    JOIN movie_app_moviegenre mg
+    ON mga.genre_id = mg.genre_id
+    WHERE mga.movie_ID = p_movie_id ;
 END //
 DELIMITER ;

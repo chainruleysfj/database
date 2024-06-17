@@ -109,6 +109,14 @@
             {{ form.video_file.errors }}
         </div>
         
+        <h2>Genres</h2>
+        {% for genre in genres %}
+            <label>
+                <input type="checkbox" name="genres" value="{{ genre.0 }}">
+                {{ genre.1 }}
+            </label><br>
+        {% endfor %}
+
         <div>
             <h3>Selected Directors:</h3>
             <div id="selected-directors">

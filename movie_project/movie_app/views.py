@@ -126,12 +126,22 @@ def add_movie(request):
                 with connection.cursor() as cursor:
                     for director_id in director_ids_list:
                         cursor.callproc('add_director_movie', [movie_id, int(director_id)])
+            # 添加类型关联
+            genre_ids = request.POST.getlist('genres')
+            for genre_id in genre_ids:
+                with connection.cursor() as cursor:
+                    cursor.callproc('add_movie_genre_association', [movie_id, genre_id])
 
             return redirect('list_movies')
         print("电影表单有误")
     else:
         form = MovieForm(is_update=False)
-    return render(request, 'add_movie.html', {'form': form})
+
+    # 获取所有电影类型
+    with connection.cursor() as cursor:
+        cursor.callproc('select_all_genre')
+        genres = cursor.fetchall()
+    return render(request, 'add_movie.html', {'form': form, 'genres': genres})
 
 def search_person_by_name(request):
     query = request.GET.get('query', '')
@@ -260,6 +270,13 @@ def list_movies(request):
     for movie in movies:
         # 对导演名进行预处理，将其拆分为列表
         directors_list = movie[7].split(',') if movie[7] else []
+
+        # 获取该电影的类型
+        with connection.cursor() as cursor:
+            cursor.callproc('get_movie_genre_association_with_name', [movie[0]])
+            movie_genres = cursor.fetchall()
+            genre_names = [genre[1] for genre in movie_genres]
+
         movies_list.append({
             'movie_id': movie[0],
             'moviename': movie[1],
@@ -268,8 +285,10 @@ def list_movies(request):
             'plot_summary': movie[4],
             'resource_link': movie[5],
             'production_company_name': movie[6],
-            'directors_list': directors_list  # 添加预处理后的导演名列表
+            'directors_list': directors_list,  # 添加预处理后的导演名列表
+            'genres':genre_names
         })
+        
 
     return render(request, 'list_movies.html', {'movies': movies_list, 'production_companies': production_companies_list})
 
@@ -320,6 +339,21 @@ def update_movie(request, movie_id):
                 cursor.callproc('delete_directors_for_movie', [movie_id])
                 for director_id in director_ids_list:
                     cursor.callproc('add_director_movie', [movie_id, int(director_id)])
+        # 更新类型关联
+        genre_ids = request.POST.getlist('genres')
+        # 获取所有电影类型
+        with connection.cursor() as cursor:
+            cursor.callproc('select_all_genre')
+            genres = cursor.fetchall()
+        with connection.cursor() as cursor:
+            cursor.callproc('get_movie_genre_association', [movie_id])
+            movie_genres = cursor.fetchall()
+            movie_genres_ids = [genre[0] for genre in movie_genres]
+        with connection.cursor() as cursor:
+            for genre_id in movie_genres_ids:
+                cursor.callproc('delete_movie_genre_association', [movie_id, genre_id])  # 删除所有现有关联
+            for genre_id in genre_ids:
+                cursor.callproc('add_movie_genre_association', [movie_id, genre_id])
         return redirect('list_movies')
     else:
         # 如果是 GET 请求，创建一个新的表单实例，并传入电影对象数据
@@ -335,10 +369,20 @@ def update_movie(request, movie_id):
             selected_directors = [row[0] for row in rows]  # 假设每行只有一个值，即导演ID  
             
         selected_directors_json = json.dumps(selected_directors)
-        print(selected_directors_json)
+        # 获取所有电影类型
+        with connection.cursor() as cursor:
+            cursor.callproc('select_all_genre')
+            genres = cursor.fetchall()
+        with connection.cursor() as cursor:
+            cursor.callproc('get_movie_genre_association', [movie_id])
+            movie_genres = cursor.fetchall()
+            movie_genres_ids = [genre[0] for genre in movie_genres]
+
         return render(request, 'update_movie.html', {  
             'form': form,  
             'selected_directors_json': selected_directors_json,  
+            'genres': genres, 
+            'movie_genres_ids': movie_genres_ids
         })
         
     
@@ -359,7 +403,7 @@ def delete_movie(request, movie_id):
         delete_video_file(movie.resource_link)
         # 调用存储过程删除电影
         with connection.cursor() as cursor:
-            cursor.callproc('delete_movie_and_directormovie', [movie_id])
+            cursor.callproc('delete_movie_and_directormovie_and_genre', [movie_id])
         return redirect('list_movies')
     return render(request, 'delete_movie_confirmation.html', {'movie': movie})
 
