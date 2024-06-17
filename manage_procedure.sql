@@ -209,3 +209,32 @@ BEGIN
     WHERE mga.movie_ID = p_movie_id ;
 END //
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS search_movies_with_directors_and_companies_and_genres;
+DELIMITER //
+CREATE PROCEDURE search_movies_with_directors_and_companies_and_genres(
+    IN p_keyword VARCHAR(255),
+    IN p_min_length INT,
+    IN p_max_length INT,
+    IN p_min_releaseyear INT,
+    IN p_max_releaseyear INT,
+    IN p_production_company_id INT,
+    IN p_genre_id SMALLINT UNSIGNED
+)
+BEGIN
+    SELECT m.Movie_ID, m.moviename, m.length, m.releaseyear, m.plot_summary, m.resource_link, pc.name AS production_company_name, 
+           GROUP_CONCAT(DISTINCT p.name ORDER BY p.name SEPARATOR ', ') AS directors
+    FROM movie_app_movie m
+    LEFT JOIN movie_app_directormovie dm ON m.Movie_ID = dm.Movie_ID
+    LEFT JOIN movie_app_person p ON dm.person_ID = p.personID
+    LEFT JOIN movie_app_productioncompany pc ON m.production_company_id = pc.company_id
+    LEFT JOIN movie_app_MovieGenreAssociation mga ON m.Movie_ID = mga.Movie_ID
+    LEFT JOIN movie_app_MovieGenre mg ON mga.genre_id = mg.genre_id
+    WHERE (p_keyword IS NULL OR m.moviename LIKE CONCAT('%', p_keyword, '%'))
+      AND m.length BETWEEN p_min_length AND p_max_length
+      AND m.releaseyear BETWEEN p_min_releaseyear AND p_max_releaseyear
+      AND (p_production_company_id IS NULL OR m.production_company_id = p_production_company_id)
+      AND (p_genre_id IS NULL OR mg.genre_id = p_genre_id)
+    GROUP BY m.Movie_ID, m.moviename, m.length, m.releaseyear, m.plot_summary, m.resource_link, pc.name;
+END //
+DELIMITER ;

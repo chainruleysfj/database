@@ -69,6 +69,16 @@
             </select>
         </div>
         
+        <div>
+            <label for="genre">Genre:</label>
+            <select id="genre" name="genre">
+                <option value="">-- Select Genre --</option>
+                {% for genre in genres %}
+                    <option value="{{ genre.genre_id }}">{{ genre.genre_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
         <button type="submit">Search</button>
     <ul>
         {% for movie in movies %}

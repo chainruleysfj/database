@@ -235,6 +235,15 @@ def list_movies(request):
         for company in production_companies
     ]
 
+    # 获取所有电影类型以供搜索表单使用
+    with connection.cursor() as cursor:
+        cursor.callproc('select_all_genre')
+        genres = cursor.fetchall()
+    genres_list = [
+        {'genre_id': genre[0], 'genre_name': genre[1]}
+        for genre in genres
+    ]
+
     # 如果有搜索请求，处理搜索
     if request.method == 'GET' and (
         'keyword' in request.GET or
@@ -242,7 +251,8 @@ def list_movies(request):
         'max_length' in request.GET or
         'min_releaseyear' in request.GET or
         'max_releaseyear' in request.GET or
-        'production_company' in request.GET
+        'production_company' in request.GET or
+        'genre' in request.GET
     ):
         keyword = request.GET.get('keyword', '')
         min_length = get_int_or_default(request.GET.get('min_length'), 0)
@@ -250,15 +260,18 @@ def list_movies(request):
         min_releaseyear = get_int_or_default(request.GET.get('min_releaseyear'), 0)
         max_releaseyear = get_int_or_default(request.GET.get('max_releaseyear'), 9999)
         production_company_id = get_int_or_default(request.GET.get('production_company'), None)
+        genre_id = get_int_or_default(request.GET.get('genre'), None)
+
 
         with connection.cursor() as cursor:
-            cursor.callproc('search_movies_with_directors_and_companies', [
+            cursor.callproc('search_movies_with_directors_and_companies_and_genres', [
                 keyword, 
                 min_length, 
                 max_length, 
                 min_releaseyear, 
                 max_releaseyear, 
-                production_company_id
+                production_company_id,
+                genre_id
             ])
             movies = cursor.fetchall()
     else:
@@ -290,7 +303,10 @@ def list_movies(request):
         })
         
 
-    return render(request, 'list_movies.html', {'movies': movies_list, 'production_companies': production_companies_list})
+    return render(request, 'list_movies.html', {
+        'movies': movies_list, 
+        'production_companies': production_companies_list,
+        'genres': genres_list})
 
 
 def movie_detail(request, movie_id):
