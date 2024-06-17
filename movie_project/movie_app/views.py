@@ -5,10 +5,11 @@ from django.http import JsonResponse,HttpResponse,HttpResponseRedirect,Http404
 from django.views.decorators.csrf import csrf_exempt
 from django import forms
 from django.urls import reverse
-from django.db import connection
+from django.db import connection,transaction
 from django.conf import settings
 from django.template.defaultfilters import urlencode
-from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation
+from django.contrib.auth.hashers import make_password
+from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation,Users
 from .forms import ProductionCompanyForm,MovieForm,PersonForm
 import json,os,uuid
 
@@ -17,6 +18,7 @@ def home(request):
     return render(request, 'home.html')  # 创建一个名为 home.html 的模板文件，并返回给客户端
 
 @csrf_exempt
+@transaction.atomic
 def add_production_company(request):
     if request.method == 'POST':
         form = ProductionCompanyForm(request.POST)
@@ -32,6 +34,7 @@ def add_production_company(request):
         form = ProductionCompanyForm()
     return render(request, 'add_production_company.html', {'form': form})
 
+@transaction.atomic
 def list_production_companies(request):
     companies = []
     with connection.cursor() as cursor:
@@ -45,6 +48,7 @@ def list_production_companies(request):
             })
     return render(request, 'list_production_companies.html', {'companies': companies})
 
+@transaction.atomic
 def update_production_company(request, company_id):
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -69,7 +73,7 @@ def update_production_company(request, company_id):
         'company_description': company[3],
     })
 
-
+@transaction.atomic
 def delete_production_company(request, company_id):
     if request.method == 'POST':
         with connection.cursor() as cursor:
@@ -77,7 +81,8 @@ def delete_production_company(request, company_id):
         return redirect('list_production_companies')
     else:
         return render(request, 'confirm_delete_production_company.html', {'company_id': company_id})
-    
+
+@transaction.atomic
 def search_production_companies(request):
     name = request.GET.get('name', '')
     city = request.GET.get('city', '')
@@ -97,6 +102,7 @@ def search_production_companies(request):
 
     return render(request, 'list_production_companies.html', {'companies': company_list})
 
+@transaction.atomic
 def add_movie(request):
     if request.method == 'POST':
         form = MovieForm(request.POST, request.FILES,is_update=False)
@@ -143,6 +149,7 @@ def add_movie(request):
         genres = cursor.fetchall()
     return render(request, 'add_movie.html', {'form': form, 'genres': genres})
 
+@transaction.atomic
 def search_person_by_name(request):
     query = request.GET.get('query', '')
     with connection.cursor() as cursor:
@@ -151,6 +158,7 @@ def search_person_by_name(request):
     directors = [{'person_id': result[0], 'name': result[1]} for result in results]
     return JsonResponse(directors, safe=False)
 
+@transaction.atomic
 def save_video_file(video_file):
     unique_filename = str(uuid.uuid4()) + '.mp4'
     file_path = os.path.join(settings.MEDIA_ROOT, 'videos', unique_filename)
@@ -159,13 +167,14 @@ def save_video_file(video_file):
             destination.write(chunk)
     return os.path.join(settings.MEDIA_URL, 'videos', unique_filename)
 
+@transaction.atomic
 def get_int_or_default(value, default):
     try:
         return int(value)
     except (ValueError, TypeError):
         return default
     
-
+@transaction.atomic
 def list_movies_v1(request):
 
 #     # 不显示导演的list_movies
@@ -225,6 +234,7 @@ def list_movies_v1(request):
 #     return render(request, 'list_movies.html', {'movies': movies_list, 'production_companies': production_companies_list})
     return 0
 
+@transaction.atomic
 def list_movies(request):
     # 获取所有出品公司以供搜索表单使用
     with connection.cursor() as cursor:
@@ -308,7 +318,7 @@ def list_movies(request):
         'production_companies': production_companies_list,
         'genres': genres_list})
 
-
+@transaction.atomic
 def movie_detail(request, movie_id):
     with connection.cursor() as cursor:
         cursor.callproc('get_movie_detail', [movie_id])
@@ -326,6 +336,7 @@ def movie_detail(request, movie_id):
 
     return render(request, 'movie_detail.html', {'movie': movie})
 
+@transaction.atomic
 def update_movie(request, movie_id):
     # 获取电影对象
     movie = Movie.objects.get(pk=movie_id)
@@ -401,7 +412,7 @@ def update_movie(request, movie_id):
             'movie_genres_ids': movie_genres_ids
         })
         
-    
+@transaction.atomic   
 def delete_video_file(file_path):
     # 从文件路径中提取文件名
     filename = os.path.basename(file_path)
@@ -411,6 +422,7 @@ def delete_video_file(file_path):
     if os.path.exists(file_path):
         os.remove(file_path)
 
+@transaction.atomic
 def delete_movie(request, movie_id):
     # 获取电影对象
     movie = Movie.objects.get(pk=movie_id)
@@ -423,6 +435,7 @@ def delete_movie(request, movie_id):
         return redirect('list_movies')
     return render(request, 'delete_movie_confirmation.html', {'movie': movie})
 
+@transaction.atomic
 def add_person(request):
     if request.method == 'POST':
         form = PersonForm(request.POST)
@@ -438,6 +451,7 @@ def add_person(request):
         form = PersonForm()
     return render(request, 'add_person.html', {'form': form})
 
+@transaction.atomic
 def list_persons(request):
     with connection.cursor() as cursor:
         cursor.callproc('get_all_persons')
@@ -454,6 +468,7 @@ def list_persons(request):
     return render(request, 'list_persons.html', {'persons': persons_list})
 
 @csrf_exempt
+@transaction.atomic
 def update_person(request, person_id):
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -469,6 +484,7 @@ def update_person(request, person_id):
         return JsonResponse({'error': 'Invalid request method'})
     
 @csrf_exempt
+@transaction.atomic
 def delete_person(request, person_id):
     if request.method == 'POST':
         with connection.cursor() as cursor:
@@ -478,6 +494,7 @@ def delete_person(request, person_id):
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=405)
     
+@transaction.atomic
 def search_persons(request):
     name = request.GET.get('name', '')
     start_birth_date = request.GET.get('start_birth_date', None)
@@ -509,6 +526,7 @@ def search_persons(request):
         person['marital_status'] = marital_status_map.get(person['marital_status'], 'Unknown')
     return render(request, 'list_persons.html', {'persons': persons_list})
 
+@transaction.atomic
 def all_directors(request):
 
     search_director = request.GET.get('search_director', '')
@@ -555,6 +573,7 @@ def all_directors(request):
         'search_movie': search_movie
     })
 
+@transaction.atomic
 def manage_genres(request):
     if request.method == 'POST':
         action = request.POST.get('action')

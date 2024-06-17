@@ -68,3 +68,11 @@ class MovieGenreAssociation(models.Model):
 
     class Meta:
         unique_together = ('movie', 'genre')
+
+class Users(models.Model):
+    UserID = models.AutoField(primary_key=True)
+    Username = models.CharField(max_length=50, unique=True)
+    UserPassword = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.Username
