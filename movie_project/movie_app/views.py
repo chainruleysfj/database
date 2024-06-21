@@ -20,12 +20,29 @@ from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm
 from functools import wraps
 import json,os,uuid
 
+
+
+def is_admin(user):
+    return user.is_authenticated and user.is_staff
+
+def admin_required(function):
+    @wraps(function)
+    def wrap(request, *args, **kwargs):
+        if request.user.is_staff:
+
+            return function(request, *args, **kwargs)
+        else:
+            messages.error(request, "缺少权限")
+         
+            return redirect(request.META.get('HTTP_REFERER', '/'))  # 重定向到来源页面
+    return wrap
+
 @login_required
 def home(request):
     return render(request, 'home.html')  # 创建一个名为 home.html 的模板文件，并返回给客户端
 
-
 @login_required
+@admin_required
 @csrf_exempt
 @transaction.atomic
 def add_production_company(request):
@@ -46,6 +63,7 @@ def add_production_company(request):
 @login_required
 @transaction.atomic
 def list_production_companies(request):
+  
     companies = []
     with connection.cursor() as cursor:
         cursor.callproc('get_all_production_companies')
@@ -59,6 +77,7 @@ def list_production_companies(request):
     return render(request, 'list_production_companies.html', {'companies': companies})
 
 @login_required
+@admin_required
 @transaction.atomic
 def update_production_company(request, company_id):
     if request.method == 'POST':
@@ -85,13 +104,17 @@ def update_production_company(request, company_id):
     })
 
 @login_required
+@admin_required
 @transaction.atomic
 def delete_production_company(request, company_id):
+
     if request.method == 'POST':
+
         with connection.cursor() as cursor:
             cursor.callproc('delete_production_company', [company_id])
         return redirect('list_production_companies')
     else:
+
         return render(request, 'confirm_delete_production_company.html', {'company_id': company_id})
 
 @login_required
@@ -116,6 +139,7 @@ def search_production_companies(request):
     return render(request, 'list_production_companies.html', {'companies': company_list})
 
 @login_required
+@admin_required
 @transaction.atomic
 def add_movie(request):
     if request.method == 'POST':
@@ -357,6 +381,7 @@ def movie_detail(request, movie_id):
     return render(request, 'movie_detail.html', {'movie': movie})
 
 @login_required
+@admin_required
 @transaction.atomic
 def update_movie(request, movie_id):
     # 获取电影对象
@@ -445,6 +470,7 @@ def delete_video_file(file_path):
         os.remove(file_path)
 
 @login_required
+@admin_required
 @transaction.atomic
 def delete_movie(request, movie_id):
     # 获取电影对象
@@ -459,6 +485,7 @@ def delete_movie(request, movie_id):
     return render(request, 'delete_movie_confirmation.html', {'movie': movie})
 
 @login_required
+@admin_required
 @transaction.atomic
 def add_person(request):
     if request.method == 'POST':
@@ -493,6 +520,7 @@ def list_persons(request):
     return render(request, 'list_persons.html', {'persons': persons_list})
 
 @login_required
+@admin_required
 @csrf_exempt
 @transaction.atomic
 def update_person(request, person_id):
@@ -510,6 +538,7 @@ def update_person(request, person_id):
         return JsonResponse({'error': 'Invalid request method'})
 
 @login_required    
+@admin_required
 @csrf_exempt
 @transaction.atomic
 def delete_person(request, person_id):
@@ -603,6 +632,7 @@ def all_directors(request):
     })
 
 @login_required
+@admin_required
 @transaction.atomic
 def manage_genres(request):
     if request.method == 'POST':
@@ -665,12 +695,3 @@ def logout_view(request):
     return redirect('login')
 
 
-def admin_required(function):
-    @wraps(function)
-    def wrap(request, *args, **kwargs):
-        if request.user.is_staff:
-            return function(request, *args, **kwargs)
-        else:
-            messages.error(request, "缺少权限")
-            return redirect(request.META.get('HTTP_REFERER', '/'))  # 重定向到来源页面
-    return wrap
