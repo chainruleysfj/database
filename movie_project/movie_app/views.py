@@ -37,6 +37,18 @@ def admin_required(function):
             return redirect(request.META.get('HTTP_REFERER', '/'))  # 重定向到来源页面
     return wrap
 
+def super_required(function):
+    @wraps(function)
+    def wrap(request, *args, **kwargs):
+        if request.user.is_superuser:
+
+            return function(request, *args, **kwargs)
+        else:
+            messages.error(request, "缺少权限")
+         
+            return redirect(request.META.get('HTTP_REFERER', '/'))  # 重定向到来源页面
+    return wrap
+
 @login_required
 def home(request):
     return render(request, 'home.html')  # 创建一个名为 home.html 的模板文件，并返回给客户端
@@ -695,20 +707,33 @@ def logout_view(request):
     return redirect('login')
 
 @login_required
-@admin_required
+@super_required
 def manage_admins(request):
-    user = User.objects.all()
+    users = User.objects.all()
+
+    # 处理搜索功能
+    name_query = request.GET.get('name')
+    if name_query:
+        users = users.filter(username__icontains=name_query)
+
     context = {
-        'users': user
+        'users': users
     }
     return render(request, 'manage_admins.html', context)
 
 @login_required
-@admin_required
+@super_required
 def add_admin(request, user_id):
     user = User.objects.get(id=user_id)
     user.is_staff = True
     user.save()
     return redirect('manage_admins')
 
-
+@login_required
+@super_required
+def toggle_staff_status(request, user_id):
+    if request.method == 'POST':
+        user = User.objects.get(id=user_id)
+        user.is_staff = not user.is_staff  # 切换 staff 状态
+        user.save()
+    return redirect('manage_admins')

@@ -136,3 +136,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 #     'movie_app.backends.CustomUserBackend',  # 替换为实际的路径
 #     'django.contrib.auth.backends.ModelBackend',  # 默认的认证后端保留
 # ]
+
+LOGIN_URL = 'login'  # 设置登录 URL
+LOGIN_REDIRECT_URL = 'home'  # 登录后重定向到的 URL
