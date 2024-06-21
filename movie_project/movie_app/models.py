@@ -62,3 +62,25 @@ class Comment(models.Model):
     comment_time = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return f'Comment by {self.user.username} on {self.movie.title}'
+
+class MovieGenre(models.Model):
+    genre_id = models.AutoField(primary_key=True)  # 对应 GenreID
+    genre_name = models.CharField(max_length=10, unique=True)  # 对应 GenreName
+
+    def __str__(self):
+        return self.genre_name
+    
+class MovieGenreAssociation(models.Model):
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    genre = models.ForeignKey(MovieGenre, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('movie', 'genre')
+
+class Users(models.Model):
+    UserID = models.AutoField(primary_key=True)
+    Username = models.CharField(max_length=50, unique=True)
+    UserPassword = models.CharField(max_length=150) #注意使用hash值，不能只有50
+
+    def __str__(self):
+        return self.Username

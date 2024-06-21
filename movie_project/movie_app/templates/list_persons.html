@@ -12,7 +12,13 @@
 </head>
 <body>
     <h1>List of Persons</h1>
-
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
     <form method="get" action="{% url 'search_persons' %}">
         <label for="name">Name:</label>
         <input type="text" id="name" name="name">
