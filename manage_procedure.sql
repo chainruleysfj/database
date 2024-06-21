@@ -232,7 +232,7 @@ BEGIN
     LEFT JOIN movie_app_MovieGenre mg ON mga.genre_id = mg.genre_id
     WHERE (p_keyword IS NULL OR m.moviename LIKE CONCAT('%', p_keyword, '%'))
       AND m.length BETWEEN p_min_length AND p_max_length
-      AND m.releaseyear BETWEEN p_min_releaseyear AND p_max_releaseyear
+      AND (m.releaseyear BETWEEN p_min_releaseyear AND p_max_releaseyear or m.releaseyear is null)
       AND (p_production_company_id IS NULL OR m.production_company_id = p_production_company_id)
       AND (p_genre_id IS NULL OR mg.genre_id = p_genre_id)
     GROUP BY m.Movie_ID, m.moviename, m.length, m.releaseyear, m.plot_summary, m.resource_link, pc.name;

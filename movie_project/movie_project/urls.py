@@ -44,6 +44,7 @@ urlpatterns = [
     path('manage_genres/', views.manage_genres, name='manage_genres'), #管理电影类型
     path('register/', views.register_view, name='register'), #用户注册
     path('', views.login_view, name='login'), #用户登录
+    path('logout/', views.logout_view, name='logout'), #用户登出
 ]
 
 if settings.DEBUG:
