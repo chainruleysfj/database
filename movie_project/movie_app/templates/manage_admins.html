@@ -1,0 +1,27 @@
+<!-- manage_admins.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Admins</title>
+</head>
+<body>
+    <h1>Manage Admins</h1>
+    <ul>
+        {% for user in users %}
+            <li>
+                {{ user.username }}
+                {% if not user.is_admin %}
+                    <form method="post" action="{% url 'add_admin' user.id %}">
+                        {% csrf_token %}
+                        <button type="submit">Make Admin</button>
+                    </form>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+    <p><a href="{% url 'home' %}">Home</a></p>
+</body>
+</html>

@@ -45,6 +45,8 @@ urlpatterns = [
     path('register/', views.register_view, name='register'), #用户注册
     path('', views.login_view, name='login'), #用户登录
     path('logout/', views.logout_view, name='logout'), #用户登出
+    path('manage_admins/', views.manage_admins, name='manage_admins'), #管理用户
+    path('add_admin/<int:user_id>/', views.add_admin, name='add_admin'), #添加管理员
 ]
 
 if settings.DEBUG:

@@ -694,4 +694,21 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
+@login_required
+@admin_required
+def manage_admins(request):
+    user = User.objects.all()
+    context = {
+        'users': user
+    }
+    return render(request, 'manage_admins.html', context)
+
+@login_required
+@admin_required
+def add_admin(request, user_id):
+    user = User.objects.get(id=user_id)
+    user.is_staff = True
+    user.save()
+    return redirect('manage_admins')
+
 
