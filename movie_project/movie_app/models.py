@@ -54,3 +54,11 @@ class DirectorMovie(models.Model):
 
     class Meta:
         unique_together = ('movie_id', 'person_id')  # 确保电影和导演的组合是唯一的
+class Comment(models.Model):
+    comment_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    content = models.TextField()
+    comment_time = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f'Comment by {self.user.username} on {self.movie.title}'
