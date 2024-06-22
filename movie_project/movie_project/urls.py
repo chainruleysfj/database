@@ -54,6 +54,7 @@ urlpatterns = [
     path('admin_delete_user/<int:user_id>/', views.admin_delete_user, name='admin_delete_user'), #管理员删除他人账户
     path('change-password/', views.change_password, name='change_password'), #更改密码
     path('set-security-question/', views.set_security_question, name='set_security_question'), #添加安全问题
+    path('reset-password/', views.reset_password, name='reset_password'), #重置密码
 ]
 
 if settings.DEBUG:

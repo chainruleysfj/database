@@ -69,3 +69,6 @@ class SecurityQAForm(forms.ModelForm):
 class PasswordResetForm(forms.Form):
     new_password = forms.CharField(label='New Password', widget=forms.PasswordInput)
     security_answer = forms.CharField(label='Security Answer')
+
+class UsernameForm(forms.Form):
+    username = forms.CharField(max_length=150, label="Username")

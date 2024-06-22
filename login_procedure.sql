@@ -111,3 +111,71 @@ BEGIN
 END$$
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS reset_password_proc;
+DELIMITER $$
+CREATE PROCEDURE reset_password_proc(
+    IN p_username VARCHAR(150),
+    IN p_security_answer VARCHAR(255),
+    IN p_new_password VARCHAR(255),
+    OUT p_success TINYINT(1),
+    OUT p_message VARCHAR(255)
+)
+BEGIN
+    DECLARE user_id INT;
+    DECLARE answer_correct TINYINT(1);
+    
+    -- Check if the user exists
+    SELECT id INTO user_id FROM auth_user WHERE username = p_username;
+    IF user_id IS NULL THEN
+        SET p_success = 0;
+        SET p_message = 'User does not exist.';
+    ELSE
+        -- Check if the provided security answer matches the stored answer
+        SELECT CASE WHEN LOWER(security_answer) = LOWER(p_security_answer) THEN 1 ELSE 0 END INTO answer_correct
+        FROM movie_app_securityqa
+        WHERE user_id = user_id;
+
+        IF answer_correct = 1 THEN
+            -- Update the user's password
+            UPDATE auth_user SET password = p_new_password WHERE id = user_id;
+            SET p_success = 1;
+            SET p_message = 'Password reset successfully.';
+        ELSE
+            SET p_success = 0;
+            SET p_message = 'Incorrect security answer.';
+        END IF;
+    END IF;
+    SELECT p_success AS success, p_message AS message;
+END$$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS get_security_question_proc;
+DELIMITER $$
+CREATE PROCEDURE get_security_question_proc(
+    IN p_username VARCHAR(150),
+    OUT p_security_question VARCHAR(255),
+    OUT p_message VARCHAR(255)
+)
+BEGIN
+    DECLARE p_user_id INT;
+    -- Check if the user exists and get the user ID
+    SELECT id INTO p_user_id FROM auth_user WHERE username = p_username;
+    IF p_user_id IS NULL THEN
+        SET p_security_question = NULL;
+        SET p_message = 'User does not exist.';
+    ELSE
+        -- Get the security question for the user
+        SELECT security_question INTO p_security_question 
+        FROM movie_app_securityqa 
+        WHERE user_id = p_user_id;
+        
+        IF p_security_question IS NULL THEN
+            SET p_message = 'Security question not set for this user.';
+        ELSE
+            SET p_message = 'Success';
+        END IF;
+    END IF;
+    SELECT p_security_question AS security_question, p_message AS message;
+END$$
+DELIMITER ;
+

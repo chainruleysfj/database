@@ -17,7 +17,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import user_passes_test,login_required
 from django.core.cache import cache
 from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation, SecurityQA
-from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm,ChangePasswordForm,SecurityQAForm, PasswordResetForm
+from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm,ChangePasswordForm,SecurityQAForm, PasswordResetForm,UsernameForm
 from functools import wraps
 import json,os,uuid
 from PIL import Image, ImageDraw, ImageFont
@@ -703,6 +703,8 @@ def register_view(request):
     return render(request, 'register.html', {'form': form})
 
 def login_view(request):
+    if 'reset_username' in request.session:
+        del request.session['reset_username']  # 清理 reset_username
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
@@ -877,7 +879,7 @@ def set_security_question(request):
                 with connection.cursor() as cursor:
                     cursor.callproc('set_security_question_proc', [request.user.id, security_question, security_answer])
                 messages.success(request, 'Security question and answer set successfully.')
-                return redirect('set_security_question')
+                return redirect('home')
             except Exception as e:
                 messages.error(request, f'Error: {str(e)}')
     else:
@@ -885,25 +887,53 @@ def set_security_question(request):
     
     return render(request, 'set_security_question.html', {'form': form})
 
-@login_required
 def reset_password(request):
-    security_qa = get_object_or_404(SecurityQA, user=request.user)
+    username_form = UsernameForm()
+    form = PasswordResetForm()
     if request.method == 'POST':
-        form = PasswordResetForm(request.POST)
-        if form.is_valid():
-            new_password = form.cleaned_data['new_password']
-            security_answer = form.cleaned_data['security_answer']
-            if security_qa.security_answer.lower() == security_answer.lower():
-                user = request.user
-                user.set_password(new_password)
-                user.save()
-                messages.success(request, 'Password reset successfully.')
-                return redirect('profile')
-            else:
-                messages.error(request, 'Incorrect security answer.')
+        if 'username' in request.POST:
+            username_form = UsernameForm(request.POST)
+            if username_form.is_valid():
+                username = username_form.cleaned_data['username']
+                try:
+                    with connection.cursor() as cursor:
+                        cursor.callproc('get_security_question_proc', [username, '', ''])
+                        result = cursor.fetchone()
+                        security_question, message = result[0], result[1]
+                        if security_question:
+                            request.session['reset_username'] = username
+                            request.session['security_question'] = security_question
+                            return redirect('reset_password')
+                        else:
+                            messages.error(request, message)
+                except Exception as e:
+                    messages.error(request, f'Error: {str(e)}')
+        else:
+            form = PasswordResetForm(request.POST)
+            if form.is_valid():
+                username = request.session.get('reset_username')
+                security_answer = form.cleaned_data['security_answer']
+                new_password = form.cleaned_data['new_password']
+                hashed_password = make_password(new_password)
+                try:
+                    with connection.cursor() as cursor:
+                        cursor.callproc('reset_password_proc', [username, security_answer, hashed_password, 0, ''])
+                        result = cursor.fetchone()
+                        success, message = result[0], result[1]
+                        if success:
+                            del request.session['reset_username']
+                            messages.success(request, message)
+                            return redirect('login')
+                        else:
+                            messages.error(request, message)
+                except Exception as e:
+                    messages.error(request, f'Error: {str(e)}')
     else:
+        username_form = UsernameForm()
         form = PasswordResetForm()
-    
-    return render(request, 'reset_password.html', {'form': form})
 
-
+    return render(request, 'reset_password.html', {
+        'username_form': username_form,
+        'form': form,
+        'security_question': request.session.get('security_question', None)
+    })
