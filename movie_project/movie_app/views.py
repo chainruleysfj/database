@@ -737,3 +737,24 @@ def toggle_staff_status(request, user_id):
         user.is_staff = not user.is_staff  # 切换 staff 状态
         user.save()
     return redirect('manage_admins')
+
+@login_required
+def delete_account(request):
+    user = request.user
+    logout(request)
+    user.delete()
+    messages.success(request, "你的账号已被删除")
+    return redirect('home')
+
+@login_required
+@admin_required
+def admin_delete_user(request, user_id):
+    target_user = get_object_or_404(User, id=user_id)
+    if target_user.is_staff:
+        messages.error(request, "管理员不能删除其他管理员")
+    else:
+        target_user.delete()
+        messages.success(request, "用户已被删除")
+    return redirect('manage_admins')
+
+

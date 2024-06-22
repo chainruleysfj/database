@@ -33,7 +33,7 @@
                 {% else %}
                     <form method="post" action="{% url 'toggle_staff_status' user.id %}">
                         {% csrf_token %}
-                        <button type="submit">Make Admin</button>
+                        <button type="submit">Make Staff</button>
                     </form>
                 {% endif %}
             </li>
