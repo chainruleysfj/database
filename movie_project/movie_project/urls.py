@@ -43,6 +43,7 @@ urlpatterns = [
     path('all_directors/', views.all_directors, name='all_directors'), #查看导演
     path('manage_genres/', views.manage_genres, name='manage_genres'), #管理电影类型
     path('register/', views.register_view, name='register'), #用户注册
+    path('generate-captcha/', views.generate_captcha, name='generate_captcha'), #验证码
     path('', views.login_view, name='login'), #用户登录
     path('logout/', views.logout_view, name='logout'), #用户登出
     path('manage_admins/', views.manage_admins, name='manage_admins'), #超级管理员管理普通管理员

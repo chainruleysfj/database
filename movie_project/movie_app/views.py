@@ -15,10 +15,15 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import user_passes_test,login_required
+from django.core.cache import cache
 from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation,Users
 from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm
 from functools import wraps
 import json,os,uuid
+from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
+import random
+import string
 
 
 
@@ -671,16 +676,27 @@ def register_view(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            hashed_password = make_password(password)
-            try:
-                with connection.cursor() as cursor:
-                    cursor.callproc('create_user_procedure', [username, hashed_password])
-                messages.success(request, 'Registration successful.')
-                return redirect('login')
-            except Exception as e:
-                messages.error(request, f'Error: {str(e)}')
+            # 验证验证码
+            captcha_response = request.POST.get('captcha')
+            cached_captcha = cache.get(request.session.session_key + '_captcha')
+            if captcha_response and captcha_response.upper() == cached_captcha:
+                # 验证通过，处理注册逻辑
+                username = form.cleaned_data.get('username')
+                password = form.cleaned_data.get('password')
+                hashed_password = make_password(password)
+                try:
+                    with connection.cursor() as cursor:
+                        cursor.callproc('create_user_procedure', [username, hashed_password])
+                    messages.success(request, 'Registration successful.')
+                    return redirect('login')
+                except Exception as e:
+                    messages.error(request, f'Error: {str(e)}')
+            else:
+                # 验证码未通过
+                messages.error(request, 'Invalid captcha. Please try again.')
+        else:
+            # 表单验证失败
+            messages.error(request, 'Invalid form data. Please check your inputs.')
     else:
         form = RegisterForm()
 
@@ -790,3 +806,31 @@ def admin_delete_user(request, user_id):
     except Exception as e:
         messages.error(request, f'Error: {str(e)}')
     return redirect('manage_users')
+
+def generate_captcha(request):
+    # 确保会话已经在请求中初始化
+    if not request.session.session_key:
+        request.session.save()
+    # 生成随机验证码
+    captcha_code = ''.join(random.choices('0123456789ABCDEFGHJKLMNPQRSTUVWXYZ', k=6))
+
+    # 将验证码保存到缓存中，有效期为5分钟
+    cache.set(request.session.session_key + '_captcha', captcha_code, 300)
+
+    # 创建图像
+    width, height = 200, 50
+    image = Image.new('RGB', (width, height), color = (255, 255, 255))
+    draw = ImageDraw.Draw(image)
+
+    # 设置字体和字体大小
+    font = ImageFont.truetype('arial.ttf', size=30)
+
+    # 在图像上绘制验证码
+    draw.text((10, 10), captcha_code, font=font, fill=(0, 0, 0))
+
+    # 将图像保存到内存中
+    image_buffer = BytesIO()
+    image.save(image_buffer, format='JPEG')
+    image_buffer.seek(0)
+
+    return HttpResponse(image_buffer, content_type='image/jpeg')
