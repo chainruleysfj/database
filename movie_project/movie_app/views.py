@@ -32,9 +32,11 @@ def admin_required(function):
 
             return function(request, *args, **kwargs)
         else:
-            messages.error(request, "缺少权限,需要管理员权限")
-         
-            return redirect(request.META.get('HTTP_REFERER', '/'))  # 重定向到来源页面
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': '缺少权限,需要管理员权限'}, status=403)
+            else:
+                messages.error(request, "缺少权限,需要管理员权限")
+                return redirect(request.META.get('HTTP_REFERER', '/'))
     return wrap
 
 def super_required(function):
@@ -119,14 +121,11 @@ def update_production_company(request, company_id):
 @admin_required
 @transaction.atomic
 def delete_production_company(request, company_id):
-
     if request.method == 'POST':
-
         with connection.cursor() as cursor:
             cursor.callproc('delete_production_company', [company_id])
         return redirect('list_production_companies')
     else:
-
         return render(request, 'confirm_delete_production_company.html', {'company_id': company_id})
 
 @login_required
@@ -508,7 +507,7 @@ def add_person(request):
             marital_status = form.cleaned_data['marital_status']
             with connection.cursor() as cursor:
                 cursor.callproc('add_person', [name, birth_date, gender, marital_status])
-            return redirect('home')
+            return redirect('list_persons')
     else:
         form = PersonForm()
     return render(request, 'add_person.html', {'form': form})
