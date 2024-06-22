@@ -75,5 +75,13 @@ BEGIN
         SELECT * FROM auth_user WHERE username LIKE CONCAT('%', p_query, '%');
     END IF;
 END //
-
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS update_password_procedure;
+DELIMITER //
+CREATE PROCEDURE update_password_procedure(IN user_id INT, IN new_password VARCHAR(255))
+BEGIN
+    UPDATE auth_user SET password = new_password WHERE id = user_id;
+END //
+DELIMITER ;
+

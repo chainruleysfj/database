@@ -52,7 +52,7 @@ urlpatterns = [
     path('delete_account/', views.delete_account, name='delete_account'), #删除自己的账户
     path('manage_users/', views.manage_users, name='manage_users'), #管理员管理用户
     path('admin_delete_user/<int:user_id>/', views.admin_delete_user, name='admin_delete_user'), #管理员删除他人账户
-    
+    path('change-password/', views.change_password, name='change_password'), #更改密码
 ]
 
 if settings.DEBUG:

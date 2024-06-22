@@ -9,7 +9,7 @@ from django.db import connection,transaction
 from django.conf import settings
 from django.template.defaultfilters import urlencode
 from django.contrib.auth.hashers import make_password,check_password
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib import messages
@@ -17,7 +17,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import user_passes_test,login_required
 from django.core.cache import cache
 from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation,Users
-from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm
+from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm,ChangePasswordForm
 from functools import wraps
 import json,os,uuid
 from PIL import Image, ImageDraw, ImageFont
@@ -834,3 +834,33 @@ def generate_captcha(request):
     image_buffer.seek(0)
 
     return HttpResponse(image_buffer, content_type='image/jpeg')
+
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = ChangePasswordForm(request.POST)
+        if form.is_valid():
+            old_password = form.cleaned_data['old_password']
+            new_password = form.cleaned_data['new_password1']
+            hashed_password = make_password(new_password)
+            user = request.user
+
+            # Verify current password
+            if user.check_password(old_password):
+                # Call a stored procedure to update password
+                with connection.cursor() as cursor:
+                    cursor.callproc('update_password_procedure', [user.id, hashed_password])
+
+                # Update session authentication hash
+                update_session_auth_hash(request, user)
+
+                messages.success(request, 'Your password was successfully updated!')
+                return redirect('change_password')
+            else:
+                messages.error(request, 'Please enter your current password correctly.')
+
+    else:
+        form = ChangePasswordForm()
+
+    return render(request, 'change_password.html', {'form': form})
+
