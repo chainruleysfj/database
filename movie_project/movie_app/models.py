@@ -72,7 +72,7 @@ class MovieGenreAssociation(models.Model):
 class Users(models.Model):
     UserID = models.AutoField(primary_key=True)
     Username = models.CharField(max_length=50, unique=True)
-    UserPassword = models.CharField(max_length=50)
+    UserPassword = models.CharField(max_length=150) #注意使用hash值，不能只有50
 
     def __str__(self):
         return self.Username

@@ -8,15 +8,53 @@ from django.urls import reverse
 from django.db import connection,transaction
 from django.conf import settings
 from django.template.defaultfilters import urlencode
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password,check_password
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import get_user_model
+from django.contrib.auth.backends import ModelBackend
+from django.contrib import messages
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import user_passes_test,login_required
 from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation,Users
-from .forms import ProductionCompanyForm,MovieForm,PersonForm
+from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm
+from functools import wraps
 import json,os,uuid
 
 
+
+def is_admin(user):
+    return user.is_authenticated and user.is_staff
+
+def admin_required(function):
+    @wraps(function)
+    def wrap(request, *args, **kwargs):
+        if request.user.is_staff:
+
+            return function(request, *args, **kwargs)
+        else:
+            messages.error(request, "缺少权限")
+         
+            return redirect(request.META.get('HTTP_REFERER', '/'))  # 重定向到来源页面
+    return wrap
+
+def super_required(function):
+    @wraps(function)
+    def wrap(request, *args, **kwargs):
+        if request.user.is_superuser:
+
+            return function(request, *args, **kwargs)
+        else:
+            messages.error(request, "缺少权限")
+         
+            return redirect(request.META.get('HTTP_REFERER', '/'))  # 重定向到来源页面
+    return wrap
+
+@login_required
 def home(request):
     return render(request, 'home.html')  # 创建一个名为 home.html 的模板文件，并返回给客户端
 
+@login_required
+@admin_required
 @csrf_exempt
 @transaction.atomic
 def add_production_company(request):
@@ -34,8 +72,10 @@ def add_production_company(request):
         form = ProductionCompanyForm()
     return render(request, 'add_production_company.html', {'form': form})
 
+@login_required
 @transaction.atomic
 def list_production_companies(request):
+  
     companies = []
     with connection.cursor() as cursor:
         cursor.callproc('get_all_production_companies')
@@ -48,6 +88,8 @@ def list_production_companies(request):
             })
     return render(request, 'list_production_companies.html', {'companies': companies})
 
+@login_required
+@admin_required
 @transaction.atomic
 def update_production_company(request, company_id):
     if request.method == 'POST':
@@ -73,15 +115,21 @@ def update_production_company(request, company_id):
         'company_description': company[3],
     })
 
+@login_required
+@admin_required
 @transaction.atomic
 def delete_production_company(request, company_id):
+
     if request.method == 'POST':
+
         with connection.cursor() as cursor:
             cursor.callproc('delete_production_company', [company_id])
         return redirect('list_production_companies')
     else:
+
         return render(request, 'confirm_delete_production_company.html', {'company_id': company_id})
 
+@login_required
 @transaction.atomic
 def search_production_companies(request):
     name = request.GET.get('name', '')
@@ -102,6 +150,8 @@ def search_production_companies(request):
 
     return render(request, 'list_production_companies.html', {'companies': company_list})
 
+@login_required
+@admin_required
 @transaction.atomic
 def add_movie(request):
     if request.method == 'POST':
@@ -149,6 +199,7 @@ def add_movie(request):
         genres = cursor.fetchall()
     return render(request, 'add_movie.html', {'form': form, 'genres': genres})
 
+@login_required
 @transaction.atomic
 def search_person_by_name(request):
     query = request.GET.get('query', '')
@@ -158,6 +209,7 @@ def search_person_by_name(request):
     directors = [{'person_id': result[0], 'name': result[1]} for result in results]
     return JsonResponse(directors, safe=False)
 
+@login_required
 @transaction.atomic
 def save_video_file(video_file):
     unique_filename = str(uuid.uuid4()) + '.mp4'
@@ -174,6 +226,7 @@ def get_int_or_default(value, default):
     except (ValueError, TypeError):
         return default
     
+@login_required    
 @transaction.atomic
 def list_movies_v1(request):
 
@@ -234,6 +287,7 @@ def list_movies_v1(request):
 #     return render(request, 'list_movies.html', {'movies': movies_list, 'production_companies': production_companies_list})
     return 0
 
+@login_required
 @transaction.atomic
 def list_movies(request):
     # 获取所有出品公司以供搜索表单使用
@@ -283,6 +337,7 @@ def list_movies(request):
                 production_company_id,
                 genre_id
             ])
+            
             movies = cursor.fetchall()
     else:
         with connection.cursor() as cursor:
@@ -318,6 +373,7 @@ def list_movies(request):
         'production_companies': production_companies_list,
         'genres': genres_list})
 
+@login_required
 @transaction.atomic
 def movie_detail(request, movie_id):
     with connection.cursor() as cursor:
@@ -336,6 +392,8 @@ def movie_detail(request, movie_id):
 
     return render(request, 'movie_detail.html', {'movie': movie})
 
+@login_required
+@admin_required
 @transaction.atomic
 def update_movie(request, movie_id):
     # 获取电影对象
@@ -411,7 +469,8 @@ def update_movie(request, movie_id):
             'genres': genres, 
             'movie_genres_ids': movie_genres_ids
         })
-        
+
+@login_required        
 @transaction.atomic   
 def delete_video_file(file_path):
     # 从文件路径中提取文件名
@@ -422,6 +481,8 @@ def delete_video_file(file_path):
     if os.path.exists(file_path):
         os.remove(file_path)
 
+@login_required
+@admin_required
 @transaction.atomic
 def delete_movie(request, movie_id):
     # 获取电影对象
@@ -435,6 +496,8 @@ def delete_movie(request, movie_id):
         return redirect('list_movies')
     return render(request, 'delete_movie_confirmation.html', {'movie': movie})
 
+@login_required
+@admin_required
 @transaction.atomic
 def add_person(request):
     if request.method == 'POST':
@@ -451,6 +514,7 @@ def add_person(request):
         form = PersonForm()
     return render(request, 'add_person.html', {'form': form})
 
+@login_required
 @transaction.atomic
 def list_persons(request):
     with connection.cursor() as cursor:
@@ -467,6 +531,8 @@ def list_persons(request):
         person['marital_status'] = marital_status_map.get(person['marital_status'], 'Unknown')
     return render(request, 'list_persons.html', {'persons': persons_list})
 
+@login_required
+@admin_required
 @csrf_exempt
 @transaction.atomic
 def update_person(request, person_id):
@@ -482,7 +548,9 @@ def update_person(request, person_id):
         return redirect('list_persons')
     else:
         return JsonResponse({'error': 'Invalid request method'})
-    
+
+@login_required    
+@admin_required
 @csrf_exempt
 @transaction.atomic
 def delete_person(request, person_id):
@@ -493,7 +561,8 @@ def delete_person(request, person_id):
         return JsonResponse({'status': 'success'})
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=405)
-    
+
+@login_required    
 @transaction.atomic
 def search_persons(request):
     name = request.GET.get('name', '')
@@ -526,6 +595,7 @@ def search_persons(request):
         person['marital_status'] = marital_status_map.get(person['marital_status'], 'Unknown')
     return render(request, 'list_persons.html', {'persons': persons_list})
 
+@login_required
 @transaction.atomic
 def all_directors(request):
 
@@ -573,6 +643,8 @@ def all_directors(request):
         'search_movie': search_movie
     })
 
+@login_required
+@admin_required
 @transaction.atomic
 def manage_genres(request):
     if request.method == 'POST':
@@ -596,6 +668,93 @@ def manage_genres(request):
     
     return render(request, 'manage_genres.html', {'genres': genres})
 
+@csrf_exempt
+def register_view(request):
+    if request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            try:
+                user = User.objects.create_user(username=username, password=password)
+                user.save()
+                messages.success(request, 'Registration successful.')
+                return redirect('login')
+            except Exception as e:
+                messages.error(request, f'Error: {str(e)}')
+    else:
+        form = RegisterForm()
 
+    return render(request, 'register.html', {'form': form})
+
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            return redirect('home')
+        else:
+            messages.error(request, 'Invalid username or password.')
+
+    return render(request, 'login.html')
+
+@login_required
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
+@login_required
+@super_required
+def manage_admins(request):
+    users = User.objects.all()
+
+    # 处理搜索功能
+    name_query = request.GET.get('name')
+    if name_query:
+        users = users.filter(username__icontains=name_query)
+
+    context = {
+        'users': users
+    }
+    return render(request, 'manage_admins.html', context)
+
+@login_required
+@super_required
+def add_admin(request, user_id):
+    user = User.objects.get(id=user_id)
+    user.is_staff = True
+    user.save()
+    return redirect('manage_admins')
+
+@login_required
+@super_required
+def toggle_staff_status(request, user_id):
+    if request.method == 'POST':
+        user = User.objects.get(id=user_id)
+        user.is_staff = not user.is_staff  # 切换 staff 状态
+        user.save()
+    return redirect('manage_admins')
+
+@login_required
+def delete_account(request):
+    user = request.user
+    logout(request)
+    user.delete()
+    messages.success(request, "你的账号已被删除")
+    return redirect('home')
+
+@login_required
+@admin_required
+def admin_delete_user(request, user_id):
+    target_user = get_object_or_404(User, id=user_id)
+    if target_user.is_staff:
+        messages.error(request, "管理员不能删除其他管理员")
+    else:
+        target_user.delete()
+        messages.success(request, "用户已被删除")
+    return redirect('manage_admins')
 
 

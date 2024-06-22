@@ -157,4 +157,66 @@ http://你的IP地址:8000
 
 即可。
 
+四、其他
+在Django中，使用`authenticate`函数验证用户时，实际上是在与Django内置的用户模型（`django.contrib.auth.models.User`）进行交互。这个内置的用户模型是通过`AUTH_USER_MODEL`配置指定的，默认情况下是`'auth.User'`，但可以根据需要自定义为自己的用户模型。
+
+对于自定义的用户模型（比如您提到的`Users`模型），如果想要使用Django提供的认证系统（`authenticate`和`login`函数），则需要进行一些配置和适配。
+
+### 配置步骤：
+
+1. **设置自定义用户模型**：
+   在`settings.py`中，通过设置`AUTH_USER_MODEL`指定自定义的用户模型。
+
+   ```python
+   # settings.py
+   AUTH_USER_MODEL = 'your_app.Users'
+   ```
+
+   这里的`your_app.Users`应替换为您实际定义的用户模型路径。
+
+2. **适配自定义用户模型**：
+   Django的认证系统假定使用的是默认的`User`模型，因此如果想要使用自定义模型进行认证，需要编写一些适配代码。
+
+   ```python
+   # views.py
+
+   from django.contrib.auth import get_user_model
+   from django.contrib.auth.backends import ModelBackend
+
+   User = get_user_model()
+
+   class CustomAuthBackend(ModelBackend):
+       def authenticate(self, request, username=None, password=None, **kwargs):
+           try:
+               user = User.objects.get(username=username)
+               if user.check_password(password):
+                   return user
+           except User.DoesNotExist:
+               return None
+           except Exception as e:
+               return None
+   ```
+
+   这里的`CustomAuthBackend`是一个自定义的认证后端类，用于处理使用自定义用户模型进行验证。在`authenticate`方法中，通过`get_user_model()`获取自定义用户模型，然后进行用户名和密码的验证。
+
+3. **使用自定义认证后端**：
+   在`settings.py`中配置使用自定义的认证后端。
+
+   ```python
+   # settings.py
+
+   AUTHENTICATION_BACKENDS = ['your_app.views.CustomAuthBackend']
+   ```
+
+   这样配置后，Django就会使用您定义的`CustomAuthBackend`来进行用户的认证。
+
+### 如何工作：
+
+- 当用户登录时，通过表单提交用户名和密码。
+- 视图函数（如`login_user`）中调用`authenticate`函数，该函数根据配置的认证后端（`CustomAuthBackend`）来验证用户。
+- `authenticate`方法通过`User.objects.get(username=username)`获取用户对象，然后使用`check_password`方法验证密码是否匹配。
+- 如果验证成功，用户将被认为是已经验证的用户，可以使用`login`函数将用户添加到当前会话中，以便后续的页面访问。
+
+这样，即使使用了自定义的`Users`模型，也可以通过适配后端来使用Django的认证系统进行用户登录验证。
+
 如果还有什么疏漏，遗漏了某些问题，或者某些地方有误，可以联系我修改。

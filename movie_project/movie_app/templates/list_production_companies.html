@@ -19,6 +19,13 @@
 </head>
 <body>
     <h1>Production Companies</h1>
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
     <!-- Search Form -->
     <form method="GET" action="{% url 'search_production_companies' %}">
         <input type="text" name="name" placeholder="Company Name">
@@ -79,21 +86,33 @@
         function deleteCompany(companyId) {
             if (confirm("Are you sure you want to delete this company?")) {
                 // Send an AJAX request to delete the company
+       
                 var xhr = new XMLHttpRequest();
                 xhr.open("POST", "/delete_production_company/" + companyId + "/", true);  // 注意末尾添加斜杠
+  
                 xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
+
                 xhr.onreadystatechange = function() {
+             
                     if (xhr.readyState === 4) {
+               
                         if (xhr.status === 200) {
                             // Reload the page after deletion
+                     
                             window.location.reload();
                         } else {
+                        
                             // Handle error
                             console.error("Error deleting company:", xhr.statusText);
                         }
+       
                     }
+        
                 };
+     
                 xhr.send();
+
+  
             }
         }
 

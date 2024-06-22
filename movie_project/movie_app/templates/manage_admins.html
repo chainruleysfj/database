@@ -1,0 +1,47 @@
+<!-- manage_admins.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Admins</title>
+</head>
+<body>
+    <h1>Manage Admins</h1>
+    <!-- 搜索表单 -->
+    <form method="get" action="{% url 'manage_admins' %}">
+        <input type="text" name="name" placeholder="Search by Username">
+        <button type="submit">Search</button>
+    </form>
+    
+    <ul>
+        {% for user in users %}
+            <li>
+                {{ user.username }}
+                {% if user.is_staff %}
+                    <span style="color: green;">(Staff)</span>
+                    {% if user.is_superuser %}
+                        <!-- 超级管理员不可操作 -->
+                        <span style="color: rgb(0, 145, 255);">(Superuser)</span>
+                    {% else %}
+                        <form method="post" action="{% url 'toggle_staff_status' user.id %}">
+                            {% csrf_token %}
+                            <button type="submit">Remove Staff Role</button>
+                        </form>
+                    {% endif %}
+                {% else %}
+                    <form method="post" action="{% url 'toggle_staff_status' user.id %}">
+                        {% csrf_token %}
+                        <button type="submit">Make Staff</button>
+                    </form>
+                {% endif %}
+            </li>
+        {% empty %}
+            <li>No users found.</li>
+        {% endfor %}
+    </ul>
+    
+    <p><a href="{% url 'home' %}">Home</a></p>
+</body>
+</html>

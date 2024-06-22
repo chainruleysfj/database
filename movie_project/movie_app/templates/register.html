@@ -1,25 +1,24 @@
-<!-- add_person.html -->
+<!-- register.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Person</title>
+    <title>Register</title>
 </head>
 <body>
-    <h1>Add Person</h1>
+    <h1>Register</h1>
     {% if messages %}
-        <ul class="messages">
+        <ul>
             {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                <li>{{ message }}</li>
             {% endfor %}
         </ul>
     {% endif %}
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Add Person</button>
+        <button type="submit">Register</button>
     </form>
-    <p><a href="{% url 'home' %}">home</a></p>
 </body>
 </html>

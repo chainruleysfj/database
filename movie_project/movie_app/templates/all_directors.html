@@ -9,6 +9,13 @@
 </head>
 <body>
     <h1>All Directors and Their Movies</h1>
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
     <form method="get">
         <label for="search_director">Search by Director:</label>
         <input type="text" id="search_director" name="search_director" value="{{ search_director }}">
