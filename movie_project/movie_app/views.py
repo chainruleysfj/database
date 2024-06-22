@@ -16,7 +16,7 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import user_passes_test,login_required
 from django.core.cache import cache
-from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation,Users
+from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation
 from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm,ChangePasswordForm
 from functools import wraps
 import json,os,uuid
@@ -129,7 +129,7 @@ def delete_production_company(request, company_id):
     if request.method == 'POST':
         with connection.cursor() as cursor:
             cursor.callproc('delete_production_company', [company_id])
-        return redirect('list_production_companies')
+        return JsonResponse({'success': True, 'error': '无错误'}, status=200)
     else:
         return render(request, 'confirm_delete_production_company.html', {'company_id': company_id})
 
@@ -472,8 +472,7 @@ def update_movie(request, movie_id):
             'genres': genres, 
             'movie_genres_ids': movie_genres_ids
         })
-
-@login_required        
+      
 @transaction.atomic   
 def delete_video_file(file_path):
     # 从文件路径中提取文件名
@@ -544,11 +543,12 @@ def update_person(request, person_id):
         birth_date = request.POST.get('birth_date')
         gender = request.POST.get('gender')
         marital_status = request.POST.get('marital_status')
-
+        if not birth_date:
+            birth_date = None
         with connection.cursor() as cursor:
             cursor.callproc('update_person', [person_id, name, birth_date, gender, marital_status])
 
-        return redirect('list_persons')
+        return JsonResponse({'success': True, 'error': '无错误'}, status=200)
     else:
         return JsonResponse({'error': 'Invalid request method'})
 
@@ -561,7 +561,7 @@ def delete_person(request, person_id):
         with connection.cursor() as cursor:
             cursor.callproc('delete_person_and_directormovie', [person_id])
 
-        return JsonResponse({'status': 'success'})
+        return JsonResponse({'success': True, 'error': '无错误'}, status=200)
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=405)
 

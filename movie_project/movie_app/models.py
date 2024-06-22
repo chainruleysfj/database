@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MaxValueValidator
+from django.contrib.auth.models import AbstractUser
 
 # Create your models here.
 class ProductionCompany(models.Model):
@@ -76,3 +77,4 @@ class Users(models.Model):
 
     def __str__(self):
         return self.Username
+    
