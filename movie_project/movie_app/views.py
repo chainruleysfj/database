@@ -739,11 +739,13 @@ def toggle_staff_status(request, user_id):
 
 @login_required
 def delete_account(request):
-    user = request.user
-    logout(request)
-    user.delete()
-    messages.success(request, "你的账号已被删除")
-    return redirect('home')
+    if request.method == 'POST':
+        user = request.user
+        logout(request)
+        user.delete()
+        messages.success(request, "你的账号已被删除")
+        return redirect('home')
+    return render(request, 'delete_account.html')
 
 @login_required
 @admin_required
@@ -756,4 +758,29 @@ def admin_delete_user(request, user_id):
         messages.success(request, "用户已被删除")
     return redirect('manage_admins')
 
+@login_required
+@admin_required
+def manage_users(request):
+    query = request.GET.get('q')
+    if query:
+        users = User.objects.filter(username__icontains=query)
+    else:
+        users = User.objects.all()
+    context = {
+        'users': users,
+        'query': query
+    }
+    return render(request, 'manage_users.html', context)
+
+@login_required
+@admin_required
+def admin_delete_user(request, user_id):
+    if request.method == 'POST':
+        target_user = get_object_or_404(User, id=user_id)
+        if target_user.is_staff:
+            messages.error(request, "管理员不能删除其他管理员")
+        else:
+            target_user.delete()
+            messages.success(request, "用户已被删除")
+    return redirect('manage_users')
 
