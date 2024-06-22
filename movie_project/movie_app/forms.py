@@ -1,6 +1,6 @@
 # forms.py
 from django import forms
-from .models import ProductionCompany,Movie,Person
+from .models import ProductionCompany,Movie,Person,SecurityQA
 from django.contrib.auth.models import User
 
 
@@ -53,13 +53,19 @@ class ChangePasswordForm(forms.Form):
     old_password = forms.CharField(label='Current Password', widget=forms.PasswordInput)
     new_password1 = forms.CharField(label='New Password', widget=forms.PasswordInput)
     new_password2 = forms.CharField(label='Confirm New Password', widget=forms.PasswordInput)
-
     def clean(self):
         cleaned_data = super().clean()
         new_password1 = cleaned_data.get('new_password1')
         new_password2 = cleaned_data.get('new_password2')
-
         if new_password1 and new_password2 and new_password1 != new_password2:
             raise forms.ValidationError("New passwords do not match.")
-
         return cleaned_data
+
+class SecurityQAForm(forms.ModelForm):
+    class Meta:
+        model = SecurityQA
+        fields = ['security_question', 'security_answer']
+
+class PasswordResetForm(forms.Form):
+    new_password = forms.CharField(label='New Password', widget=forms.PasswordInput)
+    security_answer = forms.CharField(label='Security Answer')

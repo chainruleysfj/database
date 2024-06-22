@@ -16,8 +16,8 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import user_passes_test,login_required
 from django.core.cache import cache
-from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation
-from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm,ChangePasswordForm
+from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation, SecurityQA
+from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm,ChangePasswordForm,SecurityQAForm, PasswordResetForm
 from functools import wraps
 import json,os,uuid
 from PIL import Image, ImageDraw, ImageFont
@@ -855,7 +855,7 @@ def change_password(request):
                 update_session_auth_hash(request, user)
 
                 messages.success(request, 'Your password was successfully updated!')
-                return redirect('change_password')
+                return redirect('home')
             else:
                 messages.error(request, 'Please enter your current password correctly.')
 
@@ -863,4 +863,47 @@ def change_password(request):
         form = ChangePasswordForm()
 
     return render(request, 'change_password.html', {'form': form})
+
+@login_required
+def set_security_question(request):
+
+    if request.method == 'POST':
+        form = SecurityQAForm(request.POST)
+        if form.is_valid():
+            security_question = form.cleaned_data['security_question']
+            security_answer = form.cleaned_data['security_answer']
+            # Call the stored procedure to update security question and answer
+            try:
+                with connection.cursor() as cursor:
+                    cursor.callproc('set_security_question_proc', [request.user.id, security_question, security_answer])
+                messages.success(request, 'Security question and answer set successfully.')
+                return redirect('set_security_question')
+            except Exception as e:
+                messages.error(request, f'Error: {str(e)}')
+    else:
+        form = SecurityQAForm()
+    
+    return render(request, 'set_security_question.html', {'form': form})
+
+@login_required
+def reset_password(request):
+    security_qa = get_object_or_404(SecurityQA, user=request.user)
+    if request.method == 'POST':
+        form = PasswordResetForm(request.POST)
+        if form.is_valid():
+            new_password = form.cleaned_data['new_password']
+            security_answer = form.cleaned_data['security_answer']
+            if security_qa.security_answer.lower() == security_answer.lower():
+                user = request.user
+                user.set_password(new_password)
+                user.save()
+                messages.success(request, 'Password reset successfully.')
+                return redirect('profile')
+            else:
+                messages.error(request, 'Incorrect security answer.')
+    else:
+        form = PasswordResetForm()
+    
+    return render(request, 'reset_password.html', {'form': form})
+
 

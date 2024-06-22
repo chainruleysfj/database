@@ -1,13 +1,13 @@
-<!-- change_password.html -->
+<!-- set_security_question.html -->
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Change Password</title>
+    <title>Set Security Question</title>
 </head>
 <body>
-    <h1>Change Password</h1>
+    <h1>Set Security Question</h1>
     {% if messages %}
         <ul>
             {% for message in messages %}
@@ -18,7 +18,7 @@
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Change Password</button>
+        <button type="submit">Save</button>
     </form>
     <p><a href="{% url 'home' %}">home</a>.</p>
 </body>

@@ -85,3 +85,29 @@ BEGIN
 END //
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS set_security_question_proc;
+DELIMITER $$
+CREATE PROCEDURE set_security_question_proc(
+    IN p_user_id INT,
+    IN p_security_question VARCHAR(255),
+    IN p_security_answer VARCHAR(255)
+)
+BEGIN
+    DECLARE user_exists INT;
+    -- Check if the user exists
+    SELECT COUNT(*) INTO user_exists FROM auth_user WHERE id = p_user_id;
+    
+    IF user_exists = 1 THEN
+        -- Update or insert into SecurityQA table
+        INSERT INTO movie_app_securityqa (user_id, security_question, security_answer)
+        VALUES (p_user_id, p_security_question, p_security_answer)
+        ON DUPLICATE KEY UPDATE
+        security_question = VALUES(security_question),
+        security_answer = VALUES(security_answer);
+    ELSE
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'User does not exist';
+    END IF;
+END$$
+DELIMITER ;
+

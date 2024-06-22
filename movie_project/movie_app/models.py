@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MaxValueValidator
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import User
 
 # Create your models here.
 class ProductionCompany(models.Model):
@@ -70,11 +71,11 @@ class MovieGenreAssociation(models.Model):
     class Meta:
         unique_together = ('movie', 'genre')
 
-class Users(models.Model):
-    UserID = models.AutoField(primary_key=True)
-    Username = models.CharField(max_length=50, unique=True)
-    UserPassword = models.CharField(max_length=150) #注意使用hash值，不能只有50
+
+class SecurityQA(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    security_question = models.CharField(max_length=255)
+    security_answer = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.Username
-    
+        return f"{self.user.username}'s Security Question"
