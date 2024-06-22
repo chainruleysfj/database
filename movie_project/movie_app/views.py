@@ -32,7 +32,7 @@ def admin_required(function):
 
             return function(request, *args, **kwargs)
         else:
-            messages.error(request, "缺少权限")
+            messages.error(request, "缺少权限,需要管理员权限")
          
             return redirect(request.META.get('HTTP_REFERER', '/'))  # 重定向到来源页面
     return wrap
@@ -44,7 +44,7 @@ def super_required(function):
 
             return function(request, *args, **kwargs)
         else:
-            messages.error(request, "缺少权限")
+            messages.error(request, "缺少权限,需要超级管理员权限")
          
             return redirect(request.META.get('HTTP_REFERER', '/'))  # 重定向到来源页面
     return wrap
@@ -674,9 +674,10 @@ def register_view(request):
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
+            hashed_password = make_password(password)
             try:
-                user = User.objects.create_user(username=username, password=password)
-                user.save()
+                with connection.cursor() as cursor:
+                    cursor.callproc('create_user_procedure', [username, hashed_password])
                 messages.success(request, 'Registration successful.')
                 return redirect('login')
             except Exception as e:
@@ -708,13 +709,19 @@ def logout_view(request):
 @login_required
 @super_required
 def manage_admins(request):
-    users = User.objects.all()
+    users = []
 
     # 处理搜索功能
     name_query = request.GET.get('name')
-    if name_query:
-        users = users.filter(username__icontains=name_query)
-
+    try:
+        with connection.cursor() as cursor:
+            if name_query:
+                cursor.callproc('get_users_procedure', [name_query])
+            else:
+                cursor.callproc('get_users_procedure', [None])
+            users = cursor.fetchall()
+    except Exception as e:
+        messages.error(request, f'Error: {str(e)}')
     context = {
         'users': users
     }
@@ -723,49 +730,51 @@ def manage_admins(request):
 @login_required
 @super_required
 def add_admin(request, user_id):
-    user = User.objects.get(id=user_id)
-    user.is_staff = True
-    user.save()
+    try:
+        with connection.cursor() as cursor:
+            cursor.callproc('set_staff_status', [user_id, True])
+        messages.success(request, "用户已被设置为管理员。")
+    except Exception as e:
+        messages.error(request, f'Error: {str(e)}')
     return redirect('manage_admins')
 
 @login_required
 @super_required
 def toggle_staff_status(request, user_id):
     if request.method == 'POST':
-        user = User.objects.get(id=user_id)
-        user.is_staff = not user.is_staff  # 切换 staff 状态
-        user.save()
+        try:
+            with connection.cursor() as cursor:
+                cursor.callproc('change_staff_status', [user_id])
+            messages.success(request, "用户权限已更新。")
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
     return redirect('manage_admins')
 
-@login_required
 def delete_account(request):
     if request.method == 'POST':
-        user = request.user
+        user_id = request.user.id
         logout(request)
-        user.delete()
-        messages.success(request, "你的账号已被删除")
+        try:
+            with connection.cursor() as cursor:
+                cursor.callproc('delete_user', [user_id])
+            messages.success(request, "你的账号已被删除")
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
         return redirect('home')
     return render(request, 'delete_account.html')
 
-@login_required
-@admin_required
-def admin_delete_user(request, user_id):
-    target_user = get_object_or_404(User, id=user_id)
-    if target_user.is_staff:
-        messages.error(request, "管理员不能删除其他管理员")
-    else:
-        target_user.delete()
-        messages.success(request, "用户已被删除")
-    return redirect('manage_admins')
 
 @login_required
 @admin_required
 def manage_users(request):
     query = request.GET.get('q')
-    if query:
-        users = User.objects.filter(username__icontains=query)
-    else:
-        users = User.objects.all()
+    users = []
+    try:
+        with connection.cursor() as cursor:
+            cursor.callproc('get_users_procedure', [query])
+            users = cursor.fetchall()
+    except Exception as e:
+        messages.error(request, f'Error: {str(e)}')
     context = {
         'users': users,
         'query': query
@@ -775,12 +784,10 @@ def manage_users(request):
 @login_required
 @admin_required
 def admin_delete_user(request, user_id):
-    if request.method == 'POST':
-        target_user = get_object_or_404(User, id=user_id)
-        if target_user.is_staff:
-            messages.error(request, "管理员不能删除其他管理员")
-        else:
-            target_user.delete()
-            messages.success(request, "用户已被删除")
+    try:
+        with connection.cursor() as cursor:
+            cursor.callproc('delete_user', [user_id])
+        messages.success(request, "用户已被删除")
+    except Exception as e:
+        messages.error(request, f'Error: {str(e)}')
     return redirect('manage_users')
-

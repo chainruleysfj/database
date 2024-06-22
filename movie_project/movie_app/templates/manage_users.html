@@ -9,6 +9,13 @@
 </head>
 <body>
     <h1>Manage Users</h1>
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
     <form method="GET" action="{% url 'manage_users' %}">
         <input type="text" name="q" placeholder="Search users" value="{{ query }}">
         <button type="submit">Search</button>
@@ -16,12 +23,12 @@
     <ul>
         {% for user in users %}
             <li>
-                {{ user.username }}
-                {% if user.is_staff %}
+                {{ user.1 }}
+                {% if user.2 %}
                     <span style="color: green;">(Staff)</span>
                 {% endif %}
-                {% if not user.is_staff %}
-                    <form method="post" action="{% url 'admin_delete_user' user.id %}">
+                {% if not user.2 %}
+                    <form method="post" action="{% url 'admin_delete_user' user.0 %}">
                         {% csrf_token %}
                         <button type="submit">Delete User</button>
                     </form>
