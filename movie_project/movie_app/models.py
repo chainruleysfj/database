@@ -79,3 +79,15 @@ class SecurityQA(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s Security Question"
+    
+class LoginRecord(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    session_key = models.CharField(max_length=100)
+    login_time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Login Record"
+        verbose_name_plural = "Login Records"
+
+    def __str__(self):
+        return f"{self.user.username} - {self.login_time}"

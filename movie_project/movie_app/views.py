@@ -16,7 +16,9 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import user_passes_test,login_required
 from django.core.cache import cache
-from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation, SecurityQA
+from django.contrib.sessions.models import Session
+from django.utils import timezone
+from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation, SecurityQA, LoginRecord
 from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm,ChangePasswordForm,SecurityQAForm, PasswordResetForm,UsernameForm
 from functools import wraps
 import json,os,uuid
@@ -58,7 +60,18 @@ def super_required(function):
 
 @login_required
 def home(request):
-    return render(request, 'home.html')  # 创建一个名为 home.html 的模板文件，并返回给客户端
+    try:
+        with connection.cursor() as cursor:
+            cursor.callproc('get_active_login_records', [request.user.id])
+            count=cursor.fetchall()
+        if count[0][0] > 1:
+            messages.warning(request, 'There are other active logins detected. Please consider changing your password for security reasons if you do not recognize them.')
+
+    except Exception as e:
+        # Handle any exceptions or errors
+        print(f"Error : {e}")
+
+    return render(request, 'home.html')
 
 @login_required
 @admin_required
@@ -712,6 +725,13 @@ def login_view(request):
 
         if user is not None:
             login(request, user)
+            # Check if there are other active login records for this user
+            try:
+                with connection.cursor() as cursor:
+                    cursor.callproc('manage_login_record', [user.id, request.session.session_key, 'create'])
+            except Exception as e:
+                # Handle any exceptions or errors
+                print(f"Error creating login record: {e}")
             return redirect('home')
         else:
             messages.error(request, 'Invalid username or password.')
@@ -720,6 +740,13 @@ def login_view(request):
 
 @login_required
 def logout_view(request):
+    try:
+        with connection.cursor() as cursor:
+            cursor.callproc('manage_login_record', [request.user.id, request.session.session_key, 'delete'])
+    except Exception as e:
+        # Handle any exceptions or errors
+        print(f"Error deleting login record: {e}")
+
     logout(request)
     return redirect('login')
 
@@ -907,6 +934,7 @@ def reset_password(request):
                         else:
                             messages.error(request, message)
                 except Exception as e:
+                    print("error when get security question proc")
                     messages.error(request, f'Error: {str(e)}')
         else:
             form = PasswordResetForm(request.POST)
@@ -927,6 +955,7 @@ def reset_password(request):
                         else:
                             messages.error(request, message)
                 except Exception as e:
+                    print("error when reset password")
                     messages.error(request, f'Error: {str(e)}')
     else:
         username_form = UsernameForm()

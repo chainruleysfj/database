@@ -121,25 +121,26 @@ CREATE PROCEDURE reset_password_proc(
     OUT p_message VARCHAR(255)
 )
 BEGIN
-    DECLARE user_id INT;
+    DECLARE p_user_id INT;
     DECLARE answer_correct TINYINT(1);
     
     -- Check if the user exists
-    SELECT id INTO user_id FROM auth_user WHERE username = p_username;
-    IF user_id IS NULL THEN
+    SELECT id INTO p_user_id FROM auth_user WHERE username = p_username;
+    IF p_user_id IS NULL THEN
         SET p_success = 0;
         SET p_message = 'User does not exist.';
     ELSE
         -- Check if the provided security answer matches the stored answer
         SELECT CASE WHEN LOWER(security_answer) = LOWER(p_security_answer) THEN 1 ELSE 0 END INTO answer_correct
         FROM movie_app_securityqa
-        WHERE user_id = user_id;
+        WHERE user_id = p_user_id;
 
         IF answer_correct = 1 THEN
             -- Update the user's password
-            UPDATE auth_user SET password = p_new_password WHERE id = user_id;
+            UPDATE auth_user SET password = p_new_password WHERE id = p_user_id;
             SET p_success = 1;
             SET p_message = 'Password reset successfully.';
+			DELETE FROM movie_app_loginrecord WHERE user_id = p_user_id;
         ELSE
             SET p_success = 0;
             SET p_message = 'Incorrect security answer.';
@@ -176,6 +177,40 @@ BEGIN
         END IF;
     END IF;
     SELECT p_security_question AS security_question, p_message AS message;
+END$$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS manage_login_record;
+DELIMITER $$
+CREATE PROCEDURE manage_login_record(
+    IN p_user_id INT,
+    IN p_session_key VARCHAR(100),
+    IN p_action VARCHAR(10)
+)
+BEGIN
+    -- Check if the user already has an active login record
+    IF p_action = 'create' THEN
+        -- Create a new login record
+        INSERT INTO movie_app_loginrecord (user_id, session_key, login_time)
+        VALUES (p_user_id, p_session_key, now());
+
+    ELSEIF p_action = 'delete' THEN
+        -- Delete the specific login record
+        DELETE FROM movie_app_loginrecord
+        WHERE user_id = p_user_id AND session_key = p_session_key;
+    END IF;
+END$$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS get_active_login_records;
+DELIMITER $$
+CREATE PROCEDURE get_active_login_records(
+    IN p_user_id INT
+)
+BEGIN
+    SELECT COUNT(*) 
+    FROM movie_app_loginrecord
+    WHERE user_id = p_user_id;
 END$$
 DELIMITER ;
 
