@@ -363,6 +363,10 @@ def list_movies(request):
         for genre in genres
     ]
 
+    # Initialize min_rating and max_rating
+    min_rating = 0
+    max_rating = 10
+
     # Handle search requests
     if request.method == 'GET' and (
         'keyword' in request.GET or
@@ -371,7 +375,9 @@ def list_movies(request):
         'min_releaseyear' in request.GET or
         'max_releaseyear' in request.GET or
         'production_company' in request.GET or
-        'genre' in request.GET
+        'genre' in request.GET or
+        'min_rating' in request.GET or
+        'max_rating' in request.GET
     ):
         keyword = request.GET.get('keyword', '')
         min_length = get_int_or_default(request.GET.get('min_length'), 0)
@@ -380,6 +386,8 @@ def list_movies(request):
         max_releaseyear = get_int_or_default(request.GET.get('max_releaseyear'), 9999)
         production_company_id = get_int_or_default(request.GET.get('production_company'), None)
         genre_id = get_int_or_default(request.GET.get('genre'), None)
+        min_rating = get_float_or_default(request.GET.get('min_rating'), 0)
+        max_rating = get_float_or_default(request.GET.get('max_rating'), 10)
 
         with connection.cursor() as cursor:
             cursor.callproc('search_movies_with_directors_and_companies_and_genres', [
@@ -415,6 +423,10 @@ def list_movies(request):
         else:
             average_rating = 'No ratings yet'
 
+        # Apply the rating filter
+        if isinstance(average_rating, (int, float)) and not (min_rating <= average_rating <= max_rating):
+            continue
+
         movies_list.append({
             'movie_id': movie[0],
             'moviename': movie[1],
@@ -427,7 +439,7 @@ def list_movies(request):
             'genres': genre_names,
             'average_rating': average_rating  # Add the average rating to the movie data
         })
-    
+
     # Implement pagination
     page = request.GET.get('page', 1)
     limit = 5  # Number of movies per page
@@ -445,6 +457,13 @@ def list_movies(request):
         'genres': genres_list
     })
 
+def get_float_or_default(value, default):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
 @login_required
 def movie_detail(request, movie_id):
     with connection.cursor() as cursor:
@@ -461,7 +480,19 @@ def movie_detail(request, movie_id):
         'production_company_id': movie_data[6]
     }
 
-    comments = Comment.objects.filter(movie_id=movie_id, is_approved=True)
+    comments = Comment.objects.filter(movie_id=movie_id, is_approved=True).order_by('comment_time')
+    
+    # Reverse the comments order for displaying the latest comment on top
+    comments = comments.reverse()
+    
+    # Add floor to each comment
+    comments_with_floors = []
+    for idx, comment in enumerate(comments):
+        comments_with_floors.append({
+            'floor': f"{len(comments) - idx}F",  # Start from the highest floor number
+            'comment': comment
+        })
+
     rating_form = RatingForm()
     comment_form = CommentForm()
 
@@ -498,7 +529,7 @@ def movie_detail(request, movie_id):
 
     context = {
         'movie': movie,
-        'comments': comments,
+        'comments_with_floors': comments_with_floors,
         'rating_form': rating_form,
         'comment_form': comment_form,
         'average_rating': average_rating,
@@ -506,7 +537,6 @@ def movie_detail(request, movie_id):
     }
 
     return render(request, 'movie_detail.html', context)
-
 @login_required
 @admin_required
 @transaction.atomic
@@ -757,10 +787,11 @@ def search_persons(request):
         person['marital_status'] = marital_status_map.get(person['marital_status'], 'Unknown')
     return render(request, 'list_persons.html', {'persons': persons_list})
 
+
+
 @login_required
 @transaction.atomic
 def all_directors(request):
-
     search_director = request.GET.get('search_director', '')
     search_movie = request.GET.get('search_movie', '')
     with connection.cursor() as cursor:
@@ -770,7 +801,7 @@ def all_directors(request):
     directors_with_movies = []
     all_directors_map = {}
 
-    # 处理存储过程的结果
+    # Process the stored procedure results
     for row in results:
         director_id = row[0]
         director_name = row[1]
@@ -781,7 +812,7 @@ def all_directors(request):
             'movies': [{'id': movie[0], 'name': movie[1]} for movie in movies]
         }
 
-    # 根据搜索条件筛选导演和电影
+    # Filter directors and movies based on search criteria
     filtered_directors = []
     for director in all_directors_map.values():
         director_name_lower = director['name'].lower()
@@ -789,31 +820,51 @@ def all_directors(request):
         matches_movie = any(search_movie.lower() in movie['name'].lower() for movie in director['movies']) if search_movie else True
         if matches_director and matches_movie:
             filtered_directors.append(director)
-            
-
-    # 准备要传递给模板的导演及其电影
+    print(filtered_directors,"A")
+    # Prepare directors and their movies to pass to the template
     for director in filtered_directors:
+        director_movies = []
+        for movie in director['movies']:
+            movie_id = movie['id']
+            movie_name = movie['name']
+            # Calculate the average rating for the movie
+            average_rating = Rating.objects.filter(movie_id=movie_id).aggregate(Avg('rating'))['rating__avg']
+            if average_rating is not None:
+                print("rate")
+                average_rating = round(average_rating*2, 1)  # Round to 1 decimal place
+                print(average_rating)
+            else:
+                print("NOt rate")
+                average_rating = None
+
+            director_movies.append({
+                'id': movie_id,
+                'name': movie_name,
+                'average_rating': average_rating
+            })
+
         directors_with_movies.append({
             'id': director['id'],
             'name': director['name'],
-            'movies': director['movies']
+            'movies': director_movies
         })
+        print(directors_with_movies)
 
-    # 分页处理导演列表
+    # Paginate the list of directors
     page = request.GET.get('page', 1)
-    d_limit = 10 # 每页显示导演数
-    paginator = Paginator(filtered_directors, d_limit)  
+    d_limit = 10  # Number of directors per page
+    paginator = Paginator(filtered_directors, d_limit)
     try:
         directors_page = paginator.page(page)
     except PageNotAnInteger:
         directors_page = paginator.page(1)
     except EmptyPage:
         directors_page = paginator.page(paginator.num_pages)
-    
-    # 为每位导演的电影创建分页
+    print(director_movies,"dp")
+    # Create pagination for each director's movies
     for director in directors_page:
-        m_limit = 5 # 每页显示电影数
-        movies_paginator = Paginator(director['movies'], m_limit)  
+        m_limit = 5  # Number of movies per page
+        movies_paginator = Paginator(director_movies, m_limit)
         movies_page = request.GET.get(f'movies_page_{director["id"]}', 1)
         try:
             director['movies_page'] = movies_paginator.page(movies_page)
@@ -1016,6 +1067,7 @@ def approve_comments(request):
         return redirect('approve_comments')
 
     return render(request, 'approve_comments.html', {'comments': comments})
+
 @login_required
 def delete_comment(request, comment_id):
     comment = get_object_or_404(Comment, comment_id=comment_id)
@@ -1052,8 +1104,8 @@ def manage_users(request):
             users = cursor.fetchall()
     except Exception as e:
         messages.error(request, f'Error: {str(e)}')
-    # 分页处理
-    paginator = Paginator(users, 10)  # 每页显示10个用户
+
+    paginator = Paginator(users, 10)  # 10 users per page
     page_number = request.GET.get('page')
 
     try:
@@ -1211,3 +1263,58 @@ def reset_password(request):
         'form': form,
         'security_question': request.session.get('security_question', None)
     })
+
+@login_required
+def user_homepage(request, username):
+    user = get_object_or_404(User, username=username)
+    
+    with connection.cursor() as cursor:
+        cursor.callproc('get_user_activity', [user.id])
+        
+        # Fetch ratings
+        ratings = cursor.fetchall()
+        cursor.nextset()  # Move to the next result set
+        
+        # Fetch comments
+        comments = cursor.fetchall()
+
+    ratings_list = []
+    for rating in ratings:
+        ratings_list.append({
+            'rating_id': rating[0],
+            'user_id': rating[1],
+            'movie_id': rating[2],
+            'movie_name': rating[3],
+            'rating': round(rating[4] * 2, 1)  # Scale rating to 10 and round to 1 decimal place
+        })
+
+    comments_list = []
+    for comment in comments:
+        comments_list.append({
+            'comment_id': comment[0],
+            'user_id': comment[1],
+            'movie_id': comment[2],
+            'movie_name': comment[3],
+            'content': comment[4],
+            'comment_time': comment[5]
+        })
+
+    return render(request, 'user_homepage.html', {
+        'user_profile': user,
+        'ratings': ratings_list,
+        'comments': comments_list,
+    })
+@login_required
+def search_users(request):
+    query = request.GET.get('q', '')
+    users = []
+    
+    if query:
+        users = User.objects.filter(username__icontains=query)
+    
+    context = {
+        'query': query,
+        'users': users
+    }
+    
+    return render(request, 'search_users.html', context)

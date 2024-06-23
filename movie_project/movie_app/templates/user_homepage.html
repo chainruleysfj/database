@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ user_profile.username }}'s Homepage</title>
+</head>
+<body>
+    <h1>{{ user_profile.username }}'s Homepage</h1>
+
+    <h2>Ratings</h2>
+    <ul>
+        {% for rating in ratings %}
+            <li>
+                Movie: <a href="{% url 'movie_detail' rating.movie_id %}">{{ rating.movie_name }}</a>
+                Rating: {{ rating.rating }}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Comments</h2>
+    <ul>
+        {% for comment in comments %}
+            <li>
+                Movie: <a href="{% url 'movie_detail' comment.movie_id %}">{{ comment.movie_name }}</a>
+                Comment: {{ comment.content }}
+                <br>
+                <small>Commented on: {{ comment.comment_time }}</small>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

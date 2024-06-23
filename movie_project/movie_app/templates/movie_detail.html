@@ -1,3 +1,4 @@
+<!-- movie_detail.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -50,11 +51,14 @@
     
     <h2>Comments</h2>
     <ul>
-        {% for comment in comments %}
+        {% for item in comments_with_floors %}
             <li>
-                <p>{{ comment.content }} - {{ comment.user.username }} on {{ comment.comment_time }}</p>
-                {% if comment.user == request.user %}
-                    <form method="post" action="{% url 'delete_comment' comment_id=comment.comment_id %}">
+                <strong>{{ item.floor }}</strong> - 
+                <a href="{% url 'user_homepage' item.comment.user.username %}">{{ item.comment.user.username }}</a>: {{ item.comment.content }}
+                <br>
+                <small>Commented on: {{ item.comment.comment_time }}</small>
+                {% if item.comment.user == request.user %}
+                    <form method="post" action="{% url 'delete_comment' comment_id=item.comment.comment_id %}">
                         {% csrf_token %}
                         <button type="submit">Delete</button>
                     </form>
