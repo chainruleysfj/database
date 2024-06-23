@@ -15,27 +15,20 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import user_passes_test,login_required
-<<<<<<< HEAD
-from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation,Comment,Rating
-from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm,CommentForm,RatingForm
-from functools import wraps
-import json,os,uuid
-from django.db.models import Avg
-=======
+
 from django.core.cache import cache
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.sessions.models import Session
 from django.utils import timezone
-from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation, SecurityQA, LoginRecord
-from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm,ChangePasswordForm,SecurityQAForm, PasswordResetForm,UsernameForm
+from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation, SecurityQA, LoginRecord,Comment,Rating
+from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm,ChangePasswordForm,SecurityQAForm, PasswordResetForm,UsernameForm,CommentForm,RatingForm
 from functools import wraps
 import json,os,uuid
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 import random
 import string
-
->>>>>>> main
+from django.db.models import Avg
 
 
 def is_admin(user):
@@ -272,10 +265,6 @@ def search_person_by_name(request):
     
     return JsonResponse(directors, safe=False)
 
-<<<<<<< HEAD
-
-=======
->>>>>>> main
 @transaction.atomic
 def save_video_file(video_file):
     unique_filename = str(uuid.uuid4()) + '.mp4'
@@ -974,7 +963,6 @@ def toggle_staff_status(request, user_id):
             messages.error(request, f'Error: {str(e)}')
     return redirect('manage_admins')
 
-<<<<<<< HEAD
 @login_required
 def add_comment(request, pk):
     movie = get_object_or_404(Movie, pk=pk)
@@ -1012,7 +1000,6 @@ def delete_comment(request, comment_id):
         return redirect('movie_detail', movie_id=comment.movie_id)
     
     return render(request, 'confirm_delete_comment.html', {'comment': comment})
-=======
 def delete_account(request):
     if request.method == 'POST':
         user_id = request.user.id
@@ -1197,4 +1184,3 @@ def reset_password(request):
         'form': form,
         'security_question': request.session.get('security_question', None)
     })
->>>>>>> main

@@ -48,12 +48,10 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'), #用户登出
     path('manage_admins/', views.manage_admins, name='manage_admins'), #超级管理员管理普通管理员
     path('add_admin/<int:user_id>/', views.add_admin, name='add_admin'), #添加管理员
-<<<<<<< HEAD
     path('toggle_staff_status/<int:user_id>/', views.toggle_staff_status, name='toggle_staff_status'), #用户状态显示
     path('movies/<int:pk>/comment/', views.add_comment, name='add_comment'),#添加评论
     path('approve-comments/', views.approve_comments, name='approve_comments'),#审核评论
     path('comment/delete/<int:comment_id>/', views.delete_comment, name='delete_comment'),#删除评论
-=======
     path('toggle_staff_status/<int:user_id>/', views.toggle_staff_status, name='toggle_staff_status'), #管理状态显示
     path('delete_account/', views.delete_account, name='delete_account'), #删除自己的账户
     path('manage_users/', views.manage_users, name='manage_users'), #管理员管理用户
@@ -61,7 +59,6 @@ urlpatterns = [
     path('change-password/', views.change_password, name='change_password'), #更改密码
     path('set-security-question/', views.set_security_question, name='set_security_question'), #添加安全问题
     path('reset-password/', views.reset_password, name='reset_password'), #重置密码
->>>>>>> main
 ]
 
 if settings.DEBUG:
