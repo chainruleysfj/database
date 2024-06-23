@@ -20,7 +20,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 from django.db.models import Q,Avg
-from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation, SecurityQA, LoginRecord,Users,Role, RoleActorMovie,Comment,Rating
+from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation, SecurityQA, LoginRecord,Role, RoleActorMovie,Comment,Rating
 from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm,ChangePasswordForm,SecurityQAForm, PasswordResetForm,UsernameForm,CommentForm,RatingForm,RoleForm, RoleActorMovieForm
 from functools import wraps
 import json,os,uuid
