@@ -1,6 +1,10 @@
 # forms.py
 from django import forms
+<<<<<<< HEAD
 from .models import ProductionCompany,Movie,Person,Comment,Rating
+=======
+from .models import ProductionCompany,Movie,Person,SecurityQA
+>>>>>>> main
 from django.contrib.auth.models import User
 
 
@@ -48,6 +52,7 @@ class RegisterForm(forms.ModelForm):
 
         if password != confirm_password:
             raise forms.ValidationError("Passwords do not match")
+<<<<<<< HEAD
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
@@ -59,3 +64,29 @@ class RatingForm(forms.ModelForm):
         widgets = {
             'rating': forms.RadioSelect(choices=[(i, str(i)) for i in range(1, 6)])
         }
+=======
+
+class ChangePasswordForm(forms.Form):
+    old_password = forms.CharField(label='Current Password', widget=forms.PasswordInput)
+    new_password1 = forms.CharField(label='New Password', widget=forms.PasswordInput)
+    new_password2 = forms.CharField(label='Confirm New Password', widget=forms.PasswordInput)
+    def clean(self):
+        cleaned_data = super().clean()
+        new_password1 = cleaned_data.get('new_password1')
+        new_password2 = cleaned_data.get('new_password2')
+        if new_password1 and new_password2 and new_password1 != new_password2:
+            raise forms.ValidationError("New passwords do not match.")
+        return cleaned_data
+
+class SecurityQAForm(forms.ModelForm):
+    class Meta:
+        model = SecurityQA
+        fields = ['security_question', 'security_answer']
+
+class PasswordResetForm(forms.Form):
+    new_password = forms.CharField(label='New Password', widget=forms.PasswordInput)
+    security_answer = forms.CharField(label='Security Answer')
+
+class UsernameForm(forms.Form):
+    username = forms.CharField(max_length=150, label="Username")
+>>>>>>> main

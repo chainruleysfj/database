@@ -107,7 +107,29 @@
         </div>
         <div>
             {{ form.production_company.label_tag }}<br>
-            {{ form.production_company }}<br>
+            {% for company in production_companies_page %}
+                <label>
+                    <input type="radio" name="production_company" value="{{ company.company_id }}">
+                    {{ company.name }}
+                </label><br>
+            {% endfor %}
+            <div class="pagination">
+                <span class="step-links">
+                    {% if production_companies_page.has_previous %}
+                        <a href="?production_company_page=1">&laquo; first</a>
+                        <a href="?production_company_page={{ production_companies_page.previous_page_number }}">previous</a>
+                    {% endif %}
+
+                    <span class="current">
+                        Page {{ production_companies_page.number }} of {{ production_companies_page.paginator.num_pages }}.
+                    </span>
+
+                    {% if production_companies_page.has_next %}
+                        <a href="?production_company_page={{ production_companies_page.next_page_number }}">next</a>
+                        <a href="?production_company_page={{ production_companies_page.paginator.num_pages }}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
             {{ form.production_company.errors }}
         </div>
         <div>
@@ -124,6 +146,7 @@
             </label><br>
         {% endfor %}
 
+
         <div>
             <h3>Selected Directors:</h3>
             <div id="selected-directors">
@@ -139,6 +162,7 @@
 
         <div id="search-results">
             <!-- 搜索结果将动态填充在这里 -->
+             
         </div>
 
         <input type="hidden" name="directors" id="directors-input" value="">

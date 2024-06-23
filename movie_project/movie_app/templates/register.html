@@ -18,7 +18,12 @@
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
+        <!-- 显示验证码图像和输入框 -->
+        <label for="id_captcha">Enter the captcha:</label><br>
+        <input type="text" id="id_captcha" name="captcha"><br><br>
+        <img src="{% url 'generate_captcha' %}" alt="captcha"><br>
         <button type="submit">Register</button>
     </form>
+    <p><a href="{% url 'login' %}">login</a>.</p>
 </body>
 </html>

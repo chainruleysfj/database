@@ -1,5 +1,9 @@
 from django.db import models
 from django.core.validators import MaxValueValidator
+<<<<<<< HEAD
+=======
+from django.contrib.auth.models import AbstractUser
+>>>>>>> main
 from django.contrib.auth.models import User
 
 # Create your models here.
@@ -70,6 +74,14 @@ class MovieGenreAssociation(models.Model):
     class Meta:
         unique_together = ('movie', 'genre')
 
+<<<<<<< HEAD
+=======
+
+class SecurityQA(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    security_question = models.CharField(max_length=255)
+    security_answer = models.CharField(max_length=255)
+>>>>>>> main
 
 class Comment(models.Model):
     comment_id = models.AutoField(primary_key=True)
@@ -79,6 +91,7 @@ class Comment(models.Model):
     comment_time = models.DateTimeField(auto_now_add=True)
     is_approved = models.BooleanField(default=False)
     def __str__(self):
+<<<<<<< HEAD
         return f'Comment by {self.user.username} on {self.movie.title}'
 class Rating(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -87,3 +100,18 @@ class Rating(models.Model):
 
     class Meta:
         unique_together = ('user', 'movie')
+=======
+        return f"{self.user.username}'s Security Question"
+    
+class LoginRecord(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    session_key = models.CharField(max_length=100)
+    login_time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Login Record"
+        verbose_name_plural = "Login Records"
+
+    def __str__(self):
+        return f"{self.user.username} - {self.login_time}"
+>>>>>>> main

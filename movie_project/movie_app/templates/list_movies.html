@@ -117,6 +117,25 @@
             </li>
         {% endfor %}
     </ul>
+
+    <div class="pagination">
+        <span class="step-links">
+            {% if movies.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ movies.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ movies.number }} of {{ movies.paginator.num_pages }}.
+            </span>
+
+            {% if movies.has_next %}
+                <a href="?page={{ movies.next_page_number }}">next</a>
+                <a href="?page={{ movies.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+    
     <p><a href="{% url 'add_movie' %}">add a new movie</a>.</p>
     <p><a href="{% url 'home' %}">home</a>.</p>
 </body>

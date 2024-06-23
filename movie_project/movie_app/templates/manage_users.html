@@ -5,10 +5,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Admins</title>
+    <title>Manage Users</title>
 </head>
 <body>
-    <h1>Manage Admins</h1>
+    <h1>Manage Users</h1>
     {% if messages %}
         <ul class="messages">
             {% for message in messages %}
@@ -16,45 +16,33 @@
             {% endfor %}
         </ul>
     {% endif %}
-    <!-- 搜索表单 -->
-    <form method="get" action="{% url 'manage_admins' %}">
-        <input type="text" name="name" placeholder="Search by Username">
+    <form method="GET" action="{% url 'manage_users' %}">
+        <input type="text" name="q" placeholder="Search users" value="{{ query }}">
         <button type="submit">Search</button>
     </form>
-    
     <ul>
         {% for user in users_page %}
             <li>
                 {{ user.1 }}
                 {% if user.2 %}
                     <span style="color: green;">(Staff)</span>
-                    {% if user.4 %}
-                        <!-- 超级管理员不可操作 -->
-                        <span style="color: rgb(0, 145, 255);">(Superuser)</span>
-                    {% else %}
-                        <form method="post" action="{% url 'toggle_staff_status' user.0 %}">
-                            {% csrf_token %}
-                            <button type="submit">Remove Staff Role</button>
-                        </form>
-                    {% endif %}
-                {% else %}
-                    <form method="post" action="{% url 'toggle_staff_status' user.0 %}">
+                {% endif %}
+                {% if not user.2 %}
+                    <form method="post" action="{% url 'admin_delete_user' user.0 %}">
                         {% csrf_token %}
-                        <button type="submit">Make Staff</button>
+                        <button type="submit">Delete User</button>
                     </form>
                 {% endif %}
             </li>
-        {% empty %}
-            <li>No users found.</li>
         {% endfor %}
     </ul>
-    
+
     <!-- 分页导航 -->
     <div class="pagination">
         <span class="step-links">
             {% if users_page.has_previous %}
-                <a href="?page=1">&laquo; first</a>
-                <a href="?page={{ users_page.previous_page_number }}">previous</a>
+                <a href="?page=1{% if query %}&q={{ query }}{% endif %}">&laquo; first</a>
+                <a href="?page={{ users_page.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">previous</a>
             {% endif %}
 
             <span class="current">
@@ -62,12 +50,12 @@
             </span>
 
             {% if users_page.has_next %}
-                <a href="?page={{ users_page.next_page_number }}">next</a>
-                <a href="?page={{ users_page.paginator.num_pages }}">last &raquo;</a>
+                <a href="?page={{ users_page.next_page_number }}{% if query %}&q={{ query }}{% endif %}">next</a>
+                <a href="?page={{ users_page.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">last &raquo;</a>
             {% endif %}
         </span>
     </div>
-    
+
     <p><a href="{% url 'home' %}">Home</a></p>
 </body>
 </html>

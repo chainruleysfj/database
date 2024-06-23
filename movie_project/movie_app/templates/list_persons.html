@@ -75,6 +75,26 @@
             </li>
         {% endfor %}
     </ul>
+
+    <div class="pagination">
+        <span class="step-links">
+            {% if persons.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ persons.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ persons.number }} of {{ persons.paginator.num_pages }}.
+            </span>
+
+            {% if persons.has_next %}
+                <a href="?page={{ persons.next_page_number }}">next</a>
+                <a href="?page={{ persons.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+
+
     <p><a href="{% url 'add_person' %}">add a new person</a>.</p>
     <p><a href="{% url 'home' %}">home</a>.</p>
     
@@ -106,11 +126,23 @@
             var xhr = new XMLHttpRequest();
             xhr.open("POST", "/update_person/" + personId + "/", true);
             xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+            xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest"); // 确保设置了这个头信息
             xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    location.reload();
-                } else if (xhr.readyState === 4) {
-                    console.error("Error: " + xhr.responseText);
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            console.error("Error: " + response.error);
+                        }
+                    } else if (xhr.status === 403) {
+                        var response = JSON.parse(xhr.responseText);
+                        console.error("Permission error: " + response.error);
+                        alert(response.error); // 显示权限错误消息
+                    } else {
+                        console.error("An error occurred: " + xhr.statusText);
+                    }
                 }
             };
             xhr.send(formData);
@@ -121,11 +153,21 @@
                 var xhr = new XMLHttpRequest();
                 xhr.open("POST", "/delete_person/" + personId + "/", true);
                 xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+                xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest"); // 确保设置了这个头信息
                 xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 4 && xhr.status === 200) {
-                        location.reload();
-                    } else if (xhr.readyState === 4) {
-                        console.error("Error: " + xhr.responseText);
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            var response = JSON.parse(xhr.responseText);
+                            if (response.success) {
+                                location.reload();
+                            } else {
+                                alert("Error: " + response.error);
+                            }
+                        } else if (xhr.status === 403) {
+                            alert("缺少权限,需要管理员权限");
+                        } else {
+                            alert("An error occurred: " + xhr.statusText);
+                        }
                     }
                 };
                 xhr.send();
