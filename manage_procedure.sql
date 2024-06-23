@@ -194,6 +194,8 @@ CREATE PROCEDURE delete_movie_and_directormovie_and_genre(IN p_movie_id INT)
 BEGIN
 	DELETE FROM movie_app_MovieGenreAssociation mga WHERE mga.movie_id = p_movie_id;
 	DELETE FROM movie_app_directormovie dm WHERE dm.movie_id = p_movie_id;
+    DELETE FROM movie_app_comment mc WHERE mc.movie_id = p_movie_id;
+    DELETE FROM movie_app_rating mr WHERE mr.movie_id = p_movie_id;
     DELETE FROM movie_app_movie m WHERE m.movie_id = p_movie_id;
 END //
 DELIMITER ;
@@ -239,5 +241,11 @@ BEGIN
 END //
 DELIMITER ;
 
-
+DROP PROCEDURE IF EXISTS delete_production_company;
+DELIMITER $$
+CREATE PROCEDURE delete_production_company(IN p_company_id INT)
+BEGIN
+    DELETE FROM movie_app_productioncompany WHERE company_id = p_company_id;
+END$$
+DELIMITER ;
 
