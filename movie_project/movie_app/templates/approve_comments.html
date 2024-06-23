@@ -1,0 +1,33 @@
+<!-- templates/approve_comments.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Approve Comments</title>
+</head>
+<body>
+    <h1>Approve Comments</h1>
+    <form method="post">
+        {% csrf_token %}
+        <table>
+            <tr>
+                <th>Movie</th>
+                <th>User</th>
+                <th>Content</th>
+                <th>Approve</th>
+            </tr>
+            {% for comment in comments %}
+            <tr>
+                <td>{{ comment.movie.title }}</td>
+                <td>{{ comment.user.username }}</td>
+                <td>{{ comment.content }}</td>
+                <td><input type="checkbox" name="approve" value="{{ comment.comment_id }}"></td>
+            </tr>
+            {% endfor %}
+        </table>
+        <button type="submit">Approve Selected Comments</button>
+    </form>
+    <p><a href="{% url 'home' %}">Home</a></p>
+</body>
+</html>

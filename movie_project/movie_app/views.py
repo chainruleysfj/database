@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 
 # Create your views here.
-from django.http import JsonResponse,HttpResponse,HttpResponseRedirect,Http404
+from django.http import JsonResponse,HttpResponse,HttpResponseRedirect,Http404,HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 from django import forms
 from django.urls import reverse
@@ -15,18 +15,20 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import user_passes_test,login_required
+
 from django.core.cache import cache
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.sessions.models import Session
 from django.utils import timezone
-from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation, SecurityQA, LoginRecord
-from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm,ChangePasswordForm,SecurityQAForm, PasswordResetForm,UsernameForm
+from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation, SecurityQA, LoginRecord,Comment,Rating
+from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm,ChangePasswordForm,SecurityQAForm, PasswordResetForm,UsernameForm,CommentForm,RatingForm
 from functools import wraps
 import json,os,uuid
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 import random
 import string
-
+from django.db.models import Avg
 
 
 def is_admin(user):
@@ -95,7 +97,9 @@ def add_production_company(request):
 @login_required
 @transaction.atomic
 def list_production_companies(request):
-  
+    page = request.GET.get('page', 1)
+    limit = 10  # 每页显示的公司数量
+
     companies = []
     with connection.cursor() as cursor:
         cursor.callproc('get_all_production_companies')
@@ -106,7 +110,16 @@ def list_production_companies(request):
                 'city': result[2],
                 'company_description': result[3],
             })
-    return render(request, 'list_production_companies.html', {'companies': companies})
+
+    paginator = Paginator(companies, limit)
+    try:
+        companies_page = paginator.page(page)
+    except PageNotAnInteger:
+        companies_page = paginator.page(1)
+    except EmptyPage:
+        companies_page = paginator.page(paginator.num_pages)
+
+    return render(request, 'list_production_companies.html', {'companies': companies_page})
 
 @login_required
 @admin_required
@@ -174,7 +187,6 @@ def add_movie(request):
     if request.method == 'POST':
         form = MovieForm(request.POST, request.FILES,is_update=False)
         if form.is_valid():
-            print("电影表单无误")
             # 从表单中获取数据
             moviename = form.cleaned_data['moviename']
             length = form.cleaned_data['length']
@@ -206,15 +218,41 @@ def add_movie(request):
                     cursor.callproc('add_movie_genre_association', [movie_id, genre_id])
 
             return redirect('list_movies')
-        print("电影表单有误")
     else:
         form = MovieForm(is_update=False)
+
+    
+
+    # 获取出品公司分页数据
+    with connection.cursor() as cursor:
+        cursor.callproc('get_all_production_companies')
+        production_companies = cursor.fetchall()
+    production_companies_list = [
+        {'company_id': company[0], 'name': company[1], 'city': company[2], 'company_description': company[3]}
+        for company in production_companies
+    ]
+    production_companies_paginator = Paginator(production_companies_list, 10)
+    production_company_page = request.GET.get('production_company_page', 1)
+    try:
+        production_companies_page = production_companies_paginator.page(production_company_page)
+    except PageNotAnInteger:
+        production_companies_page = production_companies_paginator.page(1)
+    except EmptyPage:
+        production_companies_page = production_companies_paginator.page(production_companies_paginator.num_pages)
+
 
     # 获取所有电影类型
     with connection.cursor() as cursor:
         cursor.callproc('select_all_genre')
         genres = cursor.fetchall()
-    return render(request, 'add_movie.html', {'form': form, 'genres': genres})
+    
+    return render(request, 'add_movie.html', {
+        'form': form,
+        'genres': genres,
+        'production_companies_page': production_companies_page
+    })
+
+
 
 @login_required
 @transaction.atomic
@@ -224,6 +262,7 @@ def search_person_by_name(request):
         cursor.callproc('search_person_by_name', [query])
         results = cursor.fetchall()
     directors = [{'person_id': result[0], 'name': result[1]} for result in results]
+    
     return JsonResponse(directors, safe=False)
 
 @transaction.atomic
@@ -382,15 +421,25 @@ def list_movies(request):
             'directors_list': directors_list,  # 添加预处理后的导演名列表
             'genres':genre_names
         })
+    
+    # 实现分页
+    page = request.GET.get('page', 1)
+    limit = 5 # # 每页显示的电影数量
+    paginator = Paginator(movies_list, limit)  
+    try:
+        movies_page = paginator.page(page)
+    except PageNotAnInteger:
+        movies_page = paginator.page(1)
+    except EmptyPage:
+        movies_page = paginator.page(paginator.num_pages)
         
 
     return render(request, 'list_movies.html', {
-        'movies': movies_list, 
+        'movies': movies_page, 
         'production_companies': production_companies_list,
         'genres': genres_list})
 
 @login_required
-@transaction.atomic
 def movie_detail(request, movie_id):
     with connection.cursor() as cursor:
         cursor.callproc('get_movie_detail', [movie_id])
@@ -406,8 +455,51 @@ def movie_detail(request, movie_id):
         'production_company_id': movie_data[6]
     }
 
-    return render(request, 'movie_detail.html', {'movie': movie})
+    comments = Comment.objects.filter(movie_id=movie_id, is_approved=True)
+    rating_form = RatingForm()
+    comment_form = CommentForm()
 
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                if 'rating' in request.POST:
+                    if Rating.objects.filter(movie_id=movie_id, user=request.user).exists():
+                        messages.error(request, "Already rated!")
+                    else:
+                        rating_form = RatingForm(request.POST)
+                        if rating_form.is_valid():
+                            rating = rating_form.save(commit=False)
+                            rating.movie_id = movie_id
+                            rating.user = request.user
+                            rating.save()
+                            messages.success(request, "Rating submitted successfully!")
+                            return redirect('movie_detail', movie_id=movie_id)
+                else:
+                    comment_form = CommentForm(request.POST)
+                    if comment_form.is_valid():
+                        comment = comment_form.save(commit=False)
+                        comment.movie_id = movie_id
+                        comment.user = request.user
+                        comment.save()
+                        messages.success(request, "Comment submitted successfully!")
+                        return redirect('movie_detail', movie_id=movie_id)
+        except Exception as e:
+            messages.error(request, "An error occurred! Please try again.")
+
+    average_rating = Rating.objects.filter(movie_id=movie_id).aggregate(Avg('rating'))['rating__avg']
+    if average_rating is not None:
+        average_rating = round(average_rating * 2, 1)  # Scale to 10 and round to 1 decimal place
+
+    context = {
+        'movie': movie,
+        'comments': comments,
+        'rating_form': rating_form,
+        'comment_form': comment_form,
+        'average_rating': average_rating,
+        'star_range': range(5, 0, -1)  # Pass a range of 5 to 1 for star ratings
+    }
+
+    return render(request, 'movie_detail.html', context)
 @login_required
 @admin_required
 @transaction.atomic
@@ -479,11 +571,30 @@ def update_movie(request, movie_id):
             movie_genres = cursor.fetchall()
             movie_genres_ids = [genre[0] for genre in movie_genres]
 
+        # 获取出品公司分页数据
+        with connection.cursor() as cursor:
+            cursor.callproc('get_all_production_companies')
+            production_companies = cursor.fetchall()
+        production_companies_list = [
+            {'company_id': company[0], 'name': company[1], 'city': company[2], 'company_description': company[3]}
+            for company in production_companies
+        ]
+        production_companies_paginator = Paginator(production_companies_list, 10)
+        production_company_page = request.GET.get('production_company_page', 1)
+        try:
+            production_companies_page = production_companies_paginator.page(production_company_page)
+        except PageNotAnInteger:
+            production_companies_page = production_companies_paginator.page(1)
+        except EmptyPage:
+            production_companies_page = production_companies_paginator.page(production_companies_paginator.num_pages)
+
+
         return render(request, 'update_movie.html', {  
             'form': form,  
             'selected_directors_json': selected_directors_json,  
             'genres': genres, 
-            'movie_genres_ids': movie_genres_ids
+            'movie_genres_ids': movie_genres_ids,
+            'production_companies_page': production_companies_page
         })
       
 @transaction.atomic   
@@ -544,7 +655,18 @@ def list_persons(request):
     for person in persons_list:
         person['gender'] = gender_map.get(person['gender'], 'Unknown')
         person['marital_status'] = marital_status_map.get(person['marital_status'], 'Unknown')
-    return render(request, 'list_persons.html', {'persons': persons_list})
+
+    # 实现分页
+    page = request.GET.get('page', 1)
+    limit = 10 # # 每页显示的人物数量
+    paginator = Paginator( persons_list, limit)  
+    try:
+        person_page = paginator.page(page)
+    except PageNotAnInteger:
+        person_page = paginator.page(1)
+    except EmptyPage:
+        person_page = paginator.page(paginator.num_pages)
+    return render(request, 'list_persons.html', {'persons': person_page})
 
 @login_required
 @admin_required
@@ -653,8 +775,31 @@ def all_directors(request):
             'movies': director['movies']
         })
 
+    # 分页处理导演列表
+    page = request.GET.get('page', 1)
+    d_limit = 10 # 每页显示导演数
+    paginator = Paginator(filtered_directors, d_limit)  
+    try:
+        directors_page = paginator.page(page)
+    except PageNotAnInteger:
+        directors_page = paginator.page(1)
+    except EmptyPage:
+        directors_page = paginator.page(paginator.num_pages)
+    
+    # 为每位导演的电影创建分页
+    for director in directors_page:
+        m_limit = 5 # 每页显示电影数
+        movies_paginator = Paginator(director['movies'], m_limit)  
+        movies_page = request.GET.get(f'movies_page_{director["id"]}', 1)
+        try:
+            director['movies_page'] = movies_paginator.page(movies_page)
+        except PageNotAnInteger:
+            director['movies_page'] = movies_paginator.page(1)
+        except EmptyPage:
+            director['movies_page'] = movies_paginator.page(movies_paginator.num_pages)
+
     return render(request, 'all_directors.html', {
-        'directors_with_movies': directors_with_movies,
+        'directors_with_movies': directors_page,
         'search_director': search_director,
         'search_movie': search_movie
     })
@@ -667,14 +812,16 @@ def manage_genres(request):
         action = request.POST.get('action')
         genre_name = request.POST.get('genre_name', '')
         genre_id = request.POST.get('genre_id', None)
-        
-        if action == 'add' and genre_name:
-            with connection.cursor() as cursor:
-                cursor.callproc('add_movie_genre', [genre_name])
-        
-        elif action == 'delete' and genre_id:
-            with connection.cursor() as cursor:
-                cursor.callproc('delete_movie_genre', [genre_id])
+        try:
+            if action == 'add' and genre_name:
+                with connection.cursor() as cursor:
+                    cursor.callproc('add_movie_genre', [genre_name])
+            
+            elif action == 'delete' and genre_id:
+                with connection.cursor() as cursor:
+                    cursor.callproc('delete_movie_genre', [genre_id])
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
 
         return redirect('manage_genres')
 
@@ -682,7 +829,17 @@ def manage_genres(request):
         cursor.callproc('select_all_genre')
         genres = cursor.fetchall()
     
-    return render(request, 'manage_genres.html', {'genres': genres})
+    page = request.GET.get('page', 1)
+    limit = 10 # 每页显示电影类型数
+    paginator = Paginator(genres, limit)  
+    try:
+        genres_page = paginator.page(page)
+    except PageNotAnInteger:
+        genres_page = paginator.page(1)
+    except EmptyPage:
+        genres_page = paginator.page(paginator.num_pages)
+    
+    return render(request, 'manage_genres.html', {'genres': genres_page})
 
 @csrf_exempt
 def register_view(request):
@@ -766,11 +923,23 @@ def manage_admins(request):
             users = cursor.fetchall()
     except Exception as e:
         messages.error(request, f'Error: {str(e)}')
-    context = {
-        'users': users
-    }
-    return render(request, 'manage_admins.html', context)
+    # 分页处理
+    paginator = Paginator(users, 10)  # 每页显示10个用户
+    page_number = request.GET.get('page')
 
+    try:
+        users_page = paginator.page(page_number)
+    except PageNotAnInteger:
+        users_page = paginator.page(1)
+    except EmptyPage:
+        users_page = paginator.page(paginator.num_pages)
+
+    context = {
+        'users_page': users_page,
+    }
+
+    return render(request, 'manage_admins.html', context)
+    
 @login_required
 @super_required
 def add_admin(request, user_id):
@@ -794,6 +963,43 @@ def toggle_staff_status(request, user_id):
             messages.error(request, f'Error: {str(e)}')
     return redirect('manage_admins')
 
+@login_required
+def add_comment(request, pk):
+    movie = get_object_or_404(Movie, pk=pk)
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.movie = movie
+            comment.user = request.user
+            comment.save()
+            return redirect('movie_detail', pk=movie.pk)
+    else:
+        form = CommentForm()
+    return render(request, 'movies/add_comment.html', {'form': form})
+
+@login_required
+@admin_required
+def approve_comments(request):
+    comments = Comment.objects.filter(is_approved=False)
+    if request.method == 'POST':
+        comment_ids = request.POST.getlist('approve')
+        print(request.POST,"apple")
+        Comment.objects.filter(comment_id__in=comment_ids).update(is_approved=True)
+        return redirect('approve_comments')
+    
+    return render(request, 'approve_comments.html', {'comments': comments})
+@login_required
+def delete_comment(request, comment_id):
+    comment = get_object_or_404(Comment, comment_id=comment_id)
+    if comment.user != request.user:
+        return HttpResponseForbidden("You are not allowed to delete this comment.")
+    
+    if request.method == "POST":
+        comment.delete()
+        return redirect('movie_detail', movie_id=comment.movie_id)
+    
+    return render(request, 'confirm_delete_comment.html', {'comment': comment})
 def delete_account(request):
     if request.method == 'POST':
         user_id = request.user.id
@@ -819,10 +1025,22 @@ def manage_users(request):
             users = cursor.fetchall()
     except Exception as e:
         messages.error(request, f'Error: {str(e)}')
+    # 分页处理
+    paginator = Paginator(users, 10)  # 每页显示10个用户
+    page_number = request.GET.get('page')
+
+    try:
+        users_page = paginator.page(page_number)
+    except PageNotAnInteger:
+        users_page = paginator.page(1)
+    except EmptyPage:
+        users_page = paginator.page(paginator.num_pages)
+
     context = {
-        'users': users,
+        'users_page': users_page,
         'query': query
     }
+
     return render(request, 'manage_users.html', context)
 
 @login_required

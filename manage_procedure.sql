@@ -239,5 +239,11 @@ BEGIN
 END //
 DELIMITER ;
 
-
+DROP PROCEDURE IF EXISTS delete_production_company;
+DELIMITER $$
+CREATE PROCEDURE delete_production_company(IN p_company_id INT)
+BEGIN
+    DELETE FROM movie_app_productioncompany WHERE company_id = p_company_id;
+END$$
+DELIMITER ;
 
