@@ -1,6 +1,6 @@
 # forms.py
 from django import forms
-from .models import ProductionCompany,Movie,Person,SecurityQA
+from .models import ProductionCompany,Movie,Person,Comment,Rating,SecurityQA
 from django.contrib.auth.models import User
 
 
@@ -48,6 +48,19 @@ class RegisterForm(forms.ModelForm):
 
         if password != confirm_password:
             raise forms.ValidationError("Passwords do not match")
+        
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['content']
+
+class RatingForm(forms.ModelForm):
+    class Meta:
+        model = Rating
+        fields = ['rating']
+        widgets = {
+            'rating': forms.RadioSelect(attrs={'class': 'star-rating'}),
+        }
 
 class ChangePasswordForm(forms.Form):
     old_password = forms.CharField(label='Current Password', widget=forms.PasswordInput)

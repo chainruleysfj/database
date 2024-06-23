@@ -1,7 +1,7 @@
 from django.db import models
 from django.core.validators import MaxValueValidator
-from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser,User
+
 
 # Create your models here.
 class ProductionCompany(models.Model):
@@ -72,11 +72,31 @@ class MovieGenreAssociation(models.Model):
         unique_together = ('movie', 'genre')
 
 
+
 class SecurityQA(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     security_question = models.CharField(max_length=255)
     security_answer = models.CharField(max_length=255)
 
+
+class Comment(models.Model):
+    comment_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    content = models.TextField()
+    comment_time = models.DateTimeField(auto_now_add=True)
+    is_approved = models.BooleanField(default=False)
+    def __str__(self):
+
+        return f'Comment by {self.user.username} on {self.movie.title}'
+    
+class Rating(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    rating = models.PositiveSmallIntegerField()  # Should be between 1 and 5
+
+    class Meta:
+        unique_together = ('user', 'movie')
     def __str__(self):
         return f"{self.user.username}'s Security Question"
     
