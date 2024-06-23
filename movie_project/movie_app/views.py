@@ -500,6 +500,7 @@ def movie_detail(request, movie_id):
     }
 
     return render(request, 'movie_detail.html', context)
+
 @login_required
 @admin_required
 @transaction.atomic
@@ -510,9 +511,16 @@ def update_movie(request, movie_id):
         # 解析表单数据
         moviename = request.POST['moviename']
         length = request.POST['length']
-        releaseyear = get_int_or_default(request.POST['releaseyear'],None)
+        releaseyear = get_int_or_default(request.POST['releaseyear'], None)
         plot_summary = request.POST['plot_summary']
-        production_company_id = request.POST['production_company']
+
+        # 捕获缺少 production_company 字段的异常
+        try:
+            production_company_id = request.POST['production_company']
+        except KeyError:
+            messages.error(request, "Choose a production company!")
+            return redirect('update_movie', movie_id=movie_id)
+
         # 如果上传了新的视频文件，保存并更新资源链接
         if 'video_file' in request.FILES:
             video_file = request.FILES['video_file']
@@ -521,48 +529,21 @@ def update_movie(request, movie_id):
             delete_video_file(movie.resource_link)
         else:
             resource_link = movie.resource_link
+
         # 调用存储过程更新电影信息
         with connection.cursor() as cursor:
             cursor.callproc('update_movie', [movie_id, moviename, length, releaseyear, plot_summary, resource_link, production_company_id])
+        
         # 获取选中的导演
-            director_ids = request.POST.get('directors', '')
-            # 插入导演数据
-            director_ids_list = director_ids.split(',') if director_ids else []
-            with connection.cursor() as cursor:
-                cursor.callproc('delete_directors_for_movie', [movie_id])
-                for director_id in director_ids_list:
-                    cursor.callproc('add_director_movie', [movie_id, int(director_id)])
+        director_ids = request.POST.get('directors', '')
+        director_ids_list = director_ids.split(',') if director_ids else []
+        with connection.cursor() as cursor:
+            cursor.callproc('delete_directors_for_movie', [movie_id])
+            for director_id in director_ids_list:
+                cursor.callproc('add_director_movie', [movie_id, int(director_id)])
+        
         # 更新类型关联
         genre_ids = request.POST.getlist('genres')
-        # 获取所有电影类型
-        with connection.cursor() as cursor:
-            cursor.callproc('select_all_genre')
-            genres = cursor.fetchall()
-        with connection.cursor() as cursor:
-            cursor.callproc('get_movie_genre_association', [movie_id])
-            movie_genres = cursor.fetchall()
-            movie_genres_ids = [genre[0] for genre in movie_genres]
-        with connection.cursor() as cursor:
-            for genre_id in movie_genres_ids:
-                cursor.callproc('delete_movie_genre_association', [movie_id, genre_id])  # 删除所有现有关联
-            for genre_id in genre_ids:
-                cursor.callproc('add_movie_genre_association', [movie_id, genre_id])
-        return redirect('list_movies')
-    else:
-        # 如果是 GET 请求，创建一个新的表单实例，并传入电影对象数据
-        form = MovieForm(instance=movie,is_update=True)
-        # 获取当前电影已关联的导演ID列表  
-        # 假设你有一个方法可以从数据库中获取这些ID，例如 get_directors_for_movie(movie_id)  
-        with connection.cursor() as cursor:  
-            # 调用存储过程，这里不需要输出参数  
-            cursor.callproc('get_directors_for_movie', [movie_id])  
-              
-            # fetchall()获取查询结果的所有行  
-            rows = cursor.fetchall()  
-            selected_directors = [row[0] for row in rows]  # 假设每行只有一个值，即导演ID  
-            
-        selected_directors_json = json.dumps(selected_directors)
-        # 获取所有电影类型
         with connection.cursor() as cursor:
             cursor.callproc('select_all_genre')
             genres = cursor.fetchall()
@@ -571,16 +552,53 @@ def update_movie(request, movie_id):
             movie_genres = cursor.fetchall()
             movie_genres_ids = [genre[0] for genre in movie_genres]
 
+        with connection.cursor() as cursor:
+            for genre_id in movie_genres_ids:
+                cursor.callproc('delete_movie_genre_association', [movie_id, genre_id])  # 删除所有现有关联
+            for genre_id in genre_ids:
+                cursor.callproc('add_movie_genre_association', [movie_id, genre_id])
+
+        return redirect('list_movies')
+    else:
+        # 如果是 GET 请求，创建一个新的表单实例，并传入电影对象数据
+        form = MovieForm(instance=movie, is_update=True)
+        
+        # 获取当前电影已关联的导演ID列表  
+        with connection.cursor() as cursor:  
+            cursor.callproc('get_directors_for_movie', [movie_id])
+            rows = cursor.fetchall()
+            selected_directors = [row[0] for row in rows]
+        
+        selected_directors_json = json.dumps(selected_directors)
+
+        # 获取所有电影类型
+        with connection.cursor() as cursor:
+            cursor.callproc('select_all_genre')
+            genres = cursor.fetchall()
+        
+        with connection.cursor() as cursor:
+            cursor.callproc('get_movie_genre_association', [movie_id])
+            movie_genres = cursor.fetchall()
+            movie_genres_ids = [genre[0] for genre in movie_genres]
+
+        # 获取当前电影的出品公司ID
+        with connection.cursor() as cursor:
+            cursor.callproc('get_movie_production_company', [movie_id])
+            movie_production_company_id = cursor.fetchone()[0]
+
         # 获取出品公司分页数据
         with connection.cursor() as cursor:
             cursor.callproc('get_all_production_companies')
             production_companies = cursor.fetchall()
+        
         production_companies_list = [
             {'company_id': company[0], 'name': company[1], 'city': company[2], 'company_description': company[3]}
             for company in production_companies
         ]
+        
         production_companies_paginator = Paginator(production_companies_list, 10)
         production_company_page = request.GET.get('production_company_page', 1)
+        
         try:
             production_companies_page = production_companies_paginator.page(production_company_page)
         except PageNotAnInteger:
@@ -588,13 +606,13 @@ def update_movie(request, movie_id):
         except EmptyPage:
             production_companies_page = production_companies_paginator.page(production_companies_paginator.num_pages)
 
-
-        return render(request, 'update_movie.html', {  
-            'form': form,  
-            'selected_directors_json': selected_directors_json,  
-            'genres': genres, 
+        return render(request, 'update_movie.html', {
+            'form': form,
+            'selected_directors_json': selected_directors_json,
+            'genres': genres,
             'movie_genres_ids': movie_genres_ids,
-            'production_companies_page': production_companies_page
+            'production_companies_page': production_companies_page,
+            'movie_production_company_id': movie_production_company_id  # 传递已选择的公司ID
         })
       
 @transaction.atomic   
