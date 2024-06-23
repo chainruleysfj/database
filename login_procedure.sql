@@ -79,9 +79,10 @@ DELIMITER ;
 
 DROP PROCEDURE IF EXISTS update_password_procedure;
 DELIMITER //
-CREATE PROCEDURE update_password_procedure(IN user_id INT, IN new_password VARCHAR(255))
+CREATE PROCEDURE update_password_procedure(IN p_user_id INT, IN new_password VARCHAR(255))
 BEGIN
-    UPDATE auth_user SET password = new_password WHERE id = user_id;
+    UPDATE auth_user SET password = new_password WHERE id = p_user_id;
+    DELETE FROM movie_app_loginrecord WHERE user_id = p_user_id;
 END //
 DELIMITER ;
 
