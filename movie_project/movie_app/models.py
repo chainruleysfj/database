@@ -100,11 +100,7 @@ class Rating(models.Model):
     rating = models.PositiveSmallIntegerField()  # Should be between 1 and 5
     class Meta:
         unique_together = ('user', 'movie')
-<<<<<<< HEAD
-=======
 
->>>>>>> usetomerge
-    
 class LoginRecord(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     session_key = models.CharField(max_length=100)
