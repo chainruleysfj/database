@@ -43,12 +43,18 @@ urlpatterns = [
     path('all_directors/', views.all_directors, name='all_directors'), #查看导演
     path('manage_genres/', views.manage_genres, name='manage_genres'), #管理电影类型
     path('register/', views.register_view, name='register'), #用户注册
+    path('generate-captcha/', views.generate_captcha, name='generate_captcha'), #验证码
     path('', views.login_view, name='login'), #用户登录
     path('logout/', views.logout_view, name='logout'), #用户登出
-    path('manage_admins/', views.manage_admins, name='manage_admins'), #管理用户
+    path('manage_admins/', views.manage_admins, name='manage_admins'), #超级管理员管理普通管理员
     path('add_admin/<int:user_id>/', views.add_admin, name='add_admin'), #添加管理员
-    path('toggle_staff_status/<int:user_id>/', views.toggle_staff_status, name='toggle_staff_status'), #用户状态显示
+    path('toggle_staff_status/<int:user_id>/', views.toggle_staff_status, name='toggle_staff_status'), #管理状态显示
     path('delete_account/', views.delete_account, name='delete_account'), #删除自己的账户
+    path('manage_users/', views.manage_users, name='manage_users'), #管理员管理用户
+    path('admin_delete_user/<int:user_id>/', views.admin_delete_user, name='admin_delete_user'), #管理员删除他人账户
+    path('change-password/', views.change_password, name='change_password'), #更改密码
+    path('set-security-question/', views.set_security_question, name='set_security_question'), #添加安全问题
+    path('reset-password/', views.reset_password, name='reset_password'), #重置密码
 ]
 
 if settings.DEBUG:
