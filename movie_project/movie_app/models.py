@@ -100,6 +100,7 @@ class Rating(models.Model):
     def __str__(self):
         return f"{self.user.username}'s Security Question"
     
+    
 class LoginRecord(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     session_key = models.CharField(max_length=100)
