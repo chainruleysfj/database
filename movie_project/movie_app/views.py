@@ -9,26 +9,27 @@ from django.db import connection,transaction
 from django.conf import settings
 from django.template.defaultfilters import urlencode
 from django.contrib.auth.hashers import make_password,check_password
-from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import get_user_model,update_session_auth_hash
 from django.contrib.auth.backends import ModelBackend
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import user_passes_test,login_required
-
 from django.core.cache import cache
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.sessions.models import Session
 from django.utils import timezone
-from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation, SecurityQA, LoginRecord,Comment,Rating
-from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm,ChangePasswordForm,SecurityQAForm, PasswordResetForm,UsernameForm,CommentForm,RatingForm
+from django.db.models import Q,Avg
+from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation, SecurityQA, LoginRecord,Users,Role, RoleActorMovie,Comment,Rating
+from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm,ChangePasswordForm,SecurityQAForm, PasswordResetForm,UsernameForm,CommentForm,RatingForm,RoleForm, RoleActorMovieForm
 from functools import wraps
 import json,os,uuid
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 import random
 import string
-from django.db.models import Avg
+
+
 
 
 def is_admin(user):
@@ -45,7 +46,7 @@ def admin_required(function):
                 return JsonResponse({'success': False, 'error': '缺少权限,需要管理员权限'}, status=403)
             else:
                 messages.error(request, "缺少权限,需要管理员权限")
-                return redirect(request.META.get('HTTP_REFERER', '/'))
+                return redirect(request.META.get('HTTP_REFERER', '/')) # 重定向到来源页面
     return wrap
 
 def super_required(function):
@@ -110,7 +111,6 @@ def list_production_companies(request):
                 'city': result[2],
                 'company_description': result[3],
             })
-
     paginator = Paginator(companies, limit)
     try:
         companies_page = paginator.page(page)
@@ -153,6 +153,7 @@ def update_production_company(request, company_id):
 @transaction.atomic
 def delete_production_company(request, company_id):
     try:
+
         with connection.cursor() as cursor:
             cursor.callproc('get_movies_by_company', [company_id])
             movies = cursor.fetchall()
@@ -167,6 +168,7 @@ def delete_production_company(request, company_id):
         with connection.cursor() as cursor:
             # 删除出品公司
             cursor.callproc('delete_production_company', [company_id])
+        
         messages.success(request, 'Production company and all associated movies deleted successfully.')
     except Exception as e:
         messages.error(request, f'Error: {str(e)}')
@@ -235,8 +237,6 @@ def add_movie(request):
     else:
         form = MovieForm(is_update=False)
 
-    
-
     # 获取出品公司分页数据
     with connection.cursor() as cursor:
         cursor.callproc('get_all_production_companies')
@@ -266,8 +266,6 @@ def add_movie(request):
         'production_companies_page': production_companies_page
     })
 
-
-
 @login_required
 @transaction.atomic
 def search_person_by_name(request):
@@ -276,9 +274,9 @@ def search_person_by_name(request):
         cursor.callproc('search_person_by_name', [query])
         results = cursor.fetchall()
     directors = [{'person_id': result[0], 'name': result[1]} for result in results]
-    
     return JsonResponse(directors, safe=False)
 
+@login_required
 @transaction.atomic
 def save_video_file(video_file):
     unique_filename = str(uuid.uuid4()) + '.mp4'
@@ -435,7 +433,7 @@ def list_movies(request):
             'directors_list': directors_list,  # 添加预处理后的导演名列表
             'genres':genre_names
         })
-    
+        
     # 实现分页
     page = request.GET.get('page', 1)
     limit = 5 # # 每页显示的电影数量
@@ -452,6 +450,7 @@ def list_movies(request):
         'movies': movies_page, 
         'production_companies': production_companies_list,
         'genres': genres_list})
+
 
 @login_required
 def movie_detail(request, movie_id):
@@ -628,7 +627,8 @@ def update_movie(request, movie_id):
             'production_companies_page': production_companies_page,
             'movie_production_company_id': movie_production_company_id  # 传递已选择的公司ID
         })
-      
+
+@login_required        
 @transaction.atomic   
 def delete_video_file(file_path):
     # 从文件路径中提取文件名
@@ -687,7 +687,6 @@ def list_persons(request):
     for person in persons_list:
         person['gender'] = gender_map.get(person['gender'], 'Unknown')
         person['marital_status'] = marital_status_map.get(person['marital_status'], 'Unknown')
-
     # 实现分页
     page = request.GET.get('page', 1)
     limit = 10 # # 每页显示的人物数量
@@ -829,12 +828,12 @@ def all_directors(request):
             director['movies_page'] = movies_paginator.page(1)
         except EmptyPage:
             director['movies_page'] = movies_paginator.page(movies_paginator.num_pages)
-
     return render(request, 'all_directors.html', {
         'directors_with_movies': directors_page,
         'search_director': search_director,
         'search_movie': search_movie
     })
+        
 
 @login_required
 @admin_required
@@ -844,6 +843,7 @@ def manage_genres(request):
         action = request.POST.get('action')
         genre_name = request.POST.get('genre_name', '')
         genre_id = request.POST.get('genre_id', None)
+        
         try:
             if action == 'add' and genre_name:
                 with connection.cursor() as cursor:
@@ -935,7 +935,6 @@ def logout_view(request):
     except Exception as e:
         # Handle any exceptions or errors
         print(f"Error deleting login record: {e}")
-
     logout(request)
     return redirect('login')
 
@@ -971,7 +970,7 @@ def manage_admins(request):
     }
 
     return render(request, 'manage_admins.html', context)
-    
+
 @login_required
 @super_required
 def add_admin(request, user_id):
@@ -1023,17 +1022,6 @@ def approve_comments(request):
     return render(request, 'approve_comments.html', {'comments': comments})
 
 @login_required
-def delete_comment(request, comment_id):
-    comment = get_object_or_404(Comment, comment_id=comment_id)
-    if comment.user != request.user:
-        return HttpResponseForbidden("You are not allowed to delete this comment.")
-    
-    if request.method == "POST":
-        comment.delete()
-        return redirect('movie_detail', movie_id=comment.movie_id)
-    
-    return render(request, 'confirm_delete_comment.html', {'comment': comment})
-
 def delete_account(request):
     if request.method == 'POST':
         user_id = request.user.id
@@ -1046,6 +1034,7 @@ def delete_account(request):
             messages.error(request, f'Error: {str(e)}')
         return redirect('home')
     return render(request, 'delete_account.html')
+
 
 
 @login_required
@@ -1076,6 +1065,7 @@ def manage_users(request):
     }
 
     return render(request, 'manage_users.html', context)
+
 
 @login_required
 @admin_required
@@ -1218,3 +1208,81 @@ def reset_password(request):
         'form': form,
         'security_question': request.session.get('security_question', None)
     })
+
+
+def add_role(request):
+    if request.method == 'POST':
+        role_form = RoleForm(request.POST)
+        role_actor_movie_form = RoleActorMovieForm(request.POST)
+
+        if role_form.is_valid() and role_actor_movie_form.is_valid():
+            role = role_form.save()
+            role_actor_movie = role_actor_movie_form.save(commit=False)
+            role_actor_movie.role = role
+            role_actor_movie.save()
+            return redirect('role_list')  # 假设有一个角色列表视图
+    else:
+        role_form = RoleForm()
+        role_actor_movie_form = RoleActorMovieForm()
+
+    return render(request, 'add_role.html', {'role_form': role_form, 'role_actor_movie_form': role_actor_movie_form})
+
+def role_list(request):
+    roles = Role.objects.all()
+    return render(request, 'role_list.html', {'roles': roles})
+
+def role_detail(request, role_id):
+    role = get_object_or_404(Role, pk=role_id)
+    role_actor_movies = RoleActorMovie.objects.filter(role=role)
+    return render(request, 'role_detail.html', {'role': role, 'role_actor_movies': role_actor_movies})
+
+def edit_role(request, role_id):
+    role = get_object_or_404(Role, pk=role_id)
+    if request.method == 'POST':
+        form = RoleForm(request.POST, instance=role)
+        if form.is_valid():
+            form.save()
+            return redirect('role_list')
+    else:
+        form = RoleForm(instance=role)
+    return render(request, 'edit_role.html', {'form': form, 'role': role})
+
+
+
+def search_roles_by_name(request):
+    query = request.GET.get('query', '')
+    roles = Role.objects.filter(role_name__icontains=query)
+    return render(request, 'search_roles.html', {'roles': roles, 'query': query, 'search_type': 'name'})
+
+def search_roles_by_actor(request):
+    query = request.GET.get('query', '')
+    roles = Role.objects.filter(roleactormovie__person__name__icontains=query).distinct()
+    return render(request, 'search_roles.html', {'roles': roles, 'query': query, 'search_type': 'actor'})
+
+def search_roles_by_movie(request):
+    query = request.GET.get('query', '')
+    roles = Role.objects.filter(roleactormovie__movie__title__icontains(query)).distinct()
+    return render(request, 'search_roles.html', {'roles': roles, 'query': query, 'search_type': 'movie'})
+
+
+def delete_role(request, role_id):
+    role = get_object_or_404(Role, pk=role_id)
+    if request.method == 'POST':
+        role.delete()
+        return redirect('role_list')
+    return render(request, 'delete_role.html', {'role': role})
+
+def edit_role_actor_movie(request, role_id):
+    role = get_object_or_404(Role, pk=role_id)
+    role_actor_movie = get_object_or_404(RoleActorMovie, role=role)
+    if request.method == 'POST':
+        form = RoleActorMovieForm(request.POST, instance=role_actor_movie)
+        if form.is_valid():
+            form.save()
+            return redirect('role_detail', role_id=role_id)
+    else:
+        form = RoleActorMovieForm(instance=role_actor_movie)
+    return render(request, 'edit_role_actor_movie.html', {'form': form, 'role': role})
+
+def search_role(request):
+    return render(request, 'search_role.html')

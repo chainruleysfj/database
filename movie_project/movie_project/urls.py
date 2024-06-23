@@ -59,6 +59,16 @@ urlpatterns = [
     path('change-password/', views.change_password, name='change_password'), #更改密码
     path('set-security-question/', views.set_security_question, name='set_security_question'), #添加安全问题
     path('reset-password/', views.reset_password, name='reset_password'), #重置密码
+    path('add_role/', views.add_role, name='add_role'), #增添角色
+    path('roles/', views.role_list, name='role_list'),
+    path('roles/<int:role_id>/', views.role_detail, name='role_detail'),
+    path('roles/<int:role_id>/edit/', views.edit_role, name='edit_role'),
+    path('roles/<int:role_id>/delete/', views.delete_role, name='delete_role'),
+    path('roles/<int:role_id>/edit_actor_movie/', views.edit_role_actor_movie, name='edit_role_actor_movie'),
+    path('search_roles_by_name/', views.search_roles_by_name, name='search_roles_by_name'),
+    path('search_roles_by_actor/', views.search_roles_by_actor, name='search_roles_by_actor'),
+    path('search_roles_by_movie/', views.search_roles_by_movie, name='search_roles_by_movie'),
+    path('search_role/', views.search_role, name='search_role'),  # 新增的搜索选择页面
 ]
 
 if settings.DEBUG:

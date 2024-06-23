@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Role Actor and Movie</title>
+</head>
+<body>
+    <h1>Edit Role Actor and Movie for: {{ role.role_name }}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save Changes</button>
+    </form>
+    <a href="{% url 'role_detail' role_id=role.role_id %}">Back to Role Detail</a>
+</body>
+</html>
