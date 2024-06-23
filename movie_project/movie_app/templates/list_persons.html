@@ -12,7 +12,13 @@
 </head>
 <body>
     <h1>List of Persons</h1>
-
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
     <form method="get" action="{% url 'search_persons' %}">
         <label for="name">Name:</label>
         <input type="text" id="name" name="name">
@@ -100,11 +106,23 @@
             var xhr = new XMLHttpRequest();
             xhr.open("POST", "/update_person/" + personId + "/", true);
             xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+            xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest"); // 确保设置了这个头信息
             xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    location.reload();
-                } else if (xhr.readyState === 4) {
-                    console.error("Error: " + xhr.responseText);
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            console.error("Error: " + response.error);
+                        }
+                    } else if (xhr.status === 403) {
+                        var response = JSON.parse(xhr.responseText);
+                        console.error("Permission error: " + response.error);
+                        alert(response.error); // 显示权限错误消息
+                    } else {
+                        console.error("An error occurred: " + xhr.statusText);
+                    }
                 }
             };
             xhr.send(formData);
@@ -115,11 +133,21 @@
                 var xhr = new XMLHttpRequest();
                 xhr.open("POST", "/delete_person/" + personId + "/", true);
                 xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}");
+                xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest"); // 确保设置了这个头信息
                 xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 4 && xhr.status === 200) {
-                        location.reload();
-                    } else if (xhr.readyState === 4) {
-                        console.error("Error: " + xhr.responseText);
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            var response = JSON.parse(xhr.responseText);
+                            if (response.success) {
+                                location.reload();
+                            } else {
+                                alert("Error: " + response.error);
+                            }
+                        } else if (xhr.status === 403) {
+                            alert("缺少权限,需要管理员权限");
+                        } else {
+                            alert("An error occurred: " + xhr.statusText);
+                        }
                     }
                 };
                 xhr.send();

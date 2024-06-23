@@ -72,7 +72,8 @@ git commit -m"commit的相关说明"
 
 git push
 
-注意，最好不要直接push到clone时默认的main分支，而是先checkout一个新分支，push这个分支。
+注意，最好不要直接push到clone时默认的main分支，而是先checkout一个新分支，push这个分支。通常在push前，
+需要得到项目所有者邀请成为合作开发者
 
 4.更新代码：
 输入

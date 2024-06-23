@@ -1,5 +1,7 @@
 from django.db import models
 from django.core.validators import MaxValueValidator
+from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import User
 
 # Create your models here.
 class ProductionCompany(models.Model):
@@ -54,3 +56,38 @@ class DirectorMovie(models.Model):
 
     class Meta:
         unique_together = ('movie_id', 'person_id')  # 确保电影和导演的组合是唯一的
+
+class MovieGenre(models.Model):
+    genre_id = models.AutoField(primary_key=True)  # 对应 GenreID
+    genre_name = models.CharField(max_length=10, unique=True)  # 对应 GenreName
+
+    def __str__(self):
+        return self.genre_name
+    
+class MovieGenreAssociation(models.Model):
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    genre = models.ForeignKey(MovieGenre, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('movie', 'genre')
+
+
+class SecurityQA(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    security_question = models.CharField(max_length=255)
+    security_answer = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.user.username}'s Security Question"
+    
+class LoginRecord(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    session_key = models.CharField(max_length=100)
+    login_time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Login Record"
+        verbose_name_plural = "Login Records"
+
+    def __str__(self):
+        return f"{self.user.username} - {self.login_time}"

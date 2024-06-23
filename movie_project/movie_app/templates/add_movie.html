@@ -75,6 +75,13 @@
 </head>
 <body>
     <h1>Add Movie</h1>
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.non_field_errors }}
@@ -109,6 +116,14 @@
             {{ form.video_file.errors }}
         </div>
         
+        <h2>Genres</h2>
+        {% for genre in genres %}
+            <label>
+                <input type="checkbox" name="genres" value="{{ genre.0 }}">
+                {{ genre.1 }}
+            </label><br>
+        {% endfor %}
+
         <div>
             <h3>Selected Directors:</h3>
             <div id="selected-directors">

@@ -7,6 +7,13 @@
     <title>{{ movie.moviename }} - Details</title>
 </head>
 <body>
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
     <p><a href="{% url 'list_movies' %}">all movies</a>.</p>
     <p><a href="{% url 'home' %}">home</a>.</p>
     <h1>{{ movie.moviename }} - Details</h1>

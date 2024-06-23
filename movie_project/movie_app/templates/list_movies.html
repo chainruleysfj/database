@@ -32,6 +32,13 @@
 </head>
 <body>
     <h1>List of Movies</h1>
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
     <!-- Search Form -->
     <form method="get" action="{% url 'search_movies' %}" class="search-form">
         <div>
@@ -69,6 +76,16 @@
             </select>
         </div>
         
+        <div>
+            <label for="genre">Genre:</label>
+            <select id="genre" name="genre">
+                <option value="">-- Select Genre --</option>
+                {% for genre in genres %}
+                    <option value="{{ genre.genre_id }}">{{ genre.genre_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
         <button type="submit">Search</button>
     <ul>
         {% for movie in movies %}
@@ -81,6 +98,15 @@
                 {% if movie.directors_list %}
                     {% for director in movie.directors_list %}
                         <a href="{% url 'all_directors' %}?search_director={{ director|urlencode }}">{{ director }}</a>{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                {% else %}
+                    N/A
+                {% endif %}<br>
+                Genres: 
+                {% if movie.genres %}
+                    {% for genre in movie.genres %}
+                        {{ genre }}
+                        {% if not forloop.last %}, {% endif %}
                     {% endfor %}
                 {% else %}
                     N/A
