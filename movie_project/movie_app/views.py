@@ -463,6 +463,7 @@ def get_float_or_default(value, default):
     except (TypeError, ValueError):
         return default
 
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 @login_required
 def movie_detail(request, movie_id):
@@ -480,16 +481,26 @@ def movie_detail(request, movie_id):
         'production_company_id': movie_data[6]
     }
 
-    comments = Comment.objects.filter(movie_id=movie_id, is_approved=True).order_by('comment_time')
-    
-    # Reverse the comments order for displaying the latest comment on top
-    comments = comments.reverse()
-    
-    # Add floor to each comment
+    # Fetch comments ordered by comment_time (latest on top)
+    comments = Comment.objects.filter(movie_id=movie_id, is_approved=True).order_by('-comment_time')
+
+    # Paginate comments
+    paginator = Paginator(comments, 10)  # Show 10 comments per page
+    page_number = request.GET.get('page')
+
+    try:
+        comments_page = paginator.page(page_number)
+    except PageNotAnInteger:
+        comments_page = paginator.page(1)
+    except EmptyPage:
+        comments_page = paginator.page(paginator.num_pages)
+
+    # Create a list to hold comments with floors
     comments_with_floors = []
-    for idx, comment in enumerate(comments):
+    for idx, comment in enumerate(comments_page):
+        floor_number = len(comments) - (comments_page.start_index() + idx - 1)
         comments_with_floors.append({
-            'floor': f"{len(comments) - idx}F",  # Start from the highest floor number
+            'floor': f"F{floor_number}",
             'comment': comment
         })
 
@@ -533,10 +544,12 @@ def movie_detail(request, movie_id):
         'rating_form': rating_form,
         'comment_form': comment_form,
         'average_rating': average_rating,
-        'star_range': range(5, 0, -1)  # Pass a range of 5 to 1 for star ratings
+        'star_range': range(5, 0, -1),  # Pass a range of 5 to 1 for star ratings
+        'comments_page': comments_page,  # Add paginated comments to context
     }
 
     return render(request, 'movie_detail.html', context)
+
 @login_required
 @admin_required
 @transaction.atomic

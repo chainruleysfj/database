@@ -1,4 +1,3 @@
-<!-- movie_detail.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,7 +43,7 @@
     <p>Release Year: {{ movie.releaseyear }}</p>
     <p>Plot Summary: {{ movie.plot_summary }}</p>
     <p>Production Company: {{ movie.production_company_id }}</p>
-    <video controls>
+    <video controls width="640" height="360">
         <source src="{{ movie.resource_link }}" type="video/mp4">
         Your browser does not support the video tag.
     </video>
@@ -64,8 +63,30 @@
                     </form>
                 {% endif %}
             </li>
+        {% empty %}
+            <li>No comments available.</li>
         {% endfor %}
     </ul>
+
+    <!-- Pagination Controls -->
+    <div class="pagination">
+        <span class="step-links">
+            {% if comments_page.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ comments_page.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ comments_page.number }} of {{ comments_page.paginator.num_pages }}.
+            </span>
+
+            {% if comments_page.has_next %}
+                <a href="?page={{ comments_page.next_page_number }}">next</a>
+                <a href="?page={{ comments_page.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+
     <h2>Add a Comment</h2>
     <form method="post">
         {% csrf_token %}
@@ -84,6 +105,7 @@
         </div>
         <button type="submit">Submit Rating</button>
     </form>
+
     {% if average_rating %}
         <h3>Average Rating: {{ average_rating }}/10</h3>
     {% endif %}
