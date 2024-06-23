@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Role Detail</title>
+</head>
+<body>
+    <h1>{{ role.role_name }}</h1>
+    <p>{{ role.role_description }}</p>
+    <h2>Actor and Movie Details</h2>
+    <ul>
+        {% for item in role_actor_movies %}
+        <li>Movie: {{ item.movie.title }} - Actor: {{ item.person.name }}</li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'edit_role_actor_movie' role_id=role.role_id %}">Edit Actor and Movie</a>
+    <br>
+    <a href="{% url 'role_list' %}">Back to Role List</a>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Role</title>
+</head>
+<body>
+    <h1>Search Role</h1>
+    <ul>
+        <li><a href="{% url 'search_roles_by_name' %}">Search by Name</a></li>
+        <li><a href="{% url 'search_roles_by_actor' %}">Search by Actor</a></li>
+        <li><a href="{% url 'search_roles_by_movie' %}">Search by Movie</a></li>
+    </ul>
+    <a href="{% url 'role_list' %}">Back to Role List</a>
+</body>
+</html>
