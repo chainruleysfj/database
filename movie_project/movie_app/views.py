@@ -345,7 +345,7 @@ def list_movies_v1(request):
 @login_required
 @transaction.atomic
 def list_movies(request):
-    # 获取所有出品公司以供搜索表单使用
+    # Get all production companies for the search form
     with connection.cursor() as cursor:
         cursor.callproc('get_all_production_companies')
         production_companies = cursor.fetchall()
@@ -354,7 +354,7 @@ def list_movies(request):
         for company in production_companies
     ]
 
-    # 获取所有电影类型以供搜索表单使用
+    # Get all genres for the search form
     with connection.cursor() as cursor:
         cursor.callproc('select_all_genre')
         genres = cursor.fetchall()
@@ -363,7 +363,7 @@ def list_movies(request):
         for genre in genres
     ]
 
-    # 如果有搜索请求，处理搜索
+    # Handle search requests
     if request.method == 'GET' and (
         'keyword' in request.GET or
         'min_length' in request.GET or
@@ -381,7 +381,6 @@ def list_movies(request):
         production_company_id = get_int_or_default(request.GET.get('production_company'), None)
         genre_id = get_int_or_default(request.GET.get('genre'), None)
 
-
         with connection.cursor() as cursor:
             cursor.callproc('search_movies_with_directors_and_companies_and_genres', [
                 keyword, 
@@ -392,7 +391,6 @@ def list_movies(request):
                 production_company_id,
                 genre_id
             ])
-            
             movies = cursor.fetchall()
     else:
         with connection.cursor() as cursor:
@@ -401,14 +399,21 @@ def list_movies(request):
 
     movies_list = []
     for movie in movies:
-        # 对导演名进行预处理，将其拆分为列表
+        # Preprocess director names into a list
         directors_list = movie[7].split(',') if movie[7] else []
 
-        # 获取该电影的类型
+        # Get genres for the movie
         with connection.cursor() as cursor:
             cursor.callproc('get_movie_genre_association_with_name', [movie[0]])
             movie_genres = cursor.fetchall()
             genre_names = [genre[1] for genre in movie_genres]
+
+        # Calculate the average rating for the movie
+        average_rating = Rating.objects.filter(movie_id=movie[0]).aggregate(Avg('rating'))['rating__avg']
+        if average_rating is not None:
+            average_rating = round(average_rating * 2, 1)  # Scale to 10 and round to 1 decimal place
+        else:
+            average_rating = 'No ratings yet'
 
         movies_list.append({
             'movie_id': movie[0],
@@ -418,14 +423,15 @@ def list_movies(request):
             'plot_summary': movie[4],
             'resource_link': movie[5],
             'production_company_name': movie[6],
-            'directors_list': directors_list,  # 添加预处理后的导演名列表
-            'genres':genre_names
+            'directors_list': directors_list,
+            'genres': genre_names,
+            'average_rating': average_rating  # Add the average rating to the movie data
         })
     
-    # 实现分页
+    # Implement pagination
     page = request.GET.get('page', 1)
-    limit = 5 # # 每页显示的电影数量
-    paginator = Paginator(movies_list, limit)  
+    limit = 5  # Number of movies per page
+    paginator = Paginator(movies_list, limit)
     try:
         movies_page = paginator.page(page)
     except PageNotAnInteger:
@@ -433,11 +439,11 @@ def list_movies(request):
     except EmptyPage:
         movies_page = paginator.page(paginator.num_pages)
         
-
     return render(request, 'list_movies.html', {
         'movies': movies_page, 
         'production_companies': production_companies_list,
-        'genres': genres_list})
+        'genres': genres_list
+    })
 
 @login_required
 def movie_detail(request, movie_id):
@@ -981,13 +987,16 @@ def add_comment(request, pk):
 @login_required
 @admin_required
 def approve_comments(request):
-    comments = Comment.objects.filter(is_approved=False)
+    comments = Comment.objects.filter(is_approved=False, is_denied=False)
     if request.method == 'POST':
-        comment_ids = request.POST.getlist('approve')
-        print(request.POST,"apple")
-        Comment.objects.filter(comment_id__in=comment_ids).update(is_approved=True)
+        if 'approve' in request.POST:
+            comment_ids = request.POST.getlist('approve')
+            Comment.objects.filter(comment_id__in=comment_ids).update(is_approved=True)
+        elif 'deny' in request.POST:
+            comment_ids = request.POST.getlist('deny')
+            Comment.objects.filter(comment_id__in=comment_ids).update(is_denied=True)
         return redirect('approve_comments')
-    
+
     return render(request, 'approve_comments.html', {'comments': comments})
 @login_required
 def delete_comment(request, comment_id):

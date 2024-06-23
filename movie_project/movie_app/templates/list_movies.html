@@ -6,25 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>List of Movies</title>
     <style>
-        /* 添加CSS样式 */
+        /* Add CSS styles */
         .search-form label,
         .search-form input,
         .search-form select,
         .search-form button {
             display: inline-block;
-            margin-right: 5px; /* 元素之间的间距 */
-            margin-bottom: 5px; /* 垂直间距 */
+            margin-right: 5px; /* Spacing between elements */
+            margin-bottom: 5px; /* Vertical spacing */
         }
         .search-form label {
-            margin-bottom: 0; /* 标签不需要垂直间距 */
+            margin-bottom: 0; /* No vertical spacing for labels */
         }
-        /* 根据需要调整宽度 */
+        /* Adjust widths as needed */
         .search-form input[type="text"],
         .search-form input[type="number"],
         .search-form select {
-            width: 150px; /* 可以调整这个宽度以适应你的布局 */
+            width: 150px; /* Adjust this width to suit your layout */
         }
-        /* 确保按钮有足够的空间 */
+        /* Ensure buttons have enough space */
         .search-form button {
             margin-left: 10px;
         }
@@ -87,6 +87,8 @@
         </div>
         
         <button type="submit">Search</button>
+    </form>
+
     <ul>
         {% for movie in movies %}
             <li>
@@ -111,9 +113,10 @@
                 {% else %}
                     N/A
                 {% endif %}<br>
+                Average Rating: {{ movie.average_rating }}<br> <!-- Display average rating -->
                 <a href="{% url 'movie_detail' movie.movie_id %}">Details</a>
-                <a href="{% url 'update_movie' movie.movie_id %}">Edit</a> <!-- 更新按钮 -->
-                <a href="{% url 'delete_movie' movie.movie_id %}">Delete</a> <!-- 删除按钮 -->
+                <a href="{% url 'update_movie' movie.movie_id %}">Edit</a> <!-- Update button -->
+                <a href="{% url 'delete_movie' movie.movie_id %}">Delete</a> <!-- Delete button -->
             </li>
         {% endfor %}
     </ul>
@@ -140,4 +143,3 @@
     <p><a href="{% url 'home' %}">home</a>.</p>
 </body>
 </html>
-

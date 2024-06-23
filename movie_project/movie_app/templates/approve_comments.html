@@ -1,4 +1,4 @@
-<!-- templates/approve_comments.html -->
+<!-- approve_comments.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,23 +11,26 @@
     <form method="post">
         {% csrf_token %}
         <table>
-            <tr>
-                <th>Movie</th>
-                <th>User</th>
-                <th>Content</th>
-                <th>Approve</th>
-            </tr>
-            {% for comment in comments %}
-            <tr>
-                <td>{{ comment.movie.title }}</td>
-                <td>{{ comment.user.username }}</td>
-                <td>{{ comment.content }}</td>
-                <td><input type="checkbox" name="approve" value="{{ comment.comment_id }}"></td>
-            </tr>
-            {% endfor %}
+            <thead>
+                <tr>
+                    <th>Comment</th>
+                    <th>User</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for comment in comments %}
+                <tr>
+                    <td>{{ comment.content }}</td>
+                    <td>{{ comment.user.username }}</td>
+                    <td>
+                        <button type="submit" name="approve" value="{{ comment.comment_id }}">Approve</button>
+                        <button type="submit" name="deny" value="{{ comment.comment_id }}">Deny</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
         </table>
-        <button type="submit">Approve Selected Comments</button>
     </form>
-    <p><a href="{% url 'home' %}">Home</a></p>
 </body>
 </html>

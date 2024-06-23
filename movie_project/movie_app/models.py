@@ -86,9 +86,7 @@ class Comment(models.Model):
     content = models.TextField()
     comment_time = models.DateTimeField(auto_now_add=True)
     is_approved = models.BooleanField(default=False)
-    def __str__(self):
-
-        return f'Comment by {self.user.username} on {self.movie.title}'
+    is_denied = models.BooleanField(default=False)  # New field to track denied comments
     
 class Rating(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
