@@ -1,9 +1,9 @@
 from django.db import models
 from django.core.validators import MaxValueValidator
-from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.models import User
 
 # Create your models here.
+
+
 class ProductionCompany(models.Model):
     company_id = models.AutoField(primary_key=True)  # 对应 CompanyID
     name = models.CharField(max_length=50, unique=True)  # 对应 Name
@@ -25,6 +25,7 @@ class Movie(models.Model):
 
     def __str__(self):
         return self.moviename
+
 
 class Person(models.Model):
     GENDER_CHOICES = [
@@ -48,14 +49,16 @@ class Person(models.Model):
 
     def __str__(self):
         return self.name
-    
+
+
 class DirectorMovie(models.Model):
     id = models.AutoField(primary_key=True)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='directors')
     person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='movies_directed')
 
     class Meta:
-        unique_together = ('movie_id', 'person_id')  # 确保电影和导演的组合是唯一的
+        unique_together = ('movie', 'person')  # 确保电影和导演的组合是唯一的
+
 
 class MovieGenre(models.Model):
     genre_id = models.AutoField(primary_key=True)  # 对应 GenreID
@@ -63,7 +66,8 @@ class MovieGenre(models.Model):
 
     def __str__(self):
         return self.genre_name
-    
+
+
 class MovieGenreAssociation(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     genre = models.ForeignKey(MovieGenre, on_delete=models.CASCADE)
@@ -72,22 +76,28 @@ class MovieGenreAssociation(models.Model):
         unique_together = ('movie', 'genre')
 
 
-class SecurityQA(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    security_question = models.CharField(max_length=255)
-    security_answer = models.CharField(max_length=255)
+class Users(models.Model):
+    UserID = models.AutoField(primary_key=True)
+    Username = models.CharField(max_length=50, unique=True)
+    UserPassword = models.CharField(max_length=150) #注意使用hash值，不能只有50
 
     def __str__(self):
-        return f"{self.user.username}'s Security Question"
-    
-class LoginRecord(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    session_key = models.CharField(max_length=100)
-    login_time = models.DateTimeField(auto_now_add=True)
+        return self.Username
+
+
+class Role(models.Model):
+    role_id = models.AutoField(primary_key=True)
+    role_name = models.CharField(max_length=50)
+    role_description = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.role_name
+
+class RoleActorMovie(models.Model):
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    role = models.ForeignKey(Role, on_delete=models.CASCADE)
 
     class Meta:
-        verbose_name = "Login Record"
-        verbose_name_plural = "Login Records"
+        unique_together = (('movie', 'person', 'role'),)
 
-    def __str__(self):
-        return f"{self.user.username} - {self.login_time}"
