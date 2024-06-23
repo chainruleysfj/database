@@ -152,12 +152,26 @@ def update_production_company(request, company_id):
 @admin_required
 @transaction.atomic
 def delete_production_company(request, company_id):
-    if request.method == 'POST':
+    try:
         with connection.cursor() as cursor:
+            cursor.callproc('get_movies_by_company', [company_id])
+            movies = cursor.fetchall()
+        for movie in movies:
+            with connection.cursor() as cursor:
+                movie_id = movie[0]
+                # 删除视频文件
+                movie_instance = Movie.objects.get(pk=movie_id)
+                delete_video_file(movie_instance.resource_link)
+                # 调用存储过程删除电影及其关联数据
+                cursor.callproc('delete_movie_and_directormovie_and_genre', [movie_id])
+        with connection.cursor() as cursor:
+            # 删除出品公司
             cursor.callproc('delete_production_company', [company_id])
-        return JsonResponse({'success': True, 'error': '无错误'}, status=200)
-    else:
-        return render(request, 'confirm_delete_production_company.html', {'company_id': company_id})
+        messages.success(request, 'Production company and all associated movies deleted successfully.')
+    except Exception as e:
+        messages.error(request, f'Error: {str(e)}')
+        return JsonResponse({'success': False,'error': f'Error: {str(e)}'}, status=200)
+    return JsonResponse({'success': True, 'error': '无错误'}, status=200)
 
 @login_required
 @transaction.atomic
@@ -1007,6 +1021,7 @@ def approve_comments(request):
         return redirect('approve_comments')
     
     return render(request, 'approve_comments.html', {'comments': comments})
+
 @login_required
 def delete_comment(request, comment_id):
     comment = get_object_or_404(Comment, comment_id=comment_id)
@@ -1018,6 +1033,7 @@ def delete_comment(request, comment_id):
         return redirect('movie_detail', movie_id=comment.movie_id)
     
     return render(request, 'confirm_delete_comment.html', {'comment': comment})
+
 def delete_account(request):
     if request.method == 'POST':
         user_id = request.user.id
