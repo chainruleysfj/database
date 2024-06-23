@@ -80,7 +80,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'movie_industry',
         'USER': 'root',
-        'PASSWORD': 'mysql199856',# 替换为实际密码
+        'PASSWORD': 'zaqxsw',# 替换为实际密码
         'HOST': 'localhost',
         'PORT': '3306',
     }
