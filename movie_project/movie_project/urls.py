@@ -48,6 +48,9 @@ urlpatterns = [
     path('manage_admins/', views.manage_admins, name='manage_admins'), #管理用户
     path('add_admin/<int:user_id>/', views.add_admin, name='add_admin'), #添加管理员
     path('toggle_staff_status/<int:user_id>/', views.toggle_staff_status, name='toggle_staff_status'), #用户状态显示
+    path('movies/<int:pk>/comment/', views.add_comment, name='add_comment'),#添加评论
+    path('approve-comments/', views.approve_comments, name='approve_comments'),#审核评论
+    path('comment/delete/<int:comment_id>/', views.delete_comment, name='delete_comment'),#删除评论
 ]
 
 if settings.DEBUG:

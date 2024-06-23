@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MaxValueValidator
+from django.contrib.auth.models import User
 
 # Create your models here.
 class ProductionCompany(models.Model):
@@ -54,14 +55,6 @@ class DirectorMovie(models.Model):
 
     class Meta:
         unique_together = ('movie_id', 'person_id')  # 确保电影和导演的组合是唯一的
-class Comment(models.Model):
-    comment_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
-    content = models.TextField()
-    comment_time = models.DateTimeField(auto_now_add=True)
-    def __str__(self):
-        return f'Comment by {self.user.username} on {self.movie.title}'
 
 class MovieGenre(models.Model):
     genre_id = models.AutoField(primary_key=True)  # 对应 GenreID
@@ -77,10 +70,20 @@ class MovieGenreAssociation(models.Model):
     class Meta:
         unique_together = ('movie', 'genre')
 
-class Users(models.Model):
-    UserID = models.AutoField(primary_key=True)
-    Username = models.CharField(max_length=50, unique=True)
-    UserPassword = models.CharField(max_length=150) #注意使用hash值，不能只有50
 
+class Comment(models.Model):
+    comment_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    content = models.TextField()
+    comment_time = models.DateTimeField(auto_now_add=True)
+    is_approved = models.BooleanField(default=False)
     def __str__(self):
-        return self.Username
+        return f'Comment by {self.user.username} on {self.movie.title}'
+class Rating(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    rating = models.PositiveSmallIntegerField()  # Should be between 1 and 5
+
+    class Meta:
+        unique_together = ('user', 'movie')

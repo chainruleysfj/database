@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 
 # Create your views here.
-from django.http import JsonResponse,HttpResponse,HttpResponseRedirect,Http404
+from django.http import JsonResponse,HttpResponse,HttpResponseRedirect,Http404,HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 from django import forms
 from django.urls import reverse
@@ -15,11 +15,11 @@ from django.contrib.auth.backends import ModelBackend
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import user_passes_test,login_required
-from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation,Users
-from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm
+from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation,Comment,Rating
+from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm,CommentForm,RatingForm
 from functools import wraps
 import json,os,uuid
-
+from django.db.models import Avg
 
 
 def is_admin(user):
@@ -209,7 +209,7 @@ def search_person_by_name(request):
     directors = [{'person_id': result[0], 'name': result[1]} for result in results]
     return JsonResponse(directors, safe=False)
 
-@login_required
+
 @transaction.atomic
 def save_video_file(video_file):
     unique_filename = str(uuid.uuid4()) + '.mp4'
@@ -374,7 +374,6 @@ def list_movies(request):
         'genres': genres_list})
 
 @login_required
-@transaction.atomic
 def movie_detail(request, movie_id):
     with connection.cursor() as cursor:
         cursor.callproc('get_movie_detail', [movie_id])
@@ -390,8 +389,51 @@ def movie_detail(request, movie_id):
         'production_company_id': movie_data[6]
     }
 
-    return render(request, 'movie_detail.html', {'movie': movie})
+    comments = Comment.objects.filter(movie_id=movie_id, is_approved=True)
+    rating_form = RatingForm()
+    comment_form = CommentForm()
 
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                if 'rating' in request.POST:
+                    if Rating.objects.filter(movie_id=movie_id, user=request.user).exists():
+                        messages.error(request, "Already rated!")
+                    else:
+                        rating_form = RatingForm(request.POST)
+                        if rating_form.is_valid():
+                            rating = rating_form.save(commit=False)
+                            rating.movie_id = movie_id
+                            rating.user = request.user
+                            rating.save()
+                            messages.success(request, "Rating submitted successfully!")
+                            return redirect('movie_detail', movie_id=movie_id)
+                else:
+                    comment_form = CommentForm(request.POST)
+                    if comment_form.is_valid():
+                        comment = comment_form.save(commit=False)
+                        comment.movie_id = movie_id
+                        comment.user = request.user
+                        comment.save()
+                        messages.success(request, "Comment submitted successfully!")
+                        return redirect('movie_detail', movie_id=movie_id)
+        except Exception as e:
+            messages.error(request, "An error occurred! Please try again.")
+
+    average_rating = Rating.objects.filter(movie_id=movie_id).aggregate(Avg('rating'))['rating__avg']
+    if average_rating is not None:
+        average_rating = round(average_rating * 2, 1)  # Scale to 10 and round to 1 decimal place
+
+    context = {
+        'movie': movie,
+        'comments': comments,
+        'rating_form': rating_form,
+        'comment_form': comment_form,
+        'average_rating': average_rating,
+        'star_range': range(5, 0, -1)  # Pass a range of 5 to 1 for star ratings
+    }
+
+    return render(request, 'movie_detail.html', context)
 @login_required
 @admin_required
 @transaction.atomic
@@ -737,3 +779,41 @@ def toggle_staff_status(request, user_id):
         user.is_staff = not user.is_staff  # 切换 staff 状态
         user.save()
     return redirect('manage_admins')
+
+@login_required
+def add_comment(request, pk):
+    movie = get_object_or_404(Movie, pk=pk)
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.movie = movie
+            comment.user = request.user
+            comment.save()
+            return redirect('movie_detail', pk=movie.pk)
+    else:
+        form = CommentForm()
+    return render(request, 'movies/add_comment.html', {'form': form})
+
+@login_required
+@admin_required
+def approve_comments(request):
+    comments = Comment.objects.filter(is_approved=False)
+    if request.method == 'POST':
+        comment_ids = request.POST.getlist('approve')
+        print(request.POST,"apple")
+        Comment.objects.filter(comment_id__in=comment_ids).update(is_approved=True)
+        return redirect('approve_comments')
+    
+    return render(request, 'approve_comments.html', {'comments': comments})
+@login_required
+def delete_comment(request, comment_id):
+    comment = get_object_or_404(Comment, comment_id=comment_id)
+    if comment.user != request.user:
+        return HttpResponseForbidden("You are not allowed to delete this comment.")
+    
+    if request.method == "POST":
+        comment.delete()
+        return redirect('movie_detail', movie_id=comment.movie_id)
+    
+    return render(request, 'confirm_delete_comment.html', {'comment': comment})
