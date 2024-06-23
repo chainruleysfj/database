@@ -59,6 +59,10 @@ CREATE PROCEDURE delete_user(
     IN p_user_id INT
 )
 BEGIN
+	DELETE FROM movie_app_securityqa WHERE user_id = p_user_id;
+    DELETE FROM movie_app_comment WHERE user_id = p_user_id;
+    DELETE FROM movie_app_rating WHERE user_id = p_user_id;
+    DELETE FROM movie_app_loginrecord WHERE user_id = p_user_id;
     DELETE FROM auth_user WHERE id = p_user_id;
 END //
 DELIMITER ;

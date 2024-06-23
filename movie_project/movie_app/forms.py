@@ -2,7 +2,7 @@
 from django import forms
 from .models import ProductionCompany,Movie,Person,Comment,Rating,SecurityQA
 from django.contrib.auth.models import User
-
+from .models import Role, RoleActorMovie
 
 class ProductionCompanyForm(forms.ModelForm):
     class Meta:
@@ -62,6 +62,18 @@ class RatingForm(forms.ModelForm):
             'rating': forms.RadioSelect(attrs={'class': 'star-rating'}),
         }
 
+
+class RoleForm(forms.ModelForm):
+    class Meta:
+        model = Role
+        fields = ['role_name', 'role_description']
+
+
+class RoleActorMovieForm(forms.ModelForm):
+    class Meta:
+        model = RoleActorMovie
+        fields = ['movie', 'person']
+
 class ChangePasswordForm(forms.Form):
     old_password = forms.CharField(label='Current Password', widget=forms.PasswordInput)
     new_password1 = forms.CharField(label='New Password', widget=forms.PasswordInput)
@@ -82,6 +94,3 @@ class SecurityQAForm(forms.ModelForm):
 class PasswordResetForm(forms.Form):
     new_password = forms.CharField(label='New Password', widget=forms.PasswordInput)
     security_answer = forms.CharField(label='Security Answer')
-
-class UsernameForm(forms.Form):
-    username = forms.CharField(max_length=150, label="Username")

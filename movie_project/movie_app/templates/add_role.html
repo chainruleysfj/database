@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Role</title>
+</head>
+<body>
+    <h1>Add Role</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ role_form.as_p }}
+        {{ role_actor_movie_form.as_p }}
+        <button type="submit">Add Role</button>
+    </form>
+    <p><a href="{% url 'home' %}">home</a>.</p>
+</body>
+</html>
+

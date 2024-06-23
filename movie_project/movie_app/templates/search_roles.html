@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Roles</title>
+</head>
+<body>
+    <h1>Search Roles by {{ search_type|title }}</h1>
+    <form method="get" action="">
+        <input type="text" name="query" value="{{ query }}" placeholder="Enter {{ search_type }}">
+        <button type="submit">Search</button>
+    </form>
+    <ul>
+        {% for role in roles %}
+        <li>
+            <a href="{% url 'role_detail' role_id=role.role_id %}">{{ role.role_name }}</a>
+        </li>
+        {% empty %}
+        <li>No roles found.</li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'role_list' %}">Back to Role List</a>
+    <p><a href="{% url 'home' %}">home</a>.</p>
+</body>
+</html>

@@ -4,6 +4,8 @@ from django.contrib.auth.models import AbstractUser,User
 
 
 # Create your models here.
+
+
 class ProductionCompany(models.Model):
     company_id = models.AutoField(primary_key=True)  # 对应 CompanyID
     name = models.CharField(max_length=50, unique=True)  # 对应 Name
@@ -25,6 +27,7 @@ class Movie(models.Model):
 
     def __str__(self):
         return self.moviename
+
 
 class Person(models.Model):
     GENDER_CHOICES = [
@@ -48,14 +51,16 @@ class Person(models.Model):
 
     def __str__(self):
         return self.name
-    
+
+
 class DirectorMovie(models.Model):
     id = models.AutoField(primary_key=True)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='directors')
     person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='movies_directed')
 
     class Meta:
-        unique_together = ('movie_id', 'person_id')  # 确保电影和导演的组合是唯一的
+        unique_together = ('movie', 'person')  # 确保电影和导演的组合是唯一的
+
 
 class MovieGenre(models.Model):
     genre_id = models.AutoField(primary_key=True)  # 对应 GenreID
@@ -63,7 +68,8 @@ class MovieGenre(models.Model):
 
     def __str__(self):
         return self.genre_name
-    
+
+
 class MovieGenreAssociation(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     genre = models.ForeignKey(MovieGenre, on_delete=models.CASCADE)
@@ -73,10 +79,7 @@ class MovieGenreAssociation(models.Model):
 
 
 
-class SecurityQA(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    security_question = models.CharField(max_length=255)
-    security_answer = models.CharField(max_length=255)
+
 
 
     def __str__(self):
@@ -97,6 +100,10 @@ class Rating(models.Model):
     rating = models.PositiveSmallIntegerField()  # Should be between 1 and 5
     class Meta:
         unique_together = ('user', 'movie')
+<<<<<<< HEAD
+=======
+
+>>>>>>> usetomerge
     
 class LoginRecord(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -109,3 +116,27 @@ class LoginRecord(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.login_time}"
+
+class SecurityQA(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    security_question = models.CharField(max_length=255)
+    security_answer = models.CharField(max_length=255)
+    def __str__(self):
+        return f"{self.user.username}'s Security Question"
+    
+class Role(models.Model):
+    role_id = models.AutoField(primary_key=True)
+    role_name = models.CharField(max_length=50)
+    role_description = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return self.role_name
+
+class RoleActorMovie(models.Model):
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = (('movie', 'person', 'role'),)
+
