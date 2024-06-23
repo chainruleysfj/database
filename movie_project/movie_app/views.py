@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 
 # Create your views here.
-from django.http import JsonResponse,HttpResponse,HttpResponseRedirect,Http404,HttpResponseForbidden
+from django.http import JsonResponse,HttpResponse,HttpResponseRedirect,Http404,HttpResponseForbidden,FileResponse
 from django.views.decorators.csrf import csrf_exempt
 from django import forms
 from django.urls import reverse
@@ -465,7 +465,7 @@ def movie_detail(request, movie_id):
         'length': movie_data[2],
         'releaseyear': movie_data[3],
         'plot_summary': movie_data[4],
-        'resource_link': movie_data[5],
+        'resource_link': movie_data[5],  
         'production_company_id': movie_data[6]
     }
 
