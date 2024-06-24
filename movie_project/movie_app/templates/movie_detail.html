@@ -2,10 +2,40 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ movie.moviename }}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ movie.moviename }} - Details</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .star-rating {
+            direction: rtl;
+            display: inline-flex;
+            font-size: 2em;
+        }
+        .star-rating input[type="radio"] {
+            display: none;
+        }
+        .star-rating label {
+            color: #bbb;
+            cursor: pointer;
+            font-size: 2em;
+        }
+        .star-rating input[type="radio"]:checked ~ label {
+            color: #f2b600;
+        }
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+            color: #f2b600;
+        }
+    </style>
 </head>
 <body>
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
     <div class="movie-detail">
         <h1>{{ movie.moviename }}</h1>
         <p><strong>片长:</strong> {{ movie.length }} 分钟</p>
@@ -27,7 +57,6 @@
                 <li><a href="{% url 'person_movies' actor.personID %}">{{ actor.name }}</a></li>
             {% endfor %}
         </ul>
-
         <h2>旁白</h2>
         {% if narration %}
             <p>{{ narration.content }}</p>
@@ -35,7 +64,6 @@
         {% else %}
             <p>暂无旁白信息。</p>
         {% endif %}
-
         <h2>电影类型</h2>
         <ul>
             {% for genre in movie.genres.all %}
@@ -43,5 +71,78 @@
             {% endfor %}
         </ul>
     </div>
+    
+    <p><a href="{% url 'list_movies' %}">all movies</a>.</p>
+    <p><a href="{% url 'home' %}">home</a>.</p>
+    <h1>{{ movie.moviename }} - Details</h1>
+    <p>Length: {{ movie.length }}</p>
+    <p>Release Year: {{ movie.releaseyear }}</p>
+    <p>Plot Summary: {{ movie.plot_summary }}</p>
+    <p>Production Company: {{ movie.production_company_id }}</p>
+    <video controls>
+        <source src="{{ movie.resource_link }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <h2>Comments</h2>
+    <ul>
+        {% for item in comments_with_floors %}
+            <li>
+                <strong>{{ item.floor }}</strong> - 
+                <a href="{% url 'user_homepage' item.comment.user.username %}">{{ item.comment.user.username }}</a>: {{ item.comment.content }}
+                <br>
+                <small>Commented on: {{ item.comment.comment_time }}</small>
+                {% if item.comment.user == request.user %}
+                    <form method="post" action="{% url 'delete_comment' comment_id=item.comment.comment_id %}">
+                        {% csrf_token %}
+                        <button type="submit">Delete</button>
+                    </form>
+                {% endif %}
+            </li>
+        {% empty %}
+            <li>No comments available.</li>
+        {% endfor %}
+    </ul>
+
+    <!-- Pagination Controls -->
+    <div class="pagination">
+        <span class="step-links">
+            {% if comments_page.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ comments_page.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ comments_page.number }} of {{ comments_page.paginator.num_pages }}.
+            </span>
+
+            {% if comments_page.has_next %}
+                <a href="?page={{ comments_page.next_page_number }}">next</a>
+                <a href="?page={{ comments_page.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+
+    <h2>Add a Comment</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ comment_form.as_p }}
+        <button type="submit">Submit</button>
+    </form>
+    
+    <h2>Rate this Movie</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="star-rating">
+            {% for i in star_range %}
+                <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" {% if rating_form.rating.value == i %}checked{% endif %}/>
+                <label for="star{{ i }}" title="{{ i }} star{% if i > 1 %}s{% endif %}"><i class="fas fa-star"></i></label>
+            {% endfor %}
+        </div>
+        <button type="submit">Submit Rating</button>
+    </form>
+
+    {% if average_rating %}
+        <h3>Average Rating: {{ average_rating }}/10</h3>
+    {% endif %}
 </body>
 </html>

@@ -1,4 +1,4 @@
-<!-- manage_admins.html -->
+<!-- manage_users.html -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -9,6 +9,13 @@
 </head>
 <body>
     <h1>Manage Admins</h1>
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
     <!-- 搜索表单 -->
     <form method="get" action="{% url 'manage_admins' %}">
         <input type="text" name="name" placeholder="Search by Username">
@@ -16,22 +23,22 @@
     </form>
     
     <ul>
-        {% for user in users %}
+        {% for user in users_page %}
             <li>
-                {{ user.username }}
-                {% if user.is_staff %}
+                {{ user.1 }}
+                {% if user.2 %}
                     <span style="color: green;">(Staff)</span>
-                    {% if user.is_superuser %}
+                    {% if user.4 %}
                         <!-- 超级管理员不可操作 -->
                         <span style="color: rgb(0, 145, 255);">(Superuser)</span>
                     {% else %}
-                        <form method="post" action="{% url 'toggle_staff_status' user.id %}">
+                        <form method="post" action="{% url 'toggle_staff_status' user.0 %}">
                             {% csrf_token %}
                             <button type="submit">Remove Staff Role</button>
                         </form>
                     {% endif %}
                 {% else %}
-                    <form method="post" action="{% url 'toggle_staff_status' user.id %}">
+                    <form method="post" action="{% url 'toggle_staff_status' user.0 %}">
                         {% csrf_token %}
                         <button type="submit">Make Staff</button>
                     </form>
@@ -41,6 +48,25 @@
             <li>No users found.</li>
         {% endfor %}
     </ul>
+    
+    <!-- 分页导航 -->
+    <div class="pagination">
+        <span class="step-links">
+            {% if users_page.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ users_page.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ users_page.number }} of {{ users_page.paginator.num_pages }}.
+            </span>
+
+            {% if users_page.has_next %}
+                <a href="?page={{ users_page.next_page_number }}">next</a>
+                <a href="?page={{ users_page.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
     
     <p><a href="{% url 'home' %}">Home</a></p>
 </body>

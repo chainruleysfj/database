@@ -1,5 +1,3 @@
-<!-- all_directors.html -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,15 +26,54 @@
         <li>
             <strong>{{ director.name }}:</strong>
             <ul>
-                {% for movie in director.movies %}
+                {% for movie in director.movies_page %}
                 <li>
                     <a href="{% url 'movie_detail' movie.id %}">{{ movie.name }}</a>
+                    {% if movie.average_rating is not None %}
+                        - {{ movie.average_rating }}
+                    {% else %}
+                        - No ratings yet
+                    {% endif %}
                 </li>
                 {% endfor %}
             </ul>
+            <div class="pagination">
+                <span class="step-links">
+                    {% if director.movies_page.has_previous %}
+                        <a href="?page={{ directors_with_movies.number }}&movies_page_{{ director.id }}=1">&laquo; first</a>
+                        <a href="?page={{ directors_with_movies.number }}&movies_page_{{ director.id }}={{ director.movies_page.previous_page_number }}">previous</a>
+                    {% endif %}
+
+                    <span class="current">
+                        Page {{ director.movies_page.number }} of {{ director.movies_page.paginator.num_pages }}.
+                    </span>
+
+                    {% if director.movies_page.has_next %}
+                        <a href="?page={{ directors_with_movies.number }}&movies_page_{{ director.id }}={{ director.movies_page.next_page_number }}">next</a>
+                        <a href="?page={{ directors_with_movies.number }}&movies_page_{{ director.id }}={{ director.movies_page.paginator.num_pages }}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
         </li>
         {% endfor %}
     </ul>
+    <div class="pagination">
+        <span class="step-links">
+            {% if directors_with_movies.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ directors_with_movies.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ directors_with_movies.number }} of {{ directors_with_movies.paginator.num_pages }}.
+            </span>
+
+            {% if directors_with_movies.has_next %}
+                <a href="?page={{ directors_with_movies.next_page_number }}">next</a>
+                <a href="?page={{ directors_with_movies.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
     <p><a href="{% url 'home' %}">home</a>.</p>
 </body>
 </html>

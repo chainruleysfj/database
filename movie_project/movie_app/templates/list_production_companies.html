@@ -48,6 +48,24 @@
             </li>
         {% endfor %}
     </ul>
+    
+    <div class="pagination">
+        <span class="step-links">
+            {% if companies.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ companies.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ companies.number }} of {{ companies.paginator.num_pages }}.
+            </span>
+
+            {% if companies.has_next %}
+                <a href="?page={{ companies.next_page_number }}">next</a>
+                <a href="?page={{ companies.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
     <a href="{% url 'add_production_company' %}">Add New Production Company</a>
     <p><a href="{% url 'home' %}">home</a>.</p>
 
@@ -85,34 +103,33 @@
 
         function deleteCompany(companyId) {
             if (confirm("Are you sure you want to delete this company?")) {
-                // Send an AJAX request to delete the company
-       
                 var xhr = new XMLHttpRequest();
-                xhr.open("POST", "/delete_production_company/" + companyId + "/", true);  // 注意末尾添加斜杠
-  
+                xhr.open("POST", "/delete_production_company/" + companyId + "/", true);
                 xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
-
+                xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest"); // 确保设置了这个头信息
                 xhr.onreadystatechange = function() {
-             
                     if (xhr.readyState === 4) {
-               
+                        console.log("xhr.readyState === 4");
                         if (xhr.status === 200) {
-                            // Reload the page after deletion
-                     
-                            window.location.reload();
+                            console.log("xhr.status === 200");
+                            var response = JSON.parse(xhr.responseText);
+                            if (response.success) {
+                                console.log("response.success");
+                                window.location.reload();
+                            } else {
+                                console.error("Error deleting company:", response.error);
+                                window.location.reload();
+                            }
+                        } else if (xhr.status === 403) {
+                            var response = JSON.parse(xhr.responseText);
+                            console.error("Permission error: " + response.error);
+                            alert(response.error); // 显示权限错误消息
                         } else {
-                        
-                            // Handle error
-                            console.error("Error deleting company:", xhr.statusText);
+                            console.error("An error occurred: " + xhr.statusText);
                         }
-       
                     }
-        
                 };
-     
                 xhr.send();
-
-  
             }
         }
 

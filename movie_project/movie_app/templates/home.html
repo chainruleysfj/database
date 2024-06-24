@@ -20,13 +20,22 @@
     <p><a href="{% url 'add_movie' %}">add a new movie</a>.</p>
     <p><a href="{% url 'list_movies' %}">see all movies</a>.</p>
     <p><a href="{% url 'add_person' %}">add a new person</a>.</p>
+    <p><a href="{% url 'role_list' %}">View All Roles</a></p>
+    <p><a href="{% url 'add_role' %}">add a new role</a>.</p>
+        <p><a href="{% url 'search_role' %}">Search Roles</a></p> <!-- 新增的搜索角色入口 -->
     <p><a href="{% url 'list_persons' %}">see all persons</a>.</p>
     <p><a href="{% url 'all_directors' %}">see all directors</a>.</p>
     <p><a href="{% url 'manage_genres' %}">manage movie genres</a>.</p>
     <p><a href="{% url 'manage_admins' %}">manage admins</a>.</p>
-    <!-- 添加登出按钮 -->
+    <p><a href="{% url 'manage_users' %}">manage users</a>.</p>
+    <p><a href="{% url 'search_users' %}">search users</a>.</p> <!-- Add this line for the search users link -->
+    <!-- 账号操作 -->
+    <p><a href="{% url 'change_password' %}">change password</a>.</p>
+    <p><a href="{% url 'set_security_question' %}">set security question</a>.</p>
     <p><a href="{% url 'logout' %}">Logout</a></p>
+    <p><a href="{% url 'approve_comments' %}"> approve comments</a>.</p>
     <a href="{% url 'delete_account' %}">Delete Account</a>
+
+   
 </body>
 </html>
-
