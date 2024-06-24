@@ -79,6 +79,21 @@
         .search-button {
             margin-left: 5px;
         }
+        footer a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+        header, footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1em 0;
+        }
     </style>
 </head>
 <body>
@@ -124,5 +139,8 @@
             </div>
         </form>
     </div>
+    <footer>
+        <p>&copy;  <a href="{% url 'home' %}">home</a>.</p>
+    </footer>
 </body>
 </html>

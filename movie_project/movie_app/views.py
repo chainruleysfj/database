@@ -845,6 +845,7 @@ def delete_person(request, person_id):
 
 @login_required
 @transaction.atomic
+@csrf_exempt
 def search_persons(request):
     name = request.GET.get('name', '')
     start_birth_date = request.GET.get('start_birth_date', None)
@@ -861,6 +862,7 @@ def search_persons(request):
         gender = None
     if marital_status == '':
         marital_status = None
+    print([name, start_birth_date, end_birth_date, gender, marital_status])
     try:
         with connection.cursor() as cursor:
             cursor.callproc('search_persons', [name, start_birth_date, end_birth_date, gender, marital_status])
@@ -877,7 +879,16 @@ def search_persons(request):
     except Exception as e:
         # Handle any exceptions or errors
         messages.error(request,f"Error : {e}")
-    return render(request, 'list_persons.html', {'persons': persons_list})
+    page = request.GET.get('page', 1)
+    limit = 10 # # 每页显示的人物数量
+    paginator = Paginator( persons_list, limit)  
+    try:
+        person_page = paginator.page(page)
+    except PageNotAnInteger:
+        person_page = paginator.page(1)
+    except EmptyPage:
+        person_page = paginator.page(paginator.num_pages)
+    return render(request, 'list_persons.html', {'persons': person_page})
 
 @login_required
 @transaction.atomic
@@ -1405,10 +1416,6 @@ def search_movies(request):
     movies = Movie.objects.filter(moviename__icontains=query) if query else []
     return render(request, 'search_movies.html', {'query': query, 'movies': movies})
 
-def search_persons(request):
-    query = request.GET.get('q', '')
-    persons = Person.objects.filter(name__icontains=query) if query else []
-    return render(request, 'search_persons.html', {'query': query, 'persons': persons})
 
 
 @login_required

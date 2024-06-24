@@ -64,6 +64,26 @@
             background: #333;
             color: #fff;
         }
+        .star-rating {
+            direction: rtl;
+            display: inline-flex;
+            font-size: 2em;
+        }
+        .star-rating input[type="radio"] {
+            display: none;
+        }
+        .star-rating label {
+            color: #bbb;
+            cursor: pointer;
+            font-size: 2em;
+        }
+        .star-rating input[type="radio"]:checked ~ label {
+            color: #f2b600;
+        }
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+            color: #f2b600;
+        }
     </style>
 </head>
 <body>
