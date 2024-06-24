@@ -97,16 +97,21 @@
             color: #f2b600;
         }
         .messages {
-            list-style: none;
+            list-style-type: none;
             padding: 0;
-            margin: 1em 0;
         }
         .messages li {
-            padding: 0.5em;
-            margin-bottom: 0.5em;
-            border-radius: 4px;
-            background: #f4f4f4;
-            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 3px;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
         }
         .movie-detail ul {
             list-style: none;
@@ -136,7 +141,7 @@
             <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
             {% endfor %}
         </ul>
-    {% endif %}
+        {% endif %}
     <div class="movie-detail">
         <h1>{{ movie.moviename }}</h1>
         <p><strong>片长:</strong> {{ movie.length }} 分钟</p>

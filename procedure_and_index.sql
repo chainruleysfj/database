@@ -146,7 +146,7 @@ BEGIN
     WHERE pm.movie_id = p_movie_id;
     
     -- Include narration actors in the actors list
-    SELECT GROUP_CONCAT(CONCAT(p.name, ':','Narrator') SEPARATOR '; ')
+    SELECT GROUP_CONCAT(CONCAT(p.name, ':','旁白') SEPARATOR '; ')
     INTO narration_list
     FROM movie_app_person p
     JOIN movie_app_narration nr ON p.personID = nr.actor_id

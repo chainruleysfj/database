@@ -119,6 +119,23 @@
             margin-top: 20px;
             display: inline-block;
         }
+        .messages {
+            list-style-type: none;
+            padding: 0;
+        }
+        .messages li {
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 3px;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
 
     </style>
 </head>
@@ -140,7 +157,14 @@
                         <strong>{{ actor.name }}</strong>
                         <ul>
                             {% for movie in actor.movies %}
-                                <li><a href="{% url 'movie_detail' movie.movie_id %}">{{ movie.title }}</a></li>
+                                <li><a href="{% url 'movie_detail' movie.movie_id %}">{{ movie.title }} 
+                                    {% if movie.rating is not None %}
+                                    - {{ movie.rating }}
+                                {% else %}
+                                    - No ratings yet
+                                {% endif %}
+                                </a></li>
+                                
                             {% endfor %}
                         </ul>
                     </li>

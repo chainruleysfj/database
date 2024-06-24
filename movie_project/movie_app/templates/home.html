@@ -54,20 +54,18 @@
             list-style-type: none;
             padding: 0;
         }
-
         .messages li {
-            background-color: #eee;
-            border: 1px solid #ccc;
-            margin: 0.5em 0;
-            padding: 0.5em;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 3px;
         }
-
-        .messages .error {
-            border-color: red;
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
         }
-
-        .messages .success {
-            border-color: green;
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
         }
     </style>
 </head>
@@ -93,11 +91,11 @@
         <p><a href="{% url 'add_role' %}">add a new role</a>.</p>
         <p><a href="{% url 'role_list' %}">View All Roles</a></p>
         <p><a href="{% url 'all_directors' %}">see all directors</a>.</p>
+        <p><a href="{% url 'list_actors' %}">see all actors</a>.</p>
         <p><a href="{% url 'manage_genres' %}">manage movie genres</a>.</p>
         <p><a href="{% url 'manage_admins' %}">manage admins</a>.</p>
         <p><a href="{% url 'manage_users' %}">manage users</a>.</p>
         <p><a href="{% url 'search_users' %}">search users</a>.</p> <!-- Add this line for the search users link -->
-        <p><a href="{% url 'list_actors' %}">see all actors</a>.</p>
         <!-- 账号操作 -->
         <p><a href="{% url 'change_password' %}">change password</a>.</p>
         <p><a href="{% url 'set_security_question' %}">set security question</a>.</p>

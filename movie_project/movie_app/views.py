@@ -1652,7 +1652,7 @@ def list_actors(request):
         with connection.cursor() as cursor:
             cursor.callproc('get_actor_movies_with_id', [actor['personID']])
             movies = cursor.fetchall()
-            actor['movies'] = [{'movie_id': movie[0], 'title': movie[1], 'rating': movie[2]*2} for movie in movies]
+            actor['movies'] = [{'movie_id': movie[0], 'title': movie[1], 'rating': round(movie[2]*2,1)} for movie in movies]
 
     return render(request, 'list_actors.html', {'actors': actors_list, 'search_name': search_name})
 
