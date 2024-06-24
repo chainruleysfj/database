@@ -1,18 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>Add Role</title>
 </head>
 <body>
     <h1>Add Role</h1>
     <form method="post">
         {% csrf_token %}
-        {{ role_form.as_p }}
-        {{ role_actor_movie_form.as_p }}
-        <button type="submit">Add Role</button>
+        <div>
+            <label for="movie">Select Movie:</label>
+            <select id="movie" name="movie">
+                {% for movie in movies %}
+                    <option value="{{ movie.movie_id }}">{{ movie.moviename }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="person">Select Person:</label>
+            <select id="person" name="person">
+                {% for person in persons %}
+                    <option value="{{ person.personID }}">{{ person.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="role_name">Role Name:</label>
+            <input type="text" id="role_name" name="role_name" required>
+        </div>
+        <div>
+            <label for="role_description">Role Description:</label>
+            <textarea id="role_description" name="role_description"></textarea>
+        </div>
+        <div>
+            <button type="submit">Add Role</button>
+        </div>
     </form>
-    <p><a href="{% url 'home' %}">home</a>.</p>
 </body>
 </html>
-

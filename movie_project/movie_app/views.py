@@ -1302,33 +1302,54 @@ def reset_password(request):
         'security_question': request.session.get('security_question', None)
     })
 
-
+@login_required
+@admin_required
 def add_role(request):
     if request.method == 'POST':
-        role_form = RoleForm(request.POST)
-        role_actor_movie_form = RoleActorMovieForm(request.POST)
+        movie_id = request.POST.get('movie')
+        person_id = request.POST.get('person')
+        role_name = request.POST.get('role_name')
+        role_description = request.POST.get('role_description', '')
 
-        if role_form.is_valid() and role_actor_movie_form.is_valid():
-            role = role_form.save()
-            role_actor_movie = role_actor_movie_form.save(commit=False)
-            role_actor_movie.role = role
-            role_actor_movie.save()
-            return redirect('role_list')  # 假设有一个角色列表视图
+        # Create or get the role
+        role, created = Role.objects.get_or_create(role_name=role_name, defaults={'role_description': role_description})
+
+        # Get the movie and person instances
+        try:
+            movie = Movie.objects.get(movie_id=movie_id)
+            person = Person.objects.get(personID=person_id)
+        except (Movie.DoesNotExist, Person.DoesNotExist):
+            return HttpResponse("Movie or Person not found", status=404)
+
+        # Create the RoleActorMovie instance
+        RoleActorMovie.objects.create(movie=movie, person=person, role=role)
+
+        return redirect('success')  # You can change 'success' to the name of your success page
+
     else:
-        role_form = RoleForm()
-        role_actor_movie_form = RoleActorMovieForm()
+        movies = Movie.objects.all()
+        persons = Person.objects.all()
+        roles = Role.objects.all()
 
-    return render(request, 'add_role.html', {'role_form': role_form, 'role_actor_movie_form': role_actor_movie_form})
+        return render(request, 'add_role.html', {'movies': movies, 'persons': persons, 'roles': roles})
+
+
+@login_required
 
 def role_list(request):
     roles = Role.objects.all()
     return render(request, 'role_list.html', {'roles': roles})
+
+@login_required
 
 def role_detail(request, role_id):
     role = get_object_or_404(Role, pk=role_id)
     role_actor_movies = RoleActorMovie.objects.filter(role=role)
     return render(request, 'role_detail.html', {'role': role, 'role_actor_movies': role_actor_movies})
 
+
+@login_required
+@admin_required
 def edit_role(request, role_id):
     role = get_object_or_404(Role, pk=role_id)
     if request.method == 'POST':
@@ -1341,23 +1362,29 @@ def edit_role(request, role_id):
     return render(request, 'edit_role.html', {'form': form, 'role': role})
 
 
+@login_required
 
 def search_roles_by_name(request):
     query = request.GET.get('query', '')
     roles = Role.objects.filter(role_name__icontains=query)
     return render(request, 'search_roles.html', {'roles': roles, 'query': query, 'search_type': 'name'})
 
+
+@login_required
+
 def search_roles_by_actor(request):
     query = request.GET.get('query', '')
     roles = Role.objects.filter(roleactormovie__person__name__icontains=query).distinct()
     return render(request, 'search_roles.html', {'roles': roles, 'query': query, 'search_type': 'actor'})
 
+@login_required
 def search_roles_by_movie(request):
     query = request.GET.get('query', '')
     roles = Role.objects.filter(roleactormovie__movie__title__icontains=query).distinct()
     return render(request, 'search_roles.html', {'roles': roles, 'query': query, 'search_type': 'movie'})
 
-
+@login_required
+@admin_required
 def delete_role(request, role_id):
     role = get_object_or_404(Role, pk=role_id)
     if request.method == 'POST':
@@ -1365,6 +1392,8 @@ def delete_role(request, role_id):
         return redirect('role_list')
     return render(request, 'delete_role.html', {'role': role})
 
+@login_required
+@admin_required
 def edit_role_actor_movie(request, role_id):
     role = get_object_or_404(Role, pk=role_id)
     role_actor_movie = get_object_or_404(RoleActorMovie, role=role)
@@ -1376,7 +1405,7 @@ def edit_role_actor_movie(request, role_id):
     else:
         form = RoleActorMovieForm(instance=role_actor_movie)
     return render(request, 'edit_role_actor_movie.html', {'form': form, 'role': role})
-
+@login_required
 def search_role(request):
     return render(request, 'search_role.html')
 
