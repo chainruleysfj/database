@@ -162,7 +162,7 @@
         <p><a href="{% url 'add_narration' movie_id %}">添加旁白</a>.</p>
         {% if movie.narration_list %}
             {% for narration in movie.narration_list %}
-                <p>{{ narration.actor.name }} - {{ narration.content }}
+                <p>{{ narration.actor }} - {{ narration.content }}
                     <a href="{% url 'delete_narration' movie_id narration.narration_id %}" onclick="return confirm('Are you sure you want to delete this narration?');">删除</a>
                 </p>
             {% endfor %}

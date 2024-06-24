@@ -255,6 +255,13 @@
             }
             return cookieValue;
         }
+         // Hide all edit forms on page load
+         document.addEventListener('DOMContentLoaded', function() {
+            var editForms = document.querySelectorAll('.editing');
+            editForms.forEach(function(form) {
+                form.style.display = 'none';
+            });
+        });
     </script>
 </body>
 </html>

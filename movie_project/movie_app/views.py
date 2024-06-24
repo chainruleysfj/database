@@ -1463,7 +1463,7 @@ def add_role(request):
         # Create the RoleActorMovie instance
         RoleActorMovie.objects.create(movie=movie, person=person, role=role)
 
-        return redirect('success')  # You can change 'success' to the name of your success page
+        return redirect('role_list')  # You can change 'success' to the name of your success page
 
     return render(request, 'add_role.html')
 
@@ -1549,7 +1549,7 @@ def search_roles_by_actor(request):
 @login_required
 def search_roles_by_movie(request):
     query = request.GET.get('query', '')
-    roles = Role.objects.filter(roleactormovie__movie__movie_id__icontains=query).distinct()
+    roles = Role.objects.filter(roleactormovie__movie__moviename__icontains=query).distinct()
     return render(request, 'search_roles.html', {'roles': roles, 'query': query, 'search_type': 'movie'})
 
 @login_required
