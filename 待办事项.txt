@@ -113,8 +113,15 @@
 PPT
 17.
 整理外键约束
-删user,先QA,comment,rating,loginrecord
-movie:comment,ratingV,
+主表:子表
+user:QA,comment,rating,loginrecord
+movie:comment,rating,DirectorMovie,MovieGenreAssociation,RoleActorMovie
+production_company:movie
+person:DirectorMovie,RoleActorMovie
+MovieGenre:MovieGenreAssociation
+role:RoleActorMovie
 ...
 18.
 准备展示需要的测试数据
+19.
+整合sql文件

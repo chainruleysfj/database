@@ -554,6 +554,7 @@ def movie_detail(request, movie_id):
                         messages.success(request, "Comment submitted successfully!")
                         return redirect('movie_detail', movie_id=movie_id)
         except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
             messages.error(request, "An error occurred! Please try again.")
 
     average_rating = Rating.objects.filter(movie_id=movie_id).aggregate(Avg('rating'))['rating__avg']
@@ -688,7 +689,7 @@ def update_movie(request, movie_id):
 
 @login_required        
 @transaction.atomic   
-def delete_video_file(file_path):
+def delete_video_file(request,file_path):
     # 从文件路径中提取文件名
     filename = os.path.basename(file_path)
     # 构建完整的文件路径
@@ -705,7 +706,7 @@ def delete_movie(request, movie_id):
     movie = Movie.objects.get(pk=movie_id)
     if request.method == 'POST':
         # 删除视频文件
-        delete_video_file(movie.resource_link)
+        delete_video_file(request,movie.resource_link)
         # 调用存储过程删除电影
         with connection.cursor() as cursor:
             cursor.callproc('delete_movie_and_directormovie_and_genre', [movie_id])

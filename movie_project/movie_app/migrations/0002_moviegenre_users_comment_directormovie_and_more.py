@@ -11,5 +11,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-       
+       migrations.CreateModel(
+            name='MovieGenre',
+            fields=[
+                ('genre_id', models.AutoField(primary_key=True, serialize=False)),
+                ('genre_name', models.CharField(max_length=10, unique=True)),
+            ],
+        ),
     ]
