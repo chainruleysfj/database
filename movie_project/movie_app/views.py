@@ -487,20 +487,23 @@ def movie_detail(request, movie_id):
         with connection.cursor() as cursor:
             cursor.callproc('get_movie_detail', [movie_id])
             movie_data = cursor.fetchone()
-            print(type(movie_data[7]),7)
-            print(type(movie_data[7].split(";")),7)
             if  movie_data[7]:
+                print('yes')
                 actors=movie_data[7].split(";")
             else:
+                print('no')
                 actors=None
+            print(8)
             if  movie_data[8]:
                 directors=movie_data[8].split(";")
             else:
                 directors=None
+            print(9)
             if  movie_data[9]:
                 genres=movie_data[9].split(";")
             else:
                 genres=None
+            print(10)
             if  movie_data[10]:
                 narration=movie_data[10].split(";")
             else:
