@@ -193,8 +193,17 @@ def search_production_companies(request):
             'city': company[2],
             'company_description': company[3],
         })
+    page = request.GET.get('page', 1)
+    limit = 10  # 每页显示的公司数量
+    paginator = Paginator(company_list, limit)
+    try:
+        companies_page = paginator.page(page)
+    except PageNotAnInteger:
+        companies_page = paginator.page(1)
+    except EmptyPage:
+        companies_page = paginator.page(paginator.num_pages)
 
-    return render(request, 'list_production_companies.html', {'companies': company_list})
+    return render(request, 'list_production_companies.html', {'companies': companies_page})
 
 @login_required
 @admin_required

@@ -43,7 +43,7 @@
     <p>Release Year: {{ movie.releaseyear }}</p>
     <p>Plot Summary: {{ movie.plot_summary }}</p>
     <p>Production Company: {{ movie.production_company_id }}</p>
-    <video preload="none" width="640" height="360" controls>
+    <video preload="auto" width="640" height="360" controls>
         <source src="{{ movie.resource_link }}" type="video/mp4" controls >
         Your browser does not support the video tag.
     </video>
