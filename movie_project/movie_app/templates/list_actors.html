@@ -19,7 +19,12 @@
                     <strong>{{ actor.name }}</strong>
                     <ul>
                         {% for movie in actor.movies %}
-                            <li><a href="{% url 'movie_detail' movie.movie_id %}">{{ movie.title }}</a></li>
+                            <li>
+                                <a href="{% url 'movie_detail' movie.movie_id %}">{{ movie.title }}</a>
+                                {% if movie.rating %}
+                                    - Rating: {{ movie.rating|floatformat:1 }}/10
+                                {% endif %}
+                            </li>
                         {% endfor %}
                     </ul>
                 </li>
