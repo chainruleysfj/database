@@ -112,11 +112,17 @@ def list_production_companies(request):
 
     companies = []
     with connection.cursor() as cursor:
+        
         if name:
+            print(name,'n')
             cursor.callproc('search_production_companies', [name,""])
         else:
             cursor.callproc('get_all_production_companies')
-        for result in cursor.fetchall():
+        results = cursor.fetchall()
+        print(results)
+        company_id = None
+        company = {}
+        for result in results:
             company_id = result[0]
             company = {
                 'company_id': company_id,
@@ -125,6 +131,7 @@ def list_production_companies(request):
                 'company_description': result[3],
                 'movies': []
             }
+            
     with connection.cursor() as cursor:
             # Fetch movies produced by this company
             cursor.callproc('get_movies_by_production_company', [company_id])
@@ -342,7 +349,6 @@ def search_person_by_name(request):
     return JsonResponse(directors, safe=False)
 
 
-@login_required
 @transaction.atomic
 def save_video_file(video_file):
     unique_filename = str(uuid.uuid4()) + '.mp4'
