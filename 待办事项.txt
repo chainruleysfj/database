@@ -55,7 +55,7 @@
 增加由演员页面导向其对应旁白的功能
 增加由旁白页面导向其对应演员的功能
 增加由旁白页面导向其对应电影的功能
-6.
+6.ysx
 增加由电影导向其出品公司的功能
 增加查询出品公司出品的所有电影的功能
 增加确认演员演出的所有电影的功能
@@ -113,8 +113,15 @@
 PPT
 17.
 整理外键约束
-删user,先QA,comment,rating,loginrecord
-movie:comment,ratingV,
+主表:子表
+user:QA,comment,rating,loginrecord
+movie:comment,rating,DirectorMovie,MovieGenreAssociation,RoleActorMovie
+production_company:movie
+person:DirectorMovie,RoleActorMovie
+MovieGenre:MovieGenreAssociation
+role:RoleActorMovie
 ...
 18.
 准备展示需要的测试数据
+19.
+整合sql文件
