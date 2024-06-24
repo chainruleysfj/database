@@ -26,3 +26,19 @@ BEGIN
     WHERE nr.actor_id = p_person_id;
 END //
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS get_actor_movies_with_id;
+DELIMITER //
+CREATE PROCEDURE get_actor_movies_with_id(IN p_person_id INT)
+BEGIN
+    SELECT DISTINCT m.movie_id,m.moviename
+    FROM movie_app_movie m
+    JOIN movie_app_roleactormovie ram ON m.movie_id = ram.movie_id
+    WHERE ram.person_id = p_person_id
+    UNION
+    SELECT DISTINCT m.movie_id,m.moviename
+    FROM movie_app_movie m
+    JOIN movie_app_narration nr ON m.movie_id = nr.movie_id
+    WHERE nr.actor_id = p_person_id;
+END //
+DELIMITER ;

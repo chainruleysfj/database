@@ -10,7 +10,8 @@
     <h2>Actor and Movie Details</h2>
     <ul>
         {% for item in role_actor_movies %}
-        <li>Movie: {{ item.movie.title }} - Actor: {{ item.person.name }}</li>
+        <li>Movie: {{ item.movie.title }} - 
+            Actor: <a href="{% url 'list_actors' %}?search_name={{ item.person.name|urlencode }}">{{ item.person.name }}</a>
         {% endfor %}
     </ul>
     <a href="{% url 'edit_role_actor_movie' role_id=role.role_id %}">Edit Actor and Movie</a>

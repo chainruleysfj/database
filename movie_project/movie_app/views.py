@@ -1522,9 +1522,10 @@ def list_actors(request):
     # 获取每个演员出演的电影
     for actor in actors_list:
         with connection.cursor() as cursor:
-            cursor.callproc('get_actor_movies', [actor['personID']])
+            cursor.callproc('get_actor_movies_with_id', [actor['personID']])
             movies = cursor.fetchall()
-            actor['movies'] = [movie[0] for movie in movies]
+            print(movies)
+            actor['movies'] = [{'movie_id': movie[0], 'title': movie[1]} for movie in movies]
 
     return render(request, 'list_actors.html', {'actors': actors_list, 'search_name': search_name})
 
