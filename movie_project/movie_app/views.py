@@ -24,7 +24,7 @@ from django.contrib.sessions.models import Session
 from django.utils import timezone
 from django.db.models import Q,Avg
 from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation, SecurityQA, LoginRecord,Role, RoleActorMovie,Comment,Rating,Narration
-from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm,ChangePasswordForm,SecurityQAForm, PasswordResetForm,UsernameForm,CommentForm,RatingForm,RoleForm, RoleActorMovieForm
+from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm,ChangePasswordForm,SecurityQAForm, PasswordResetForm,UsernameForm,CommentForm,RatingForm,RoleForm, RoleActorMovieForm, NarrationForm
 from functools import wraps
 import json,os,uuid
 from PIL import Image, ImageDraw, ImageFont
@@ -545,10 +545,17 @@ def movie_detail(request, movie_id):
             else:
                 genres=None
             if  movie_data[10]:
-                narration=movie_data[10].split(";")
+                narrations=movie_data[10].split(";")
+                narration_list=[]
+                for narration in narrations:
+                    narration=narration.split("-")
+                    narration_list.append({
+                        'actor':narration[0],
+                        'content':narration[1],
+                        'narration_id':narration[2],
+                    })
             else:
-                narration=None
-           
+                narration_list=None
             movie = {
                 'movie_id': movie_data[0],
                 'moviename': movie_data[1],
@@ -560,7 +567,7 @@ def movie_detail(request, movie_id):
                 'actors': actors,
                 'directors': directors,
                 'genres': genres,
-                'narration': narration,
+                'narration_list': narration_list,
             }
             
     except Exception as e:
@@ -628,6 +635,7 @@ def movie_detail(request, movie_id):
 
     context = {
         'movie': movie,
+        'movie_id': movie_id,
         'comments_with_floors': comments_with_floors,
         'rating_form': rating_form,
         'comment_form': comment_form,
@@ -1471,13 +1479,11 @@ def search_persons_role(request):
 
 
 @login_required
-
 def role_list(request):
     roles = Role.objects.all()
     return render(request, 'role_list.html', {'roles': roles})
 
 @login_required
-
 def role_detail(request, role_id):
     try:
         with connection.cursor() as cursor:
@@ -1528,7 +1534,6 @@ def edit_role(request, role_id):
 
 
 @login_required
-
 def search_roles_by_name(request):
     query = request.GET.get('query', '')
     roles = Role.objects.filter(role_name__icontains=query)
@@ -1536,7 +1541,6 @@ def search_roles_by_name(request):
 
 
 @login_required
-
 def search_roles_by_actor(request):
     query = request.GET.get('query', '')
     roles = Role.objects.filter(roleactormovie__person__name__icontains=query).distinct()
@@ -1570,6 +1574,7 @@ def edit_role_actor_movie(request, role_id):
     else:
         form = RoleActorMovieForm(instance=role_actor_movie)
     return render(request, 'edit_role_actor_movie.html', {'form': form, 'role': role})
+
 @login_required
 def search_role(request):
     return render(request, 'search_role.html')
@@ -1617,6 +1622,7 @@ def user_homepage(request, username):
         'ratings': ratings_list,
         'comments': comments_list,
     })
+
 @login_required
 def search_users(request):
     query = request.GET.get('q', '')
@@ -1632,6 +1638,7 @@ def search_users(request):
     
     return render(request, 'search_users.html', context)
 
+@login_required
 def list_actors(request):
     search_name = request.GET.get('search_name', '')
     with connection.cursor() as cursor:
@@ -1665,3 +1672,30 @@ def person_movies(request, person_id):
         'movies_as_actor': movies_as_actor,
         'movies_as_narrator': movies_as_narrator,
     })
+
+@login_required
+@admin_required
+def add_narration(request, movie_id):
+    movie = get_object_or_404(Movie, pk=movie_id)
+    if request.method == 'POST':
+        form = NarrationForm(request.POST)
+        if form.is_valid():
+            narration = form.save(commit=False)
+            narration.movie = movie
+            narration.save()
+            messages.success(request, 'Narration added successfully!')
+            return redirect('movie_detail', movie_id=movie_id)
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = NarrationForm()
+
+    return render(request, 'add_narration.html', {'form': form, 'movie': movie})
+
+@login_required
+@admin_required
+def delete_narration(request, movie_id, narration_id):
+    narration = get_object_or_404(Narration, pk=narration_id)
+    narration.delete()
+    messages.success(request, 'Narration deleted successfully!')
+    return redirect('movie_detail', movie_id=movie_id)

@@ -76,7 +76,8 @@ urlpatterns = [
     path('actors/', views.list_actors, name='list_actors'),#列举演员
     path('movie/<int:movie_id>/actors/', views.movie_actors, name='movie_actors'),
     path('person/<int:person_id>/movies/', views.person_movies, name='person_movies'),
-
+    path('movie/<int:movie_id>/add_narration/', views.add_narration, name='add_narration'), #添加旁白
+    path('movie/<int:movie_id>/delete_narration/<int:narration_id>/', views.delete_narration, name='delete_narration'), #删除旁白
 ]
 
 if settings.DEBUG:

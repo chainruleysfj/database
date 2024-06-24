@@ -2,7 +2,7 @@
 from django import forms
 from .models import ProductionCompany,Movie,Person,Comment,Rating,SecurityQA
 from django.contrib.auth.models import User
-from .models import Role, RoleActorMovie
+from .models import Role, RoleActorMovie, Narration
 
 class ProductionCompanyForm(forms.ModelForm):
     class Meta:
@@ -97,3 +97,8 @@ class PasswordResetForm(forms.Form):
 
 class UsernameForm(forms.Form):
     username = forms.CharField(max_length=150, label="Username")
+
+class NarrationForm(forms.ModelForm):
+     class Meta:
+         model = Narration
+         fields = ['content', 'actor']

@@ -171,7 +171,7 @@ BEGIN
     WHERE ga.movie_id = p_movie_id;
 
     -- Retrieve narration content (if any)
-    SELECT GROUP_CONCAT(CONCAT(p.name, ' - ', nr.content) SEPARATOR '; ')
+    SELECT GROUP_CONCAT(CONCAT(p.name, '-', nr.content, '-', nr.narration_id) SEPARATOR '; ')
     INTO narration_list
     FROM movie_app_person p
     JOIN movie_app_narration nr ON p.personID = nr.actor_id

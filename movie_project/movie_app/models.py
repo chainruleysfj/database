@@ -134,7 +134,7 @@ class Narration(models.Model):
     narration_id = models.AutoField(primary_key=True)
     content = models.TextField()
     actor = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='narrations')
-    movie = models.OneToOneField(Movie, on_delete=models.CASCADE, related_name='narration')
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='narrations')
 
     def __str__(self):
         return f"Narration for {self.movie.moviename} by {self.actor.name}"

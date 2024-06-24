@@ -1,0 +1,105 @@
+<!-- add_narration.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Narration</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 90%;
+            margin: auto;
+            overflow: hidden;
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            margin-top: 0;
+        }
+        .messages {
+            list-style-type: none;
+            padding: 0;
+        }
+        .messages li {
+            background-color: #eee;
+            border: 1px solid #ccc;
+            margin: 0.5em 0;
+            padding: 0.5em;
+        }
+        .error {
+            border-color: red;
+        }
+        .success {
+            border-color: green;
+        }
+        .editable-form {
+            margin-bottom: 20px;
+            background: #ddd;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .editable-form input[type="text"], .editable-form input[type="submit"], .editable-form textarea, .editable-form select {
+            margin: 5px 0;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        footer {
+            background: #333;
+            color: #fff;
+            text-align: center;
+            padding: 10px 20px;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+        button {
+            background: #5cb85c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #4cae4c;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Add Narration for {{ movie.moviename }}</h1>
+    </header>
+    <div class="container">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <form method="post" class="editable-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Add Narration</button>
+        </form>
+    </div>
+    <footer>
+        <p>&copy; 2024 Movie Database. All rights reserved.</p>
+    </footer>
+</body>
+</html>
