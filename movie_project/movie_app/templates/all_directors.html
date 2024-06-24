@@ -4,76 +4,185 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>All Directors</title>
+    <style>
+         body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        header, footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1em 0;
+        }
+
+        footer a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2em auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        form {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        form label,
+        form input,
+        form button {
+            margin: 5px 0;
+        }
+
+        form input[type="text"] {
+            flex-grow: 1;
+            margin-right: 10px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        form button {
+            background-color: #5cb85c;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        form button:hover {
+            background-color: #4cae4c;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        ul li {
+            margin-bottom: 10px;
+        }
+
+        ul ul {
+            padding-left: 20px;
+        }
+
+        a {
+            text-decoration: none;
+            color: #337ab7;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .current {
+            font-weight: bold;
+        }
+
+        .step-links a {
+            margin: 0 5px;
+        }
+    </style>
 </head>
 <body>
-    <h1>All Directors and Their Movies</h1>
-    {% if messages %}
+    <header>
+        <h1>All Directors and Their Movies</h1>
+    </header>
+
+    <div class="container">
+        <!-- 消息提示部分 -->
+        {% if messages %}
         <ul class="messages">
             {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
             {% endfor %}
         </ul>
-    {% endif %}
-    <form method="get">
-        <label for="search_director">Search by Director:</label>
-        <input type="text" id="search_director" name="search_director" value="{{ search_director }}">
-        <label for="search_movie">Search by Movie:</label>
-        <input type="text" id="search_movie" name="search_movie" value="{{ search_movie }}">
-        <button type="submit">Search</button>
-    </form>
-    <ul>
-        {% for director in directors_with_movies %}
-        <li>
-            <strong>{{ director.name }}:</strong>
-            <ul>
-                {% for movie in director.movies_page %}
-                <li>
-                    <a href="{% url 'movie_detail' movie.id %}">{{ movie.name }}</a>
-                    {% if movie.average_rating is not None %}
-                        - {{ movie.average_rating }}
-                    {% else %}
-                        - No ratings yet
-                    {% endif %}
-                </li>
-                {% endfor %}
-            </ul>
-            <div class="pagination">
-                <span class="step-links">
-                    {% if director.movies_page.has_previous %}
-                        <a href="?page={{ directors_with_movies.number }}&movies_page_{{ director.id }}=1">&laquo; first</a>
-                        <a href="?page={{ directors_with_movies.number }}&movies_page_{{ director.id }}={{ director.movies_page.previous_page_number }}">previous</a>
-                    {% endif %}
+        {% endif %}
 
-                    <span class="current">
-                        Page {{ director.movies_page.number }} of {{ director.movies_page.paginator.num_pages }}.
+        <!-- 搜索表单部分 -->
+        <form method="get" class="search-form">
+            <label for="search_director">Search by Director:</label>
+            <input type="text" id="search_director" name="search_director" value="{{ search_director }}">
+            <label for="search_movie">Search by Movie:</label>
+            <input type="text" id="search_movie" name="search_movie" value="{{ search_movie }}">
+            <button type="submit">Search</button>
+        </form>
+
+        <!-- 导演和电影列表部分 -->
+        <ul class="directors-list">
+            {% for director in directors_with_movies %}
+            <li class="director-item">
+                <strong>{{ director.name }}</strong>
+                <ul class="movies-list">
+                    {% for movie in director.movies_page %}
+                    <li class="movie-item">
+                        <a href="{% url 'movie_detail' movie.id %}">{{ movie.name }}</a>
+                        {% if movie.average_rating is not None %}
+                            - {{ movie.average_rating }}
+                        {% else %}
+                            - No ratings yet
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                <!-- 分页导航 -->
+                <div class="pagination">
+                    <span class="step-links">
+                        {% if director.movies_page.has_previous %}
+                            <a href="?page={{ director.movies_page.previous_page_number }}">previous</a>
+                        {% endif %}
+                        <span class="current">
+                            Page {{ director.movies_page.number }} of {{ director.movies_page.paginator.num_pages }}.
+                        </span>
+                        {% if director.movies_page.has_next %}
+                            <a href="?page={{ director.movies_page.next_page_number }}">next</a>
+                        {% endif %}
                     </span>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
 
-                    {% if director.movies_page.has_next %}
-                        <a href="?page={{ directors_with_movies.number }}&movies_page_{{ director.id }}={{ director.movies_page.next_page_number }}">next</a>
-                        <a href="?page={{ directors_with_movies.number }}&movies_page_{{ director.id }}={{ director.movies_page.paginator.num_pages }}">last &raquo;</a>
-                    {% endif %}
+        <!-- 主要分页导航 -->
+        <div class="main-pagination">
+            <span class="step-links">
+                {% if directors_with_movies.has_previous %}
+                    <a href="?page={{ directors_with_movies.previous_page_number }}">previous</a>
+                {% endif %}
+                <span class="current">
+                    Page {{ directors_with_movies.number }} of {{ directors_with_movies.paginator.num_pages }}.
                 </span>
-            </div>
-        </li>
-        {% endfor %}
-    </ul>
-    <div class="pagination">
-        <span class="step-links">
-            {% if directors_with_movies.has_previous %}
-                <a href="?page=1">&laquo; first</a>
-                <a href="?page={{ directors_with_movies.previous_page_number }}">previous</a>
-            {% endif %}
-
-            <span class="current">
-                Page {{ directors_with_movies.number }} of {{ directors_with_movies.paginator.num_pages }}.
+                {% if directors_with_movies.has_next %}
+                    <a href="?page={{ directors_with_movies.next_page_number }}">next</a>
+                {% endif %}
             </span>
-
-            {% if directors_with_movies.has_next %}
-                <a href="?page={{ directors_with_movies.next_page_number }}">next</a>
-                <a href="?page={{ directors_with_movies.paginator.num_pages }}">last &raquo;</a>
-            {% endif %}
-        </span>
+        </div>
     </div>
-    <p><a href="{% url 'home' %}">home</a>.</p>
+
+    <footer>
+        <p><a href="{% url 'home' %}">home</a>.</p>
+    </footer>
 </body>
 </html>

@@ -1,38 +1,128 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Role</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 1em 0;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2em auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        form div {
+            margin-bottom: 15px;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="hidden"],
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        input[type="text"] {
+            margin-bottom: 5px;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            background-color: #5cb85c;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #4cae4c;
+        }
+
+        button[type="submit"] {
+            align-self: center;
+        }
+
+        .search-button {
+            margin-left: 5px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Add Role</h1>
-    <form method="post">
-        {% csrf_token %}
-        <div>
-            <label for="movie_search">Search Movie:</label>
-            <input type="text" id="movie_search" name="movie_search" readonly>
-            <input type="hidden" id="movie_id" name="movie_id">
-            <button type="button" onclick="window.open('{% url 'search_movies' %}', 'Search Movies', 'width=600,height=400')">Search</button>
-        </div>
+    <header>
+        <h1>Add Role</h1>
+    </header>
 
-        <div>
-            <label for="person_search">Search Person:</label>
-            <input type="text" id="person_search" name="person_search" readonly>
-            <input type="hidden" id="person_id" name="person_id">
-            <button type="button" onclick="window.open('{% url 'search_persons' %}', 'Search Persons', 'width=600,height=400')">Search</button>
-        </div>
+    <div class="container">
+        <form method="post">
+            {% csrf_token %}
 
-        <div>
-            <label for="role_name">Role Name:</label>
-            <input type="text" id="role_name" name="role_name" required>
-        </div>
-        <div>
-            <label for="role_description">Role Description:</label>
-            <textarea id="role_description" name="role_description"></textarea>
-        </div>
-        <div>
-            <button type="submit">Add Role</button>
-        </div>
-    </form>
+            <!-- Search Movie -->
+            <div>
+                <label for="movie_search">Search Movie:</label>
+                <input type="text" id="movie_search" name="movie_search" readonly>
+                <input type="hidden" id="movie_id" name="movie_id">
+                <button type="button" class="search-button" onclick="window.open('{% url 'search_movies' %}', 'Search Movies', 'width=600,height=400')">Search</button>
+            </div>
+
+            <!-- Search Person -->
+            <div>
+                <label for="person_search">Search Person:</label>
+                <input type="text" id="person_search" name="person_search" readonly>
+                <input type="hidden" id="person_id" name="person_id">
+                <button type="button" class="search-button" onclick="window.open('{% url 'search_persons' %}', 'Search Persons', 'width=600,height=400')">Search</button>
+            </div>
+
+            <!-- Role Name -->
+            <div>
+                <label for="role_name">Role Name:</label>
+                <input type="text" id="role_name" name="role_name" required>
+            </div>
+
+            <!-- Role Description -->
+            <div>
+                <label for="role_description">Role Description:</label>
+                <textarea id="role_description" name="role_description"></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <div>
+                <button type="submit">Add Role</button>
+            </div>
+        </form>
+    </div>
 </body>
 </html>
-

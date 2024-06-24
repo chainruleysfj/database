@@ -2,24 +2,106 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Roles</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        form input[type="text"] {
+            padding: 8px;
+            margin-right: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        form button {
+            padding: 8px 15px;
+            background: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background: #4cae4c;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        ul li:last-child {
+            border-bottom: none;
+        }
+        a {
+            text-decoration: none;
+            color: #337ab7;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .no-roles {
+            color: #a94442;
+        }
+        .back-link, .home-link {
+            text-align: center;
+            display: block;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Search Roles by {{ search_type|title }}</h1>
-    <form method="get" action="">
-        <input type="text" name="query" value="{{ query }}" placeholder="Enter {{ search_type }}">
-        <button type="submit">Search</button>
-    </form>
-    <ul>
-        {% for role in roles %}
-        <li>
-            <a href="{% url 'role_detail' role_id=role.role_id %}">{{ role.role_name }}</a>
-        </li>
-        {% empty %}
-        <li>No roles found.</li>
-        {% endfor %}
-    </ul>
-    <a href="{% url 'role_list' %}">Back to Role List</a>
-    <p><a href="{% url 'home' %}">home</a>.</p>
+    <div class="container">
+        <header>
+            <h1>Search Roles by {{ search_type|title }}</h1>
+        </header>
+        <form method="get" action="{% url 'search_roles_by_'|add:search_type %}">
+            <input type="text" name="query" value="{{ query }}" placeholder="Enter {{ search_type }}">
+            <button type="submit">Search</button>
+        </form>
+        {% if roles %}
+            <ul>
+                {% for role in roles %}
+                <li>
+                    <a href="{% url 'role_detail' role_id=role.role_id %}">{{ role.role_name }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="no-roles">No roles found.</p>
+        {% endif %}
+        <div class="back-link">
+            <a href="{% url 'role_list' %}">Back to Role List</a>
+        </div>
+        <div class="home-link">
+            <p><a href="{% url 'home' %}">home</a>.</p>
+        </div>
+    </div>
 </body>
 </html>

@@ -1,131 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ movie.moviename }} - Details</title>
+    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             background-color: #f4f4f4;
             margin: 0;
             padding: 0;
         }
+        /* Add your existing styles here, with modifications as needed */
 
-        header {
-            background-color: #333;
-            color: #fff;
-            padding: 1em 0;
-            text-align: center;
+        /* Additional styles */
+        header h1 {
+            margin: 0;
         }
-
-        nav {
-            background-color: #444;
-            padding: 1em;
-            text-align: center;
-        }
-
-        nav a {
-            color: #fff;
-            margin: 0 1em;
-            text-decoration: none;
-        }
-
-        nav a:hover {
-            text-decoration: underline;
-        }
-
-        main {
-            padding: 2em;
-        }
-
-        footer {
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            padding: 1em 0;
-            position: fixed;
-            width: 100%;
-            bottom: 0;
-        }
-
-        .messages {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        .messages li {
-            background-color: #eee;
-            border: 1px solid #ccc;
-            margin: 0.5em 0;
-            padding: 0.5em;
-        }
-
-        .messages .error {
-            border-color: red;
-        }
-
-        .messages .success {
-            border-color: green;
-        }
-
-        .star-rating {
-            direction: rtl;
-            display: inline-flex;
-            font-size: 2em;
-        }
-
-        .star-rating input[type="radio"] {
-            display: none;
-        }
-
-        .star-rating label {
-            color: #bbb;
-            cursor: pointer;
-            font-size: 2em;
-        }
-
-        .star-rating input[type="radio"]:checked~label {
-            color: #f2b600;
-        }
-
-        .star-rating label:hover,
-        .star-rating label:hover~label {
-            color: #f2b600;
-        }
-
-        .pagination {
-            text-align: center;
-            margin: 2em 0;
-        }
-
-        .pagination .step-links {
-            display: inline-block;
-        }
-
-        .pagination a {
-            margin: 0 0.5em;
-            text-decoration: none;
-            color: #333;
-        }
-
-        .pagination a:hover {
-            text-decoration: underline;
-        }
-
-        .pagination .current {
-            font-weight: bold;
-        }
-
         video {
+            width: 100%;
+            max-width: 720px; /* Adjust the max-width as needed */
+            margin: 1em auto; /* Center the video */
+        }
+        .comment-form, .rating-form {
+            margin-top: 2em;
+            padding: 1em;
+            background: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        form label {
             display: block;
-            margin: 1em 0;
+            margin-bottom: 0.5em;
+        }
+        form input[type="text"], form textarea {
+            width: 100%;
+            padding: 0.5em;
+            margin-bottom: 1em;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        form button {
+            padding: 0.5em 1em;
+            background: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background: #4cae4c;
+        }
+        /* Style the pagination links */
+        .pagination a {
+            padding: 0.5em 1em;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 0 0.5em;
+        }
+        .pagination .current {
+            background: #333;
+            color: #fff;
         }
     </style>
 </head>
-
 <body>
     <header>
         <h1>{{ movie.moviename }} - Details</h1>
@@ -135,8 +75,7 @@
         <a href="{% url 'list_movies' %}">All Movies</a>
         <a href="{% url 'home' %}">Home</a>
     </nav>
-
-    <main>
+        <main>
         {% if messages %}
         <ul class="messages">
             {% for message in messages %}
@@ -217,9 +156,9 @@
         {% endif %}
     </main>
 
+    <!-- Add a footer with additional styles -->
     <footer>
         <p>&copy; 2024 Movie Database. All rights reserved.</p>
     </footer>
 </body>
-
 </html>

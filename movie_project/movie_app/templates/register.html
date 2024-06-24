@@ -1,29 +1,105 @@
-<!-- register.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            color: #a94442;
+            background-color: #f2dede;
+            border-left: 5px solid #ebccd1;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 3px;
+        }
+        form {
+            margin-top: 20px;
+        }
+        form label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        form input[type="text"],
+        form input[type="password"],
+        form input[type="captcha"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .captcha-img {
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+        button {
+            background-color: #5cb85c;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #4cae4c;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Register</h1>
-    {% if messages %}
-        <ul>
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <!-- 显示验证码图像和输入框 -->
-        <label for="id_captcha">Enter the captcha:</label><br>
-        <input type="text" id="id_captcha" name="captcha"><br><br>
-        <img src="{% url 'generate_captcha' %}" alt="captcha"><br>
-        <button type="submit">Register</button>
-    </form>
-    <p><a href="{% url 'login' %}">login</a>.</p>
+    <div class="container">
+        <h1>Register</h1>
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <!-- Captcha area -->
+            <div class="captcha-area">
+                <label for="id_captcha">Enter the captcha:</label>
+                <input type="text" id="id_captcha" name="captcha" required>
+                <img class="captcha-img" src="{% url 'generate_captcha' %}" alt="captcha">
+            </div>
+            <button type="submit">Register</button>
+        </form>
+        <div class="footer">
+            <p><a href="{% url 'login' %}">Already have an account? Login here</a>.</p>
+        </div>
+    </div>
 </body>
 </html>
