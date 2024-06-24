@@ -13,11 +13,23 @@
             margin: 0;
             padding: 0;
         }
-        /* Add your existing styles here, with modifications as needed */
-
-        /* Additional styles */
+        header, nav, footer, main {
+            padding: 1em;
+            background: #fff;
+            margin-bottom: 1em;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
         header h1 {
             margin: 0;
+        }
+        nav a {
+            margin: 0 1em;
+            text-decoration: none;
+            color: #333;
+        }
+        nav a:hover {
+            text-decoration: underline;
         }
         video {
             width: 100%;
@@ -53,12 +65,12 @@
         form button:hover {
             background: #4cae4c;
         }
-        /* Style the pagination links */
-        .pagination a {
+        .pagination a, .pagination .current {
             padding: 0.5em 1em;
             border: 1px solid #ddd;
             border-radius: 4px;
             margin: 0 0.5em;
+            text-decoration: none;
         }
         .pagination .current {
             background: #333;
@@ -83,6 +95,28 @@
         .star-rating label:hover,
         .star-rating label:hover ~ label {
             color: #f2b600;
+        }
+        .messages {
+            list-style: none;
+            padding: 0;
+            margin: 1em 0;
+        }
+        .messages li {
+            padding: 0.5em;
+            margin-bottom: 0.5em;
+            border-radius: 4px;
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+        }
+        .movie-detail ul {
+            list-style: none;
+            padding: 0;
+        }
+        .movie-detail li {
+            margin-bottom: 0.5em;
+        }
+        .movie-detail h2 {
+            margin-top: 1em;
         }
     </style>
 </head>
