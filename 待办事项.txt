@@ -115,3 +115,6 @@ PPT
 整理外键约束
 删user,先QA,comment,rating,loginrecord
 movie:comment,ratingV,
+...
+18.
+准备展示需要的测试数据
