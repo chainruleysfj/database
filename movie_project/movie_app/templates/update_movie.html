@@ -4,100 +4,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Update Movie</title>
-    <script>
-        // 使用JSON.parse()来解析传递的JSON字符串，并且使用|escapejs过滤器来确保正确的JavaScript字符串
-        let selectedDirectors = JSON.parse('{{ selected_directors_json|escapejs }}');
-
-        var addPersonUrl = '{% url "add_person" %}';
-        
-
-        function searchDirectors() {
-            const query = document.getElementById('director-search').value;
-            fetch(`/search_person_by_name/?query=${query}`)
-                .then(response => response.json())
-                .then(data => {
-                    const searchResults = document.getElementById('search-results');
-                    searchResults.innerHTML = '';
-
-                    if (data.length === 0) {
-                        searchResults.innerHTML = 'No matching directors found. Please check the search criteria or <a href="' + addPersonUrl + '">add a new director</a>.';
-                    } else {
-                        data.forEach(director => {
-                            // 检查导演是否已被选择
-                            const isSelected = selectedDirectors.includes(director.person_id);
-                            // 创建导演条目
-                            const directorElement = document.createElement('div');
-                            directorElement.id = `director-${director.person_id}`;
-                            directorElement.innerHTML = `
-                                ${director.name}
-                                <button type="button" onclick="${isSelected ? `deselectDirector(${director.person_id})` : `selectDirector(${director.person_id}, '${director.name}')`}">${isSelected ? '✔' : '✔'}</button>
-                            `;
-                            searchResults.appendChild(directorElement);
-                        });
-                        // 更新已选择导演的名字
-                        updateSelectedDirectors();
-                    }
-                    
-                });
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
         }
-
-        function selectDirector(person_id, name) {
-            selectedDirectors.push(person_id);
-            updateSelectedDirectors();
-            const directorElement = document.getElementById(`director-${person_id}`);
-            directorElement.style.display = 'none';
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
         }
-
-        function deselectDirector(person_id) {
-            selectedDirectors = selectedDirectors.filter(id => id !== person_id);
-            updateSelectedDirectors();
-            searchDirectors()
-            const directorElement = document.getElementById(`director-${person_id}`);
-            if (directorElement) {
-                directorElement.style.display = 'block';
-            }
+        header, footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1em 0;
         }
-
-        function updateSelectedDirectors() {
-            const selectedDirectorsContainer = document.getElementById('selected-directors');
-            selectedDirectorsContainer.innerHTML = '';
-
-            selectedDirectors.forEach(person_id => {
-                // 获取导演的名字
-                const directorName = document.querySelector(`#director-${person_id}`)?.innerText || '';
-                // 创建导演条目
-                const directorElement = document.createElement('div');
-                directorElement.id = `selected-director-${person_id}`;
-                directorElement.innerHTML = `
-                    ${directorName}
-                    <button type="button" onclick="deselectDirector(${person_id})">✘</button>
-                `;
-                selectedDirectorsContainer.appendChild(directorElement);
-            });
+        nav {
+            background-color: #444;
+            padding: 1em;
+            text-align: center;
         }
-
-        function updateFormDirectors() {  
-            document.getElementById('directors-input').value = selectedDirectors.join(',');  
-        }  
-
-        document.addEventListener('DOMContentLoaded', (event) => {  
-            searchDirectors(); // 在页面加载时执行一次空搜索
-
-            updateFormDirectors(); // 确保在DOM加载完成后更新表单的directors字段值  
-        });  
-    </script>
+        nav a {
+            color: #fff;
+            margin: 0 1em;
+            text-decoration: none;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        form {
+            margin-top: 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        label, input[type="text"], input[type="submit"], select, textarea {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        input[type="text"], select, textarea {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        input[type="submit"] {
+            background: #5cb85c;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        input[type="submit"]:hover {
+            background: #4cae4c;
+        }
+        .messages {
+            margin-bottom: 20px;
+        }
+        .messages li {
+            background-color: #eee;
+            border: 1px solid #ccc;
+            margin: 0.5em 0;
+            padding: 0.5em;
+        }
+        .error { border-color: red; }
+        .success { border-color: green; }
+    </style>
 </head>
 <body>
-    <h1>Update Movie</h1>
-    {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
+    <header>
+        <h1>Update Movie</h1>
+    </header>
+
+    <nav>
+        <!-- Navigation links -->
+    </nav>
+
+    <div class="container">
+        <!-- Messages -->
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <!-- Form -->
+        <form method="post" enctype="multipart/form-data">
+             {% csrf_token %}
         {{ form.non_field_errors }}
         <div>
             {{ form.moviename.label_tag }}<br>
@@ -134,11 +133,11 @@
                         <a href="?production_company_page=1">&laquo; first</a>
                         <a href="?production_company_page={{ production_companies_page.previous_page_number }}">previous</a>
                     {% endif %}
-        
+
                     <span class="current">
                         Page {{ production_companies_page.number }} of {{ production_companies_page.paginator.num_pages }}.
                     </span>
-        
+
                     {% if production_companies_page.has_next %}
                         <a href="?production_company_page={{ production_companies_page.next_page_number }}">next</a>
                         <a href="?production_company_page={{ production_companies_page.paginator.num_pages }}">last &raquo;</a>
@@ -179,10 +178,99 @@
         </div>
 
         <input type="hidden" name="directors" id="directors-input" value="">
-        
+
         <button type="submit" onclick="updateFormDirectors()">Update</button>
-    </form>
-    <p><a href="{% url 'list_movies' %}">Back to Movie List</a></p>
-    <p><a href="{% url 'home' %}">home</a>.</p>
+        </form>
+
+        <p><a href="{% url 'list_movies' %}">Back to Movie List</a></p>
+        <p><a href="{% url 'home' %}">Home</a></p>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Movie Database. All rights reserved.</p>
+    </footer>
+
+     <script>
+        // 使用JSON.parse()来解析传递的JSON字符串，并且使用|escapejs过滤器来确保正确的JavaScript字符串
+        let selectedDirectors = JSON.parse('{{ selected_directors_json|escapejs }}');
+
+        var addPersonUrl = '{% url "add_person" %}';
+
+
+        function searchDirectors() {
+            const query = document.getElementById('director-search').value;
+            fetch(`/search_person_by_name/?query=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    const searchResults = document.getElementById('search-results');
+                    searchResults.innerHTML = '';
+
+                    if (data.length === 0) {
+                        searchResults.innerHTML = 'No matching directors found. Please check the search criteria or <a href="' + addPersonUrl + '">add a new director</a>.';
+                    } else {
+                        data.forEach(director => {
+                            // 检查导演是否已被选择
+                            const isSelected = selectedDirectors.includes(director.person_id);
+                            // 创建导演条目
+                            const directorElement = document.createElement('div');
+                            directorElement.id = `director-${director.person_id}`;
+                            directorElement.innerHTML = `
+                                ${director.name}
+                                <button type="button" onclick="${isSelected ? `deselectDirector(${director.person_id})` : `selectDirector(${director.person_id}, '${director.name}')`}">${isSelected ? '✔' : '✔'}</button>
+                            `;
+                            searchResults.appendChild(directorElement);
+                        });
+                        // 更新已选择导演的名字
+                        updateSelectedDirectors();
+                    }
+
+                });
+        }
+
+        function selectDirector(person_id, name) {
+            selectedDirectors.push(person_id);
+            updateSelectedDirectors();
+            const directorElement = document.getElementById(`director-${person_id}`);
+            directorElement.style.display = 'none';
+        }
+
+        function deselectDirector(person_id) {
+            selectedDirectors = selectedDirectors.filter(id => id !== person_id);
+            updateSelectedDirectors();
+            searchDirectors()
+            const directorElement = document.getElementById(`director-${person_id}`);
+            if (directorElement) {
+                directorElement.style.display = 'block';
+            }
+        }
+
+        function updateSelectedDirectors() {
+            const selectedDirectorsContainer = document.getElementById('selected-directors');
+            selectedDirectorsContainer.innerHTML = '';
+
+            selectedDirectors.forEach(person_id => {
+                // 获取导演的名字
+                const directorName = document.querySelector(`#director-${person_id}`)?.innerText || '';
+                // 创建导演条目
+                const directorElement = document.createElement('div');
+                directorElement.id = `selected-director-${person_id}`;
+                directorElement.innerHTML = `
+                    ${directorName}
+                    <button type="button" onclick="deselectDirector(${person_id})">✘</button>
+                `;
+                selectedDirectorsContainer.appendChild(directorElement);
+            });
+        }
+
+        function updateFormDirectors() {
+            document.getElementById('directors-input').value = selectedDirectors.join(',');
+        }
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            searchDirectors(); // 在页面加载时执行一次空搜索
+
+            updateFormDirectors(); // 确保在DOM加载完成后更新表单的directors字段值
+        });
+    </script>
 </body>
 </html>

@@ -4,35 +4,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ movie.moviename }} - Details</title>
+    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        .star-rating {
-            direction: rtl;
-            display: inline-flex;
-            font-size: 2em;
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
         }
-        .star-rating input[type="radio"] {
-            display: none;
+        /* Add your existing styles here, with modifications as needed */
+
+        /* Additional styles */
+        header h1 {
+            margin: 0;
         }
-        .star-rating label {
-            color: #bbb;
+        video {
+            width: 100%;
+            max-width: 720px; /* Adjust the max-width as needed */
+            margin: 1em auto; /* Center the video */
+        }
+        .comment-form, .rating-form {
+            margin-top: 2em;
+            padding: 1em;
+            background: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        form label {
+            display: block;
+            margin-bottom: 0.5em;
+        }
+        form input[type="text"], form textarea {
+            width: 100%;
+            padding: 0.5em;
+            margin-bottom: 1em;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        form button {
+            padding: 0.5em 1em;
+            background: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 2em;
         }
-        .star-rating input[type="radio"]:checked ~ label {
-            color: #f2b600;
+        form button:hover {
+            background: #4cae4c;
         }
-        .star-rating label:hover,
-        .star-rating label:hover ~ label {
-            color: #f2b600;
+        /* Style the pagination links */
+        .pagination a {
+            padding: 0.5em 1em;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 0 0.5em;
+        }
+        .pagination .current {
+            background: #333;
+            color: #fff;
         }
     </style>
 </head>
 <body>
-    {% if messages %}
+    <header>
+        <h1>{{ movie.moviename }} - Details</h1>
+    </header>
+
+    <nav>
+        <a href="{% url 'list_movies' %}">All Movies</a>
+        <a href="{% url 'home' %}">Home</a>
+    </nav>
+        <main>
+        {% if messages %}
         <ul class="messages">
             {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
             {% endfor %}
         </ul>
     {% endif %}
@@ -82,62 +129,68 @@
     <ul>
         {% for item in comments_with_floors %}
             <li>
-                <strong>{{ item.floor }}</strong> - 
+                <strong>{{ item.floor }}</strong> -
                 <a href="{% url 'user_homepage' item.comment.user.username %}">{{ item.comment.user.username }}</a>: {{ item.comment.content }}
                 <br>
                 <small>Commented on: {{ item.comment.comment_time }}</small>
                 {% if item.comment.user == request.user %}
-                    <form method="post" action="{% url 'delete_comment' comment_id=item.comment.comment_id %}">
-                        {% csrf_token %}
-                        <button type="submit">Delete</button>
-                    </form>
+                <form method="post" action="{% url 'delete_comment' comment_id=item.comment.comment_id %}">
+                    {% csrf_token %}
+                    <button type="submit">Delete</button>
+                </form>
                 {% endif %}
             </li>
-        {% empty %}
+            {% empty %}
             <li>No comments available.</li>
-        {% endfor %}
-    </ul>
+            {% endfor %}
+        </ul>
 
-    <!-- Pagination Controls -->
-    <div class="pagination">
-        <span class="step-links">
-            {% if comments_page.has_previous %}
+        <!-- Pagination Controls -->
+        <div class="pagination">
+            <span class="step-links">
+                {% if comments_page.has_previous %}
                 <a href="?page=1">&laquo; first</a>
                 <a href="?page={{ comments_page.previous_page_number }}">previous</a>
-            {% endif %}
+                {% endif %}
 
-            <span class="current">
-                Page {{ comments_page.number }} of {{ comments_page.paginator.num_pages }}.
-            </span>
+                <span class="current">
+                    Page {{ comments_page.number }} of {{ comments_page.paginator.num_pages }}.
+                </span>
 
-            {% if comments_page.has_next %}
+                {% if comments_page.has_next %}
                 <a href="?page={{ comments_page.next_page_number }}">next</a>
                 <a href="?page={{ comments_page.paginator.num_pages }}">last &raquo;</a>
-            {% endif %}
-        </span>
-    </div>
-
-    <h2>Add a Comment</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ comment_form.as_p }}
-        <button type="submit">Submit</button>
-    </form>
-    
-    <h2>Rate this Movie</h2>
-    <form method="post">
-        {% csrf_token %}
-        <div class="star-rating">
-            {% for i in star_range %}
-                <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" {% if rating_form.rating.value == i %}checked{% endif %}/>
-                <label for="star{{ i }}" title="{{ i }} star{% if i > 1 %}s{% endif %}"><i class="fas fa-star"></i></label>
-            {% endfor %}
+                {% endif %}
+            </span>
         </div>
-        <button type="submit">Submit Rating</button>
-    </form>
 
-    {% if average_rating %}
+        <h2>Add a Comment</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ comment_form.as_p }}
+            <button type="submit">Submit</button>
+        </form>
+
+        <h2>Rate this Movie</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="star-rating">
+                {% for i in star_range %}
+                <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" {% if rating_form.rating.value == i %}checked{% endif %} />
+                <label for="star{{ i }}" title="{{ i }} star{% if i > 1 %}s{% endif %}"><i class="fas fa-star"></i></label>
+                {% endfor %}
+            </div>
+            <button type="submit">Submit Rating</button>
+        </form>
+
+        {% if average_rating %}
         <h3>Average Rating: {{ average_rating }}/10</h3>
-    {% endif %}
+        {% endif %}
+    </main>
+
+    <!-- Add a footer with additional styles -->
+    <footer>
+        <p>&copy; 2024 Movie Database. All rights reserved.</p>
+    </footer>
 </body>
 </html>

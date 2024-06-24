@@ -4,8 +4,191 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Movie</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        header, footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1em 0;
+        }
+
+        footer a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2em auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        form div {
+            margin-bottom: 15px;
+        }
+
+        form label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        form input[type="text"],
+        form input[type="number"],
+        form select,
+        form textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        form input[type="submit"] {
+            background-color: #5cb85c;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        form input[type="submit"]:hover {
+            background-color: #4cae4c;
+        }
+
+        .messages {
+            list-style-type: none;
+            padding: 0;
+            color: #fff;
+        }
+
+        .messages li {
+            background-color: #d9534f;
+            border: 1px solid #c9302c;
+            margin: 0.5em 0;
+            padding: 0.5em;
+        }
+
+        #search-results, #selected-directors {
+            margin-top: 1em;
+        }
+
+        #search-results div, #selected-directors div {
+            margin-bottom: 5px;
+        }
+
+        #search-results button, #selected-directors button {
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Add Movie</h1>
+    </header>
+
+    <div class="container">
+        <!-- 消息提示 -->
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+
+        <!-- 表单 -->
+        <form method="post" enctype="multipart/form-data">
+ {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div>
+            {{ form.moviename.label_tag }}<br>
+            {{ form.moviename }}<br>
+            {{ form.moviename.errors }}
+        </div>
+        <div>
+            {{ form.length.label_tag }}<br>
+            {{ form.length }}<br>
+            {{ form.length.errors }}
+        </div>
+        <div>
+            {{ form.releaseyear.label_tag }}<br>
+            {{ form.releaseyear }}<br>
+            {{ form.releaseyear.errors }}
+        </div>
+        <div>
+            {{ form.plot_summary.label_tag }}<br>
+            {{ form.plot_summary }}<br>
+            {{ form.plot_summary.errors }}
+        </div>
+        <div>
+            {{ form.production_company.label_tag }}<br>
+            {{ form.production_company }}<br>
+            {{ form.production_company.errors }}
+        </div>
+        <div>
+            {{ form.video_file.label_tag }}<br>
+            {{ form.video_file }}<br>
+            {{ form.video_file.errors }}
+        </div>
+
+        <h2>Genres</h2>
+        {% for genre in genres %}
+            <label>
+                <input type="checkbox" name="genres" value="{{ genre.0 }}">
+                {{ genre.1 }}
+            </label><br>
+        {% endfor %}
+
+        <div>
+            <h3>Selected Directors:</h3>
+            <div id="selected-directors">
+                <!-- 已选导演将动态填充在这里 -->
+            </div>
+        </div>
+
+        <div>
+            <label for="director-search">Search Director:</label>
+            <input type="text" id="director-search" name="director-search">
+            <button type="button" onclick="searchDirectors()">Search</button>
+        </div>
+
+        <div id="search-results">
+            <!-- 搜索结果将动态填充在这里 -->
+        </div>
+
+        <input type="hidden" name="directors" id="directors-input" value="">
+
+        <button type="submit" onclick="document.getElementById('directors-input').value = selectedDirectors.join(',')">Submit</button>
+
+        </form>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Movie Database. All rights reserved. <a href="{% url 'home' %}">home</a>.</p>
+    </footer>
+
     <script>
-        let selectedDirectors = [];
+                let selectedDirectors = [];
 
         var addPersonUrl = '{% url "add_person" %}';
 
@@ -68,107 +251,9 @@
             });
         }
 
-        document.addEventListener('DOMContentLoaded', (event) => {  
+        document.addEventListener('DOMContentLoaded', (event) => {
             searchDirectors(); // 在页面加载时执行一次空搜索
-        }); 
+        });
     </script>
-</head>
-<body>
-    <h1>Add Movie</h1>
-    {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-        <div>
-            {{ form.moviename.label_tag }}<br>
-            {{ form.moviename }}<br>
-            {{ form.moviename.errors }}
-        </div>
-        <div>
-            {{ form.length.label_tag }}<br>
-            {{ form.length }}<br>
-            {{ form.length.errors }}
-        </div>
-        <div>
-            {{ form.releaseyear.label_tag }}<br>
-            {{ form.releaseyear }}<br>
-            {{ form.releaseyear.errors }}
-        </div>
-        <div>
-            {{ form.plot_summary.label_tag }}<br>
-            {{ form.plot_summary }}<br>
-            {{ form.plot_summary.errors }}
-        </div>
-        <div>
-            {{ form.production_company.label_tag }}<br>
-            {% for company in production_companies_page %}
-                <label>
-                    <input type="radio" name="production_company" value="{{ company.company_id }}">
-                    {{ company.name }}
-                </label><br>
-            {% endfor %}
-            <div class="pagination">
-                <span class="step-links">
-                    {% if production_companies_page.has_previous %}
-                        <a href="?production_company_page=1">&laquo; first</a>
-                        <a href="?production_company_page={{ production_companies_page.previous_page_number }}">previous</a>
-                    {% endif %}
-
-                    <span class="current">
-                        Page {{ production_companies_page.number }} of {{ production_companies_page.paginator.num_pages }}.
-                    </span>
-
-                    {% if production_companies_page.has_next %}
-                        <a href="?production_company_page={{ production_companies_page.next_page_number }}">next</a>
-                        <a href="?production_company_page={{ production_companies_page.paginator.num_pages }}">last &raquo;</a>
-                    {% endif %}
-                </span>
-            </div>
-            {{ form.production_company.errors }}
-        </div>
-        <div>
-            {{ form.video_file.label_tag }}<br>
-            {{ form.video_file }}<br>
-            {{ form.video_file.errors }}
-        </div>
-        
-        <h2>Genres</h2>
-        {% for genre in genres %}
-            <label>
-                <input type="checkbox" name="genres" value="{{ genre.0 }}">
-                {{ genre.1 }}
-            </label><br>
-        {% endfor %}
-
-
-        <div>
-            <h3>Selected Directors:</h3>
-            <div id="selected-directors">
-                <!-- 已选导演将动态填充在这里 -->
-            </div>
-        </div>
-
-        <div>
-            <label for="director-search">Search Director:</label>
-            <input type="text" id="director-search" name="director-search">
-            <button type="button" onclick="searchDirectors()">Search</button>
-        </div>
-
-        <div id="search-results">
-            <!-- 搜索结果将动态填充在这里 -->
-             
-        </div>
-
-        <input type="hidden" name="directors" id="directors-input" value="">
-        
-        <button type="submit" onclick="document.getElementById('directors-input').value = selectedDirectors.join(',')">Submit</button>
-    </form>
-    <p><a href="{% url 'home' %}">home</a>.</p>
 </body>
 </html>

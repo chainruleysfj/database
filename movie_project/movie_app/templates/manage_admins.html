@@ -1,57 +1,156 @@
-<!-- manage_users.html -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Admins</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 90%;
+            margin: auto;
+            overflow: hidden;
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            margin-top: 0;
+        }
+        .messages {
+            list-style-type: none;
+            padding: 0;
+        }
+        .messages li {
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 3px;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        .search-form {
+            margin-bottom: 20px;
+        }
+        .search-form input[type="text"] {
+            padding: 5px;
+            margin-right: 5px;
+        }
+        .search-form button {
+            padding: 5px 10px;
+        }
+        .user-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .user-list li {
+            background: #fff;
+            margin-bottom: 5px;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+        .user-actions {
+            display: inline-block;
+            margin-left: 10px;
+        }
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .pagination a {
+            margin: 0 5px;
+            text-decoration: none;
+        }
+        button {
+            background: #5cb85c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #4cae4c;
+        }
+        button.remove {
+            background: #d9534f;
+        }
+        button.remove:hover {
+            background: #c9302c;
+        }
+        footer {
+            background: #333;
+            color: #fff;
+            text-align: center;
+            padding: 10px 20px;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
-    <h1>Manage Admins</h1>
-    {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-    <!-- 搜索表单 -->
-    <form method="get" action="{% url 'manage_admins' %}">
-        <input type="text" name="name" placeholder="Search by Username">
-        <button type="submit">Search</button>
-    </form>
-    
-    <ul>
-        {% for user in users_page %}
-            <li>
-                {{ user.1 }}
-                {% if user.2 %}
-                    <span style="color: green;">(Staff)</span>
-                    {% if user.4 %}
-                        <!-- 超级管理员不可操作 -->
-                        <span style="color: rgb(0, 145, 255);">(Superuser)</span>
+    <div class="container">
+        <header>
+            <h1>Manage Admins</h1>
+        </header>
+
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <form class="search-form" method="get" action="{% url 'manage_admins' %}">
+            <input type="text" name="name" placeholder="Search by Username">
+            <button type="submit">Search</button>
+        </form>
+
+        <ul class="user-list">
+            {% for user in users_page %}
+                <li>
+                    {{ user.1 }}
+                    {% if user.2 %}
+                        <span class="staff" style="color: green;">(Staff)</span>
+                        {% if user.4 %}
+                            <span class="superuser" style="color: rgb(0, 145, 255);">(Superuser)</span>
+                        {% else %}
+                            <form method="post" action="{% url 'toggle_staff_status' user.0 %}" class="user-actions">
+                                {% csrf_token %}
+                                <button type="submit" class="remove">Remove Staff Role</button>
+                            </form>
+                        {% endif %}
                     {% else %}
-                        <form method="post" action="{% url 'toggle_staff_status' user.0 %}">
+                        <form method="post" action="{% url 'toggle_staff_status' user.0 %}" class="user-actions">
                             {% csrf_token %}
-                            <button type="submit">Remove Staff Role</button>
+                            <button type="submit">Make Staff</button>
                         </form>
                     {% endif %}
-                {% else %}
-                    <form method="post" action="{% url 'toggle_staff_status' user.0 %}">
-                        {% csrf_token %}
-                        <button type="submit">Make Staff</button>
-                    </form>
-                {% endif %}
-            </li>
-        {% empty %}
-            <li>No users found.</li>
-        {% endfor %}
-    </ul>
-    
-    <!-- 分页导航 -->
-    <div class="pagination">
-        <span class="step-links">
+                </li>
+            {% empty %}
+                <li>No users found.</li>
+            {% endfor %}
+        </ul>
+
+        <div class="pagination">
+             <span class="step-links">
             {% if users_page.has_previous %}
                 <a href="?page=1">&laquo; first</a>
                 <a href="?page={{ users_page.previous_page_number }}">previous</a>
@@ -65,9 +164,12 @@
                 <a href="?page={{ users_page.next_page_number }}">next</a>
                 <a href="?page={{ users_page.paginator.num_pages }}">last &raquo;</a>
             {% endif %}
-        </span>
+            </span>
+        </div>
+
+        <footer>
+            <p><a href="{% url 'home' %}">Home</a></p>
+        </footer>
     </div>
-    
-    <p><a href="{% url 'home' %}">Home</a></p>
 </body>
 </html>

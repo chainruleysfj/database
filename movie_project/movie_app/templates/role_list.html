@@ -3,31 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <title>Role List</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul li {
+            background: #ddd;
+            margin-bottom: 8px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        a {
+            text-decoration: none;
+            color: #337ab7;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .edit-link, .delete-link {
+            margin-left: 10px;
+        }
+        .footer {
+            background: #333;
+            color: #fff;
+            text-align: center;
+            padding: 10px 20px;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
-    <h1>Role List</h1>
-    {% if messages %}
-    <ul>
-        {% for message in messages %}
-            <li>{{ message }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-    <ul>
-        {% for role in roles %}
-        <li>
-            <a href="{% url 'role_detail' role_id=role.role_id %}">{{ role.role_name }}</a>
-            (<a href="{% url 'edit_role' role_id=role.role_id %}">Edit</a>)
-            (<a href="{% url 'delete_role' role_id=role.role_id %}">Delete</a>)
-        </li>
-        {% endfor %}
-    </ul>
-    <h2>Search Roles</h2>
-    <ul>
-        <li><a href="{% url 'search_roles_by_name' %}">Search by Name</a></li>
-        <li><a href="{% url 'search_roles_by_actor' %}">Search by Actor</a></li>
-        <li><a href="{% url 'search_roles_by_movie' %}">Search by Movie</a></li>
-    </ul>
-    <p><a href="{% url 'home' %}">home</a>.</p>
+    <div class="container">
+        <header>
+            <h1>Role List</h1>
+        </header>
+        {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        <ul>
+            {% for role in roles %}
+            <li>
+                <a href="{% url 'role_detail' role_id=role.role_id %}">{{ role.role_name }}</a>
+                <span class="edit-link"><a href="{% url 'edit_role' role_id=role.role_id %}">Edit</a></span>
+                <span class="delete-link"><a href="{% url 'delete_role' role_id=role.role_id %}">Delete</a></span>
+            </li>
+            {% endfor %}
+        </ul>
+        <h2>Search Roles</h2>
+        <ul>
+            <li><a href="{% url 'search_roles_by_name' %}">Search by Name</a></li>
+            <li><a href="{% url 'search_roles_by_actor' %}">Search by Actor</a></li>
+            <li><a href="{% url 'search_roles_by_movie' %}">Search by Movie</a></li>
+        </ul>
+        <div class="footer">
+            <p><a href="{% url 'home' %}">home</a>.</p>
+        </div>
+    </div>
 </body>
 </html>
