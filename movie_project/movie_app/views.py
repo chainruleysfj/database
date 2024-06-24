@@ -483,27 +483,34 @@ def get_float_or_default(value, default):
 
 @login_required
 def movie_detail(request, movie_id):
-    movie = get_object_or_404(Movie, pk=movie_id)
-    actors = movie.actors.all()
-    directors = movie.directors.all()
-    genres = movie.genres.all()
-    narration = getattr(movie, 'narration', None)
     try:
         with connection.cursor() as cursor:
             cursor.callproc('get_movie_detail', [movie_id])
             movie_data = cursor.fetchone()
+            if movie_data[9]:
+                movie_data[9]=movie_data[9].split('; ')
+            if movie_data[7]:
+                movie_data[7]=movie_data[7].split('; ')
+            if movie_data[8]:
+                movie_data[8]=movie_data[8].split('; ')
+            movie = {
+                'movie_id': movie_data[0],
+                'moviename': movie_data[1],
+                'length': movie_data[2],
+                'releaseyear': movie_data[3],
+                'plot_summary': movie_data[4],
+                'resource_link': movie_data[5],  
+                'production_company_name': movie_data[6],
+                'actors': movie_data[7],
+                'directors': movie_data[8],
+                'genres': movie_data[9],
+                'narration': movie_data[10],
+            }
+            
     except Exception as e:
         # Handle any exceptions or errors
         messages.error(request,f"Error : {e}")
-    movie = {
-        'movie_id': movie_data[0],
-        'moviename': movie_data[1],
-        'length': movie_data[2],
-        'releaseyear': movie_data[3],
-        'plot_summary': movie_data[4],
-        'resource_link': movie_data[5],  
-        'production_company_id': movie_data[6]
-    }
+    
     # Fetch comments ordered by comment_time (latest on top)
     comments = Comment.objects.filter(movie_id=movie_id, is_approved=True).order_by('-comment_time')
 
@@ -561,6 +568,7 @@ def movie_detail(request, movie_id):
     average_rating = Rating.objects.filter(movie_id=movie_id).aggregate(Avg('rating'))['rating__avg']
     if average_rating is not None:
         average_rating = round(average_rating * 2, 1)  # Scale to 10 and round to 1 decimal place
+    
 
     context = {
         'movie': movie,
@@ -570,10 +578,6 @@ def movie_detail(request, movie_id):
         'average_rating': average_rating,
         'star_range': range(5, 0, -1),  # Pass a range of 5 to 1 for star ratings
         'comments_page': comments_page,  # Add paginated comments to context
-        'actors': actors,
-        'directors': directors,
-        'genres': genres,
-        'narration': narration
     }
 
     return render(request, 'movie_detail.html', context)
@@ -1496,20 +1500,22 @@ def search_users(request):
     return render(request, 'search_users.html', context)
 
 def list_actors(request):
+    search_name = request.GET.get('search_name', '')
+
     with connection.cursor() as cursor:
-        cursor.callproc('get_all_actors')
+        cursor.callproc('get_all_actors', [search_name])
         actors = cursor.fetchall()
-    actors_list = [
-        {'personID': actor[0], 'name': actor[1], 'birth_date': actor[2], 'gender': actor[3],
-         'marital_status': actor[4]}
-        for actor in actors
-    ]
-    gender_map = {'M': 'Male', 'F': 'Female', 'U': 'Unknown'}
-    marital_status_map = {'S': 'Single', 'M': 'Married', 'W': 'Widowed', 'U': 'Unknown'}
+
+    actors_list = [{'personID': actor[0], 'name': actor[1]} for actor in actors]
+
+    # 获取每个演员出演的电影
     for actor in actors_list:
-        actor['gender'] = gender_map.get(actor['gender'], 'Unknown')
-        actor['marital_status'] = marital_status_map.get(actor['marital_status'], 'Unknown')
-    return render(request, 'list_actors.html', {'actors': actors_list})
+        with connection.cursor() as cursor:
+            cursor.callproc('get_actor_movies', [actor['personID']])
+            movies = cursor.fetchall()
+            actor['movies'] = [movie[0] for movie in movies]
+
+    return render(request, 'list_actors.html', {'actors': actors_list, 'search_name': search_name})
 
 @login_required
 def movie_actors(request, movie_id):

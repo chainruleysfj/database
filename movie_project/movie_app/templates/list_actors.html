@@ -3,22 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <title>所有演员</title>
+    {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
     <div class="actor-list">
         <h1>所有演员</h1>
+        <form method="get" action="{% url 'list_actors' %}">
+            <input type="text" name="search_name" value="{{ search_name }}" placeholder="搜索演员名字">
+            <button type="submit">搜索</button>
+        </form>
         <ul>
             {% for actor in actors %}
                 <li>
-                    {{ actor.name }} - {{ actor.birth_date }} - {{ actor.gender }} - {{ actor.marital_status }}
-                    <a href="{% url 'person_movies' actor.personID %}">查看电影</a>
-                    {% if actor.is_director %}
-                        - <a href="{% url 'director_movies' actor.personID %}">查看导演电影</a>
-                    {% endif %}
+                    <strong>{{ actor.name }}</strong>
+                    <ul>
+                        {% for movie in actor.movies %}
+                            <li>{{ movie }}</li>
+                        {% endfor %}
+                    </ul>
                 </li>
             {% endfor %}
         </ul>
     </div>
+    <a href="{% url 'home' %}">home</a>
 </body>
 </html>

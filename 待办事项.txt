@@ -120,6 +120,7 @@ production_company:movie
 person:DirectorMovie,RoleActorMovie
 MovieGenre:MovieGenreAssociation
 role:RoleActorMovie
+!naration
 ...
 18.
 准备展示需要的测试数据

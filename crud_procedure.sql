@@ -103,23 +103,101 @@ END$$
 DELIMITER ;
 
 DROP PROCEDURE IF EXISTS get_movie_detail;
+
 DELIMITER //
+
+DROP PROCEDURE IF EXISTS get_movie_detail;
+DELIMITER //
+
 CREATE PROCEDURE get_movie_detail(IN p_movie_id INT)
 BEGIN
+    -- Declare variables to store concatenated results
+    DECLARE actors_list TEXT DEFAULT '';
+    DECLARE directors_list TEXT DEFAULT '';
+    DECLARE genres_list TEXT DEFAULT '';
+    DECLARE narration_list TEXT DEFAULT '';
+    
+    -- Retrieve movie details
     SELECT
-        movie_id,
-        moviename,
-        length,
-        releaseyear,
-        plot_summary,
-        resource_link,
-        name
+        m.movie_id,
+        m.moviename,
+        m.length,
+        m.releaseyear,
+        m.plot_summary,
+        m.resource_link,
+        pc.name AS production_company_name
+    INTO
+        @movie_id,
+        @moviename,
+        @length,
+        @releaseyear,
+        @plot_summary,
+        @resource_link,
+        @production_company_name
     FROM
-        movie_app_movie JOIN movie_app_productioncompany ON production_company_id = company_id
+        movie_app_movie m
+    JOIN
+        movie_app_productioncompany pc ON m.production_company_id = pc.company_id
     WHERE
-        p_movie_id = movie_id;
+        m.movie_id = p_movie_id;
+
+    -- Get actors list with their roles (including those who narrated)
+    SELECT GROUP_CONCAT(CONCAT(p.name, ' (', r.role_name, ')') SEPARATOR '; ')
+    INTO actors_list
+    FROM movie_app_person p
+    JOIN movie_app_roleactormovie pm ON p.personID = pm.person_id
+    JOIN movie_app_role r ON pm.role_id = r.role_id
+    WHERE pm.movie_id = p_movie_id;
+    
+    -- Include narration actors in the actors list
+    SELECT GROUP_CONCAT(CONCAT(p.name, ' (Narrator)') SEPARATOR '; ')
+    INTO narration_list
+    FROM movie_app_person p
+    JOIN movie_app_narration nr ON p.personID = nr.actor_id
+    WHERE nr.movie_id = p_movie_id;
+
+    IF narration_list IS NOT NULL THEN
+        SET actors_list = CONCAT(actors_list, '; ', narration_list);
+    END IF;
+
+    -- Retrieve directors
+    SELECT GROUP_CONCAT(p.name SEPARATOR '; ')
+    INTO directors_list
+    FROM movie_app_person p
+    JOIN movie_app_directormovie dm ON p.personID = dm.person_id
+    WHERE dm.movie_id = p_movie_id;
+
+    -- Retrieve genres
+    SELECT GROUP_CONCAT(g.genre_name SEPARATOR '; ')
+    INTO genres_list
+    FROM movie_app_moviegenre g
+    JOIN movie_app_moviegenreassociation ga ON g.genre_id = ga.genre_id
+    WHERE ga.movie_id = p_movie_id;
+
+    -- Retrieve narration content (if any)
+    SELECT GROUP_CONCAT(CONCAT(p.name, ' - ', nr.content) SEPARATOR '; ')
+    INTO narration_list
+    FROM movie_app_person p
+    JOIN movie_app_narration nr ON p.personID = nr.actor_id
+    WHERE nr.movie_id = p_movie_id;
+
+    -- Return the movie details along with actors, directors, genres, and narration
+    SELECT
+        @movie_id AS movie_id,
+        @moviename AS moviename,
+        @length AS length,
+        @releaseyear AS releaseyear,
+        @plot_summary AS plot_summary,
+        @resource_link AS resource_link,
+        @production_company_name AS production_company_name,
+        actors_list AS actors,
+        directors_list AS directors,
+        genres_list AS genres,
+        narration_list AS narration;
 END //
+
 DELIMITER ;
+
 
 DROP PROCEDURE IF EXISTS update_movie;
 DELIMITER //

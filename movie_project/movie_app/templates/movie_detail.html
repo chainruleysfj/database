@@ -41,108 +41,97 @@
         <p><strong>片长:</strong> {{ movie.length }} 分钟</p>
         <p><strong>上映年份:</strong> {{ movie.releaseyear }}</p>
         <p><strong>简介:</strong> {{ movie.plot_summary }}</p>
-        <p><strong>资源链接:</strong> <a href="{{ movie.resource_link }}">{{ movie.resource_link }}</a></p>
-        <p><strong>制作公司:</strong> {{ movie.production_company.name }}</p>
+        <p><strong>制作公司:</strong> {{ movie.production_company_name }}</p>
         
         <h2>导演</h2>
         <ul>
-            {% for director in movie.directors.all %}
-                <li>{{ director.person.name }}</li>
+            {% for director in movie.directors %}
+                <li>{{ director }}</li>
             {% endfor %}
         </ul>
         
         <h2>演员</h2>
         <ul>
-            {% for actor in movie.actors.all %}
-                <li><a href="{% url 'person_movies' actor.personID %}">{{ actor.name }}</a></li>
+            {% for actor in movie.actors %}
+                <li>{{ actor }}</li>
             {% endfor %}
         </ul>
+        
         <h2>旁白</h2>
-        {% if narration %}
-            <p>{{ narration.content }}</p>
-            <p><strong>旁白演员:</strong> <a href="{% url 'person_movies' narration.actor.personID %}">{{ narration.actor.name }}</a></p>
+        {% if movie.narration %}
+            <p>{{ movie.narration }}</p>
         {% else %}
             <p>暂无旁白信息。</p>
         {% endif %}
+        
         <h2>电影类型</h2>
         <ul>
-            {% for genre in movie.genres.all %}
-                <li>{{ genre.genre_name }}</li>
+            {% for genre in movie.genres %}
+                <li>{{ genre }}</li>
             {% endfor %}
         </ul>
     </div>
     
-    <p><a href="{% url 'list_movies' %}">all movies</a>.</p>
-    <p><a href="{% url 'home' %}">home</a>.</p>
-    <h1>{{ movie.moviename }} - Details</h1>
-    <p>Length: {{ movie.length }}</p>
-    <p>Release Year: {{ movie.releaseyear }}</p>
-    <p>Plot Summary: {{ movie.plot_summary }}</p>
-    <p>Production Company: {{ movie.production_company_id }}</p>
-    <video controls>
-        <source src="{{ movie.resource_link }}" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
-    <h2>Comments</h2>
+    <h2>评论</h2>
     <ul>
         {% for item in comments_with_floors %}
             <li>
                 <strong>{{ item.floor }}</strong> - 
                 <a href="{% url 'user_homepage' item.comment.user.username %}">{{ item.comment.user.username }}</a>: {{ item.comment.content }}
                 <br>
-                <small>Commented on: {{ item.comment.comment_time }}</small>
+                <small>评论时间: {{ item.comment.comment_time }}</small>
                 {% if item.comment.user == request.user %}
-                    <form method="post" action="{% url 'delete_comment' comment_id=item.comment.comment_id %}">
+                    <form method="post" action="{% url 'delete_comment' item.comment.comment_id %}">
                         {% csrf_token %}
-                        <button type="submit">Delete</button>
+                        <button type="submit">删除</button>
                     </form>
                 {% endif %}
             </li>
         {% empty %}
-            <li>No comments available.</li>
+            <li>暂无评论。</li>
         {% endfor %}
     </ul>
 
-    <!-- Pagination Controls -->
+    <!-- 分页控件 -->
     <div class="pagination">
         <span class="step-links">
             {% if comments_page.has_previous %}
-                <a href="?page=1">&laquo; first</a>
-                <a href="?page={{ comments_page.previous_page_number }}">previous</a>
+                <a href="?page=1">&laquo; 首页</a>
+                <a href="?page={{ comments_page.previous_page_number }}">上一页</a>
             {% endif %}
 
             <span class="current">
-                Page {{ comments_page.number }} of {{ comments_page.paginator.num_pages }}.
+                第 {{ comments_page.number }} 页，共 {{ comments_page.paginator.num_pages }} 页。
             </span>
 
             {% if comments_page.has_next %}
-                <a href="?page={{ comments_page.next_page_number }}">next</a>
-                <a href="?page={{ comments_page.paginator.num_pages }}">last &raquo;</a>
+                <a href="?page={{ comments_page.next_page_number }}">下一页</a>
+                <a href="?page={{ comments_page.paginator.num_pages }}">末页 &raquo;</a>
             {% endif %}
         </span>
     </div>
 
-    <h2>Add a Comment</h2>
+    <h2>添加评论</h2>
     <form method="post">
         {% csrf_token %}
         {{ comment_form.as_p }}
-        <button type="submit">Submit</button>
+        <button type="submit">提交</button>
     </form>
     
-    <h2>Rate this Movie</h2>
+    <h2>评分</h2>
     <form method="post">
         {% csrf_token %}
         <div class="star-rating">
             {% for i in star_range %}
                 <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" {% if rating_form.rating.value == i %}checked{% endif %}/>
-                <label for="star{{ i }}" title="{{ i }} star{% if i > 1 %}s{% endif %}"><i class="fas fa-star"></i></label>
+                <label for="star{{ i }}" title="{{ i }} 星"><i class="fas fa-star"></i></label>
             {% endfor %}
         </div>
-        <button type="submit">Submit Rating</button>
+        <button type="submit">提交评分</button>
     </form>
 
     {% if average_rating %}
-        <h3>Average Rating: {{ average_rating }}/10</h3>
+        <h3>平均评分: {{ average_rating }}/10</h3>
     {% endif %}
 </body>
 </html>
