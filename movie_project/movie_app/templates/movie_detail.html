@@ -1,113 +1,225 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ movie.moviename }} - Details</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 1em 0;
+            text-align: center;
+        }
+
+        nav {
+            background-color: #444;
+            padding: 1em;
+            text-align: center;
+        }
+
+        nav a {
+            color: #fff;
+            margin: 0 1em;
+            text-decoration: none;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        main {
+            padding: 2em;
+        }
+
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1em 0;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+
+        .messages {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .messages li {
+            background-color: #eee;
+            border: 1px solid #ccc;
+            margin: 0.5em 0;
+            padding: 0.5em;
+        }
+
+        .messages .error {
+            border-color: red;
+        }
+
+        .messages .success {
+            border-color: green;
+        }
+
         .star-rating {
             direction: rtl;
             display: inline-flex;
             font-size: 2em;
         }
+
         .star-rating input[type="radio"] {
             display: none;
         }
+
         .star-rating label {
             color: #bbb;
             cursor: pointer;
             font-size: 2em;
         }
-        .star-rating input[type="radio"]:checked ~ label {
+
+        .star-rating input[type="radio"]:checked~label {
             color: #f2b600;
         }
+
         .star-rating label:hover,
-        .star-rating label:hover ~ label {
+        .star-rating label:hover~label {
             color: #f2b600;
+        }
+
+        .pagination {
+            text-align: center;
+            margin: 2em 0;
+        }
+
+        .pagination .step-links {
+            display: inline-block;
+        }
+
+        .pagination a {
+            margin: 0 0.5em;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .pagination a:hover {
+            text-decoration: underline;
+        }
+
+        .pagination .current {
+            font-weight: bold;
+        }
+
+        video {
+            display: block;
+            margin: 1em 0;
         }
     </style>
 </head>
+
 <body>
-    {% if messages %}
+    <header>
+        <h1>{{ movie.moviename }} - Details</h1>
+    </header>
+
+    <nav>
+        <a href="{% url 'list_movies' %}">All Movies</a>
+        <a href="{% url 'home' %}">Home</a>
+    </nav>
+
+    <main>
+        {% if messages %}
         <ul class="messages">
             {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
             {% endfor %}
         </ul>
-    {% endif %}
-    <p><a href="{% url 'list_movies' %}">all movies</a>.</p>
-    <p><a href="{% url 'home' %}">home</a>.</p>
-    <h1>{{ movie.moviename }} - Details</h1>
-    <p>Length: {{ movie.length }}</p>
-    <p>Release Year: {{ movie.releaseyear }}</p>
-    <p>Plot Summary: {{ movie.plot_summary }}</p>
-    <p>Production Company: {{ movie.production_company_id }}</p>
-    <video preload="auto" width="640" height="360" controls>
-        <source src="{{ movie.resource_link }}" type="video/mp4" controls >
-        Your browser does not support the video tag.
-    </video>
-    
-    <h2>Comments</h2>
-    <ul>
-        {% for item in comments_with_floors %}
+        {% endif %}
+
+        <p>Length: {{ movie.length }}</p>
+        <p>Release Year: {{ movie.releaseyear }}</p>
+        <p>Plot Summary: {{ movie.plot_summary }}</p>
+        <p>Production Company: {{ movie.production_company_id }}</p>
+        <video preload="auto" width="640" height="360" controls>
+            <source src="{{ movie.resource_link }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+
+        <h2>Comments</h2>
+        <ul>
+            {% for item in comments_with_floors %}
             <li>
-                <strong>{{ item.floor }}</strong> - 
+                <strong>{{ item.floor }}</strong> -
                 <a href="{% url 'user_homepage' item.comment.user.username %}">{{ item.comment.user.username }}</a>: {{ item.comment.content }}
                 <br>
                 <small>Commented on: {{ item.comment.comment_time }}</small>
                 {% if item.comment.user == request.user %}
-                    <form method="post" action="{% url 'delete_comment' comment_id=item.comment.comment_id %}">
-                        {% csrf_token %}
-                        <button type="submit">Delete</button>
-                    </form>
+                <form method="post" action="{% url 'delete_comment' comment_id=item.comment.comment_id %}">
+                    {% csrf_token %}
+                    <button type="submit">Delete</button>
+                </form>
                 {% endif %}
             </li>
-        {% empty %}
+            {% empty %}
             <li>No comments available.</li>
-        {% endfor %}
-    </ul>
+            {% endfor %}
+        </ul>
 
-    <!-- Pagination Controls -->
-    <div class="pagination">
-        <span class="step-links">
-            {% if comments_page.has_previous %}
+        <!-- Pagination Controls -->
+        <div class="pagination">
+            <span class="step-links">
+                {% if comments_page.has_previous %}
                 <a href="?page=1">&laquo; first</a>
                 <a href="?page={{ comments_page.previous_page_number }}">previous</a>
-            {% endif %}
+                {% endif %}
 
-            <span class="current">
-                Page {{ comments_page.number }} of {{ comments_page.paginator.num_pages }}.
-            </span>
+                <span class="current">
+                    Page {{ comments_page.number }} of {{ comments_page.paginator.num_pages }}.
+                </span>
 
-            {% if comments_page.has_next %}
+                {% if comments_page.has_next %}
                 <a href="?page={{ comments_page.next_page_number }}">next</a>
                 <a href="?page={{ comments_page.paginator.num_pages }}">last &raquo;</a>
-            {% endif %}
-        </span>
-    </div>
-
-    <h2>Add a Comment</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ comment_form.as_p }}
-        <button type="submit">Submit</button>
-    </form>
-    
-    <h2>Rate this Movie</h2>
-    <form method="post">
-        {% csrf_token %}
-        <div class="star-rating">
-            {% for i in star_range %}
-                <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" {% if rating_form.rating.value == i %}checked{% endif %}/>
-                <label for="star{{ i }}" title="{{ i }} star{% if i > 1 %}s{% endif %}"><i class="fas fa-star"></i></label>
-            {% endfor %}
+                {% endif %}
+            </span>
         </div>
-        <button type="submit">Submit Rating</button>
-    </form>
 
-    {% if average_rating %}
+        <h2>Add a Comment</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ comment_form.as_p }}
+            <button type="submit">Submit</button>
+        </form>
+
+        <h2>Rate this Movie</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="star-rating">
+                {% for i in star_range %}
+                <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" {% if rating_form.rating.value == i %}checked{% endif %} />
+                <label for="star{{ i }}" title="{{ i }} star{% if i > 1 %}s{% endif %}"><i class="fas fa-star"></i></label>
+                {% endfor %}
+            </div>
+            <button type="submit">Submit Rating</button>
+        </form>
+
+        {% if average_rating %}
         <h3>Average Rating: {{ average_rating }}/10</h3>
-    {% endif %}
+        {% endif %}
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Movie Database. All rights reserved.</p>
+    </footer>
 </body>
+
 </html>

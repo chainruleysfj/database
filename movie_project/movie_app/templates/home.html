@@ -1,41 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 1em 0;
+            text-align: center;
+        }
+
+        nav {
+            background-color: #444;
+            padding: 1em;
+            text-align: center;
+        }
+
+        nav a {
+            color: #fff;
+            margin: 0 1em;
+            text-decoration: none;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        main {
+            padding: 2em;
+        }
+
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1em 0;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+
+        .messages {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .messages li {
+            background-color: #eee;
+            border: 1px solid #ccc;
+            margin: 0.5em 0;
+            padding: 0.5em;
+        }
+
+        .messages .error {
+            border-color: red;
+        }
+
+        .messages .success {
+            border-color: green;
+        }
+    </style>
 </head>
+
 <body>
-    <h1>Welcome to Movie Database</h1>
-    <p>This is the home page of our movie database website.</p>
-    {% if messages %}
+    <header>
+        <h1>Welcome to Movie Database</h1>
+    </header>
+
+    <nav>
+        <a href="{% url 'add_production_company' %}">Add a New Production Company</a>
+        <a href="{% url 'list_production_companies' %}">See All Production Companies</a>
+        <a href="{% url 'add_movie' %}">Add a New Movie</a>
+        <a href="{% url 'list_movies' %}">See All Movies</a>
+        <a href="{% url 'add_person' %}">Add a New Person</a>
+        <a href="{% url 'role_list' %}">View All Roles</a>
+        <a href="{% url 'add_role' %}">Add a New Role</a>
+        <a href="{% url 'search_role' %}">Search Roles</a>
+        <a href="{% url 'list_persons' %}">See All Persons</a>
+        <a href="{% url 'all_directors' %}">See All Directors</a>
+        <a href="{% url 'manage_genres' %}">Manage Movie Genres</a>
+        <a href="{% url 'manage_admins' %}">Manage Admins</a>
+        <a href="{% url 'logout' %}">Logout</a>
+        <a href="{% url 'delete_account' %}">Delete Account</a>
+    </nav>
+
+    <main>
+        <p>This is the home page of our movie database website.</p>
+
+        {% if messages %}
         <ul class="messages">
             {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
             {% endfor %}
         </ul>
-    {% endif %}
-    <p><a href="{% url 'add_production_company' %}">add a new production company</a>.</p>
-    <p><a href="{% url 'list_production_companies' %}">see all production companies</a>.</p>
-    <p><a href="{% url 'add_movie' %}">add a new movie</a>.</p>
-    <p><a href="{% url 'list_movies' %}">see all movies</a>.</p>
-    <p><a href="{% url 'add_person' %}">add a new person</a>.</p>
-    <p><a href="{% url 'role_list' %}">View All Roles</a></p>
-    <p><a href="{% url 'add_role' %}">add a new role</a>.</p>
-        <p><a href="{% url 'search_role' %}">Search Roles</a></p> <!-- 新增的搜索角色入口 -->
-    <p><a href="{% url 'list_persons' %}">see all persons</a>.</p>
-    <p><a href="{% url 'all_directors' %}">see all directors</a>.</p>
-    <p><a href="{% url 'manage_genres' %}">manage movie genres</a>.</p>
-    <p><a href="{% url 'manage_admins' %}">manage admins</a>.</p>
-    <p><a href="{% url 'manage_users' %}">manage users</a>.</p>
-    <p><a href="{% url 'search_users' %}">search users</a>.</p> <!-- Add this line for the search users link -->
-    <!-- 账号操作 -->
-    <p><a href="{% url 'change_password' %}">change password</a>.</p>
-    <p><a href="{% url 'set_security_question' %}">set security question</a>.</p>
-    <p><a href="{% url 'logout' %}">Logout</a></p>
-    <p><a href="{% url 'approve_comments' %}"> approve comments</a>.</p>
-    <a href="{% url 'delete_account' %}">Delete Account</a>
+        {% endif %}
+    </main>
 
-   
+    <footer>
+        <p>&copy; 2024 Movie Database. All rights reserved.</p>
+    </footer>
 </body>
+
 </html>
