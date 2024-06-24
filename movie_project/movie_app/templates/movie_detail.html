@@ -196,7 +196,7 @@
                 <strong>{{ item.floor }}</strong> -
                 <a href="{% url 'user_homepage' item.comment.user.username %}">{{ item.comment.user.username }}</a>: {{ item.comment.content }}
                 <br>
-                <small>Commented on: {{ item.comment.comment_time }}</small>
+                <small>Commented on: {{ item.comment.adjusted_comment_time }}</small>
                 {% if item.comment.user == request.user %}
                 <form method="post" action="{% url 'delete_comment' comment_id=item.comment.comment_id %}">
                     {% csrf_token %}

@@ -22,7 +22,8 @@ from django.core.validators import FileExtensionValidator
 from django.core.files.uploadedfile import UploadedFile
 from django.contrib.sessions.models import Session
 from django.utils import timezone
-from django.db.models import Q,Avg
+from django.db.models import Q,Avg,F, ExpressionWrapper, DateTimeField
+from django.db.models.functions import Now
 from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation, SecurityQA, LoginRecord,Role, RoleActorMovie,Comment,Rating,Narration
 from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm,ChangePasswordForm,SecurityQAForm, PasswordResetForm,UsernameForm,CommentForm,RatingForm,RoleForm, RoleActorMovieForm, NarrationForm
 from functools import wraps
@@ -31,6 +32,7 @@ from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 import random
 import string
+from datetime import timedelta
 
 
 def is_admin(user):
@@ -575,7 +577,10 @@ def movie_detail(request, movie_id):
         messages.error(request,f"Error : {e}")
     
     # Fetch comments ordered by comment_time (latest on top)
-    comments = Comment.objects.filter(movie_id=movie_id, is_approved=True).order_by('-comment_time')
+    # 调整评论时间增加8小时
+    comments = Comment.objects.filter(movie_id=movie_id, is_approved=True).annotate(
+    adjusted_comment_time=ExpressionWrapper(F('comment_time') + timedelta(hours=8), output_field=DateTimeField())
+    ).order_by('-adjusted_comment_time') 
 
     # Paginate comments
     paginator = Paginator(comments, 10)  # Show 10 comments per page
