@@ -106,13 +106,19 @@
         <input type="text" name="name" placeholder="Company Name">
         <input type="text" name="city" placeholder="City">
         <button type="submit">Search</button>
-    </form>
+        </form>
         </div>
-
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
 
 
         <ul class="companies">
- {% for company in companies %}
+        {% for company in companies %}
             <li class="editable" id="company-{{ company.company_id }}">
                 <span>{{ company.name }} - {{ company.city }} - {{ company.company_description }}</span>
                 <button onclick="toggleEdit(parseInt('{{ company.company_id }}'))">Edit</button>
@@ -128,7 +134,7 @@
         {% endfor %}
         </ul>
 
- <div class="pagination">
+    <div class="pagination">
         <span class="step-links">
             {% if companies.has_previous %}
                 <a href="?page=1">&laquo; first</a>

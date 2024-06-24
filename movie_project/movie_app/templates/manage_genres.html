@@ -119,8 +119,9 @@
             {% for genre in genres %}
                 <li>
                     <span>{{ genre.1 }}</span>
-                    <form method="post" action="{% url 'delete_genre' genre.0 %}" style="display: inline;">
+                    <form method="post" style="display: inline;">
                         {% csrf_token %}
+                        <input type="hidden" name="genre_id" value="{{ genre.0 }}">
                         <button type="submit" name="action" value="delete">Delete</button>
                     </form>
                 </li>

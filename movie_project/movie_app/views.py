@@ -5,7 +5,7 @@ from django.http import JsonResponse,HttpResponse,HttpResponseRedirect,Http404,H
 from django.views.decorators.csrf import csrf_exempt
 from django import forms
 from django.urls import reverse
-from django.db import connection, transaction
+from django.db import connection, transaction,IntegrityError
 from django.conf import settings
 from django.template.defaultfilters import urlencode
 from django.contrib.auth.hashers import make_password, check_password
@@ -991,15 +991,17 @@ def manage_genres(request):
         action = request.POST.get('action')
         genre_name = request.POST.get('genre_name', '')
         genre_id = request.POST.get('genre_id', None)
-        
         try:
             if action == 'add' and genre_name:
                 with connection.cursor() as cursor:
                     cursor.callproc('add_movie_genre', [genre_name])
             
             elif action == 'delete' and genre_id:
+                print('del in')
                 with connection.cursor() as cursor:
                     cursor.callproc('delete_movie_genre', [genre_id])
+        except IntegrityError as e:
+            messages.error(request, 'Error: Already have this genre.')
         except Exception as e:
             messages.error(request, f'Error: {str(e)}')
 

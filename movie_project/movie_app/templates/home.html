@@ -76,7 +76,13 @@
     <header>
         <h1>Welcome to Movie Database</h1>
     </header>
-
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
     <nav>
         <p><a href="{% url 'add_production_company' %}">add a new production company</a>.</p>
         <p><a href="{% url 'list_production_companies' %}">see all production companies</a>.</p>
@@ -105,13 +111,7 @@
     <main>
         <p>This is the home page of our movie database website.</p>
 
-    {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+
     
     </main>
 

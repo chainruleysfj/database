@@ -3,29 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <title>All Actors</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        header, footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1em 0;
+        }
+
+        footer a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2em auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .actor-list {
+            margin-bottom: 20px;
+        }
+
+        .actor-list h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .actor-list form {
+            margin-bottom: 20px;
+        }
+
+        .actor-list form input[type="text"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        .actor-list form button {
+            background-color: #5cb85c;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .actor-list form button:hover {
+            background-color: #4cae4c;
+        }
+
+        .actor-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .actor-list ul li {
+            margin-bottom: 10px;
+        }
+
+        .actor-list ul ul {
+            padding-left: 20px;
+        }
+
+        .actor-list ul ul li {
+            margin-bottom: 5px;
+        }
+
+        .actor-list ul ul li a {
+            text-decoration: none;
+            color: #337ab7;
+        }
+
+        .actor-list ul ul li a:hover {
+            text-decoration: underline;
+        }
+
+        .actor-list a {
+            text-decoration: none;
+            color: #337ab7;
+            display: block;
+            margin-top: 10px;
+        }
+
+        .actor-list a:hover {
+            text-decoration: underline;
+        }
+
+        .actor-list a[href="#"] {
+            color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .actor-list a[href="#"]:hover {
+            text-decoration: none;
+        }
+
+        .actor-list a.home-link {
+            margin-top: 20px;
+            display: inline-block;
+        }
+
+    </style>
 </head>
 <body>
-    <div class="actor-list">
+    <header>
         <h1>All Actors</h1>
-        <form method="get" action="{% url 'list_actors' %}">
-            <input type="text" name="search_name" value="{{ search_name }}" placeholder="Search Actor Name">
-            <button type="submit">Search</button>
-        </form>
-        <ul>
-            {% for actor in actors %}
-                <li>
-                    <strong>{{ actor.name }}</strong>
-                    <ul>
-                        {% for movie in actor.movies %}
-                            <li><a href="{% url 'movie_detail' movie.movie_id %}">{{ movie.title }}</a></li>
-                        {% endfor %}
-                    </ul>
-                </li>
-            {% endfor %}
-        </ul>
+    </header>
+
+    <div class="container">
+        <div class="actor-list">
+            <form method="get" action="{% url 'list_actors' %}">
+                <input type="text" name="search_name" value="{{ search_name }}" placeholder="Search Actor Name">
+                <button type="submit">Search</button>
+            </form>
+
+            <ul>
+                {% for actor in actors %}
+                    <li>
+                        <strong>{{ actor.name }}</strong>
+                        <ul>
+                            {% for movie in actor.movies %}
+                                <li><a href="{% url 'movie_detail' movie.movie_id %}">{{ movie.title }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% empty %}
+                    <li>No actors available.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <a href="{% url 'home' %}" class="home-link">Home</a>
     </div>
-    <a href="{% url 'home' %}">Home</a>
 </body>
 </html>
