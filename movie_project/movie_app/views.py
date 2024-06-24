@@ -5,7 +5,7 @@ from django.http import JsonResponse,HttpResponse,HttpResponseRedirect,Http404,H
 from django.views.decorators.csrf import csrf_exempt
 from django import forms
 from django.urls import reverse
-from django.db import connection,transaction
+from django.db import connection,transaction,IntegrityError
 from django.conf import settings
 from django.template.defaultfilters import urlencode
 from django.contrib.auth.hashers import make_password,check_password
@@ -1322,9 +1322,13 @@ def add_role(request):
             return HttpResponse("Movie or Person not found", status=404)
 
         # Create the RoleActorMovie instance
-        RoleActorMovie.objects.create(movie=movie, person=person, role=role)
-
-        return redirect('success')  # You can change 'success' to the name of your success page
+        try:
+            RoleActorMovie.objects.create(movie=movie, person=person, role=role)
+            messages.success(request, 'Add a role successfully.')
+        except IntegrityError:
+            messages.error(request, 'Already added.')
+            return render(request, 'add_role.html')
+        return redirect('home')  
 
     return render(request, 'add_role.html')
 
