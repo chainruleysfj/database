@@ -446,6 +446,7 @@ BEGIN
 	DELETE FROM movie_app_directormovie dm WHERE dm.movie_id = p_movie_id;
     DELETE FROM movie_app_comment mc WHERE mc.movie_id = p_movie_id;
     DELETE FROM movie_app_rating mr WHERE mr.movie_id = p_movie_id;
+    DELETE FROM movie_app_roleactormovie ram WHERE ram.movie_id = p_movie_id;
     DELETE FROM movie_app_movie m WHERE m.movie_id = p_movie_id;
 END //
 DELIMITER ;
