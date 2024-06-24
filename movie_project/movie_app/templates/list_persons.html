@@ -53,6 +53,7 @@
                     {{ person.gender|title }} -
                     {{ person.marital_status|title }}
                 </span>
+                <a href="{% url 'person_movies' person.personID %}">查看电影</a>
                 <button onclick="toggleEdit('{{ person.personID }}')">Edit</button>
                 <button class="save-button" onclick="saveChanges('{{ person.personID }}')" style="display:none;">Save</button>
                 <button onclick="deletePerson('{{ person.personID }}')">Delete</button>

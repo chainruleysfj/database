@@ -1,29 +1,29 @@
 from django.shortcuts import render, redirect, get_object_or_404
 
 # Create your views here.
-from django.http import JsonResponse,HttpResponse,HttpResponseRedirect,Http404
+from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django import forms
 from django.urls import reverse
-from django.db import connection,transaction
+from django.db import connection, transaction
 from django.conf import settings
 from django.template.defaultfilters import urlencode
-from django.contrib.auth.hashers import make_password,check_password
+from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib import messages
 from django.contrib.auth.models import User
-from django.contrib.auth.decorators import user_passes_test,login_required
-from .models import Movie, ProductionCompany, Person,MovieGenre, MovieGenreAssociation,Users
-from .forms import ProductionCompanyForm,MovieForm,PersonForm,RegisterForm
+from django.contrib.auth.decorators import user_passes_test, login_required
+from .models import Movie, ProductionCompany, Person, MovieGenre, MovieGenreAssociation, Users, Narration
+from .forms import ProductionCompanyForm, MovieForm, PersonForm, RegisterForm
 from functools import wraps
-import json,os,uuid
-
+import json, os, uuid
 
 
 def is_admin(user):
     return user.is_authenticated and user.is_staff
+
 
 def admin_required(function):
     @wraps(function)
@@ -33,9 +33,11 @@ def admin_required(function):
             return function(request, *args, **kwargs)
         else:
             messages.error(request, "缺少权限")
-         
+
             return redirect(request.META.get('HTTP_REFERER', '/'))  # 重定向到来源页面
+
     return wrap
+
 
 def super_required(function):
     @wraps(function)
@@ -45,13 +47,16 @@ def super_required(function):
             return function(request, *args, **kwargs)
         else:
             messages.error(request, "缺少权限")
-         
+
             return redirect(request.META.get('HTTP_REFERER', '/'))  # 重定向到来源页面
+
     return wrap
+
 
 @login_required
 def home(request):
     return render(request, 'home.html')  # 创建一个名为 home.html 的模板文件，并返回给客户端
+
 
 @login_required
 @admin_required
@@ -67,15 +72,15 @@ def add_production_company(request):
             # 调用存储过程添加生产公司
             with connection.cursor() as cursor:
                 cursor.callproc('add_productioncompany', [name, city, description])
-            return redirect('list_production_companies')    # 重定向到公司一览页面
+            return redirect('list_production_companies')  # 重定向到公司一览页面
     else:
         form = ProductionCompanyForm()
     return render(request, 'add_production_company.html', {'form': form})
 
+
 @login_required
 @transaction.atomic
 def list_production_companies(request):
-  
     companies = []
     with connection.cursor() as cursor:
         cursor.callproc('get_all_production_companies')
@@ -87,6 +92,7 @@ def list_production_companies(request):
                 'company_description': result[3],
             })
     return render(request, 'list_production_companies.html', {'companies': companies})
+
 
 @login_required
 @admin_required
@@ -104,7 +110,7 @@ def update_production_company(request, company_id):
     with connection.cursor() as cursor:
         cursor.callproc('get_company_by_id', [company_id])
         company = cursor.fetchone()
-    
+
     if company is None:
         return redirect('list_production_companies')
 
@@ -115,11 +121,11 @@ def update_production_company(request, company_id):
         'company_description': company[3],
     })
 
+
 @login_required
 @admin_required
 @transaction.atomic
 def delete_production_company(request, company_id):
-
     if request.method == 'POST':
 
         with connection.cursor() as cursor:
@@ -128,6 +134,7 @@ def delete_production_company(request, company_id):
     else:
 
         return render(request, 'confirm_delete_production_company.html', {'company_id': company_id})
+
 
 @login_required
 @transaction.atomic
@@ -150,12 +157,13 @@ def search_production_companies(request):
 
     return render(request, 'list_production_companies.html', {'companies': company_list})
 
+
 @login_required
 @admin_required
 @transaction.atomic
 def add_movie(request):
     if request.method == 'POST':
-        form = MovieForm(request.POST, request.FILES,is_update=False)
+        form = MovieForm(request.POST, request.FILES, is_update=False)
         if form.is_valid():
             print("电影表单无误")
             # 从表单中获取数据
@@ -171,7 +179,8 @@ def add_movie(request):
                 resource_link = save_video_file(video_file)
             # 调用存储过程插入电影数据
             with connection.cursor() as cursor:
-                cursor.callproc('add_movie', [moviename, length, releaseyear, plot_summary, resource_link, production_company_id])
+                cursor.callproc('add_movie',
+                                [moviename, length, releaseyear, plot_summary, resource_link, production_company_id])
                 cursor.callproc('get_last_insert_movie_id')
                 movie_id = cursor.fetchone()[0]
             # 获取选中的导演
@@ -199,6 +208,7 @@ def add_movie(request):
         genres = cursor.fetchall()
     return render(request, 'add_movie.html', {'form': form, 'genres': genres})
 
+
 @login_required
 @transaction.atomic
 def search_person_by_name(request):
@@ -208,6 +218,7 @@ def search_person_by_name(request):
         results = cursor.fetchall()
     directors = [{'person_id': result[0], 'name': result[1]} for result in results]
     return JsonResponse(directors, safe=False)
+
 
 @login_required
 @transaction.atomic
@@ -219,73 +230,75 @@ def save_video_file(video_file):
             destination.write(chunk)
     return os.path.join(settings.MEDIA_URL, 'videos', unique_filename)
 
+
 @transaction.atomic
 def get_int_or_default(value, default):
     try:
         return int(value)
     except (ValueError, TypeError):
         return default
-    
-@login_required    
+
+
+@login_required
 @transaction.atomic
 def list_movies_v1(request):
+    #     # 不显示导演的list_movies
+    #     # 获取所有出品公司以供搜索表单使用
+    #     with connection.cursor() as cursor:
+    #         cursor.callproc('get_all_production_companies')
+    #         production_companies = cursor.fetchall()
+    #     production_companies_list = [
+    #         {'company_id': company[0], 'name': company[1], 'city': company[2], 'company_description': company[3]}
+    #         for company in production_companies
+    #         ]
+    #     # 如果有搜索请求，处理搜索
+    #     if request.method == 'GET' and (
+    #         'keyword' in request.GET or
+    #         'min_length' in request.GET or
+    #         'max_length' in request.GET or
+    #         'min_releaseyear' in request.GET or
+    #         'max_releaseyear' in request.GET or
+    #         'production_company' in request.GET
+    #     ):
+    #         keyword = request.GET.get('keyword', '')
+    #         min_length = get_int_or_default(request.GET.get('min_length'), 0)
+    #         max_length = get_int_or_default(request.GET.get('max_length'), 9999)
+    #         min_releaseyear = get_int_or_default(request.GET.get('min_releaseyear'), 0)
+    #         max_releaseyear = get_int_or_default(request.GET.get('max_releaseyear'), 9999)
+    #         production_company_id = get_int_or_default(request.GET.get('production_company'), None)
 
-#     # 不显示导演的list_movies
-#     # 获取所有出品公司以供搜索表单使用
-#     with connection.cursor() as cursor:
-#         cursor.callproc('get_all_production_companies')
-#         production_companies = cursor.fetchall()
-#     production_companies_list = [
-#         {'company_id': company[0], 'name': company[1], 'city': company[2], 'company_description': company[3]}
-#         for company in production_companies
-#         ]
-#     # 如果有搜索请求，处理搜索
-#     if request.method == 'GET' and (
-#         'keyword' in request.GET or
-#         'min_length' in request.GET or
-#         'max_length' in request.GET or
-#         'min_releaseyear' in request.GET or
-#         'max_releaseyear' in request.GET or
-#         'production_company' in request.GET
-#     ):
-#         keyword = request.GET.get('keyword', '')
-#         min_length = get_int_or_default(request.GET.get('min_length'), 0)
-#         max_length = get_int_or_default(request.GET.get('max_length'), 9999)
-#         min_releaseyear = get_int_or_default(request.GET.get('min_releaseyear'), 0)
-#         max_releaseyear = get_int_or_default(request.GET.get('max_releaseyear'), 9999)
-#         production_company_id = get_int_or_default(request.GET.get('production_company'), None)
+    #         with connection.cursor() as cursor:
+    #             cursor.callproc('search_movies', [
+    #                 keyword,
+    #                 min_length,
+    #                 max_length,
+    #                 min_releaseyear,
+    #                 max_releaseyear,
+    #                 production_company_id
+    #             ])
+    #             movies = cursor.fetchall()
 
-#         with connection.cursor() as cursor:
-#             cursor.callproc('search_movies', [
-#                 keyword, 
-#                 min_length, 
-#                 max_length, 
-#                 min_releaseyear, 
-#                 max_releaseyear, 
-#                 production_company_id
-#             ])
-#             movies = cursor.fetchall()
+    #         movies_list = [{'movie_id': movie[0], 'moviename': movie[1], 'length': movie[2], 'releaseyear': movie[3], 'plot_summary': movie[4], 'resource_link': movie[5], 'production_company_id': movie[6]} for movie in movies]
+    #     else:
+    #         with connection.cursor() as cursor:
+    #             cursor.callproc('get_all_movies')
+    #             movies = cursor.fetchall()
 
-#         movies_list = [{'movie_id': movie[0], 'moviename': movie[1], 'length': movie[2], 'releaseyear': movie[3], 'plot_summary': movie[4], 'resource_link': movie[5], 'production_company_id': movie[6]} for movie in movies]
-#     else:
-#         with connection.cursor() as cursor:
-#             cursor.callproc('get_all_movies')
-#             movies = cursor.fetchall()
+    #         movies_list = [
+    #             {
+    #                 'movie_id': movie[0],
+    #                 'moviename': movie[1],
+    #                 'length': movie[2],
+    #                 'releaseyear': movie[3],
+    #                 'plot_summary': movie[4],
+    #                 'resource_link': movie[5],
+    #                 'production_company_id': movie[6]
+    #             } for movie in movies
+    #         ]
 
-#         movies_list = [
-#             {
-#                 'movie_id': movie[0],
-#                 'moviename': movie[1],
-#                 'length': movie[2],
-#                 'releaseyear': movie[3],
-#                 'plot_summary': movie[4],
-#                 'resource_link': movie[5],
-#                 'production_company_id': movie[6]
-#             } for movie in movies
-#         ]
-        
-#     return render(request, 'list_movies.html', {'movies': movies_list, 'production_companies': production_companies_list})
+    #     return render(request, 'list_movies.html', {'movies': movies_list, 'production_companies': production_companies_list})
     return 0
+
 
 @login_required
 @transaction.atomic
@@ -310,13 +323,13 @@ def list_movies(request):
 
     # 如果有搜索请求，处理搜索
     if request.method == 'GET' and (
-        'keyword' in request.GET or
-        'min_length' in request.GET or
-        'max_length' in request.GET or
-        'min_releaseyear' in request.GET or
-        'max_releaseyear' in request.GET or
-        'production_company' in request.GET or
-        'genre' in request.GET
+            'keyword' in request.GET or
+            'min_length' in request.GET or
+            'max_length' in request.GET or
+            'min_releaseyear' in request.GET or
+            'max_releaseyear' in request.GET or
+            'production_company' in request.GET or
+            'genre' in request.GET
     ):
         keyword = request.GET.get('keyword', '')
         min_length = get_int_or_default(request.GET.get('min_length'), 0)
@@ -326,18 +339,17 @@ def list_movies(request):
         production_company_id = get_int_or_default(request.GET.get('production_company'), None)
         genre_id = get_int_or_default(request.GET.get('genre'), None)
 
-
         with connection.cursor() as cursor:
             cursor.callproc('search_movies_with_directors_and_companies_and_genres', [
-                keyword, 
-                min_length, 
-                max_length, 
-                min_releaseyear, 
-                max_releaseyear, 
+                keyword,
+                min_length,
+                max_length,
+                min_releaseyear,
+                max_releaseyear,
                 production_company_id,
                 genre_id
             ])
-            
+
             movies = cursor.fetchall()
     else:
         with connection.cursor() as cursor:
@@ -364,18 +376,23 @@ def list_movies(request):
             'resource_link': movie[5],
             'production_company_name': movie[6],
             'directors_list': directors_list,  # 添加预处理后的导演名列表
-            'genres':genre_names
+            'genres': genre_names
         })
-        
 
     return render(request, 'list_movies.html', {
-        'movies': movies_list, 
+        'movies': movies_list,
         'production_companies': production_companies_list,
         'genres': genres_list})
+
 
 @login_required
 @transaction.atomic
 def movie_detail(request, movie_id):
+    movie = get_object_or_404(Movie, pk=movie_id)
+    actors = movie.actors.all()
+    directors = movie.directors.all()
+    genres = movie.genres.all()
+    narration = getattr(movie, 'narration', None)
     with connection.cursor() as cursor:
         cursor.callproc('get_movie_detail', [movie_id])
         movie_data = cursor.fetchone()
@@ -390,7 +407,14 @@ def movie_detail(request, movie_id):
         'production_company_id': movie_data[6]
     }
 
-    return render(request, 'movie_detail.html', {'movie': movie})
+    return render(request, 'movie_details.html', {
+        'movie': movie,
+        'actors': actors,
+        'directors': directors,
+        'genres': genres,
+        'narration': narration
+    })
+
 
 @login_required
 @admin_required
@@ -402,7 +426,7 @@ def update_movie(request, movie_id):
         # 解析表单数据
         moviename = request.POST['moviename']
         length = request.POST['length']
-        releaseyear = get_int_or_default(request.POST['releaseyear'],None)
+        releaseyear = get_int_or_default(request.POST['releaseyear'], None)
         plot_summary = request.POST['plot_summary']
         production_company_id = request.POST['production_company']
         # 如果上传了新的视频文件，保存并更新资源链接
@@ -415,8 +439,9 @@ def update_movie(request, movie_id):
             resource_link = movie.resource_link
         # 调用存储过程更新电影信息
         with connection.cursor() as cursor:
-            cursor.callproc('update_movie', [movie_id, moviename, length, releaseyear, plot_summary, resource_link, production_company_id])
-        # 获取选中的导演
+            cursor.callproc('update_movie', [movie_id, moviename, length, releaseyear, plot_summary, resource_link,
+                                             production_company_id])
+            # 获取选中的导演
             director_ids = request.POST.get('directors', '')
             # 插入导演数据
             director_ids_list = director_ids.split(',') if director_ids else []
@@ -442,17 +467,17 @@ def update_movie(request, movie_id):
         return redirect('list_movies')
     else:
         # 如果是 GET 请求，创建一个新的表单实例，并传入电影对象数据
-        form = MovieForm(instance=movie,is_update=True)
-        # 获取当前电影已关联的导演ID列表  
-        # 假设你有一个方法可以从数据库中获取这些ID，例如 get_directors_for_movie(movie_id)  
-        with connection.cursor() as cursor:  
-            # 调用存储过程，这里不需要输出参数  
-            cursor.callproc('get_directors_for_movie', [movie_id])  
-              
-            # fetchall()获取查询结果的所有行  
-            rows = cursor.fetchall()  
-            selected_directors = [row[0] for row in rows]  # 假设每行只有一个值，即导演ID  
-            
+        form = MovieForm(instance=movie, is_update=True)
+        # 获取当前电影已关联的导演ID列表
+        # 假设你有一个方法可以从数据库中获取这些ID，例如 get_directors_for_movie(movie_id)
+        with connection.cursor() as cursor:
+            # 调用存储过程，这里不需要输出参数
+            cursor.callproc('get_directors_for_movie', [movie_id])
+
+            # fetchall()获取查询结果的所有行
+            rows = cursor.fetchall()
+            selected_directors = [row[0] for row in rows]  # 假设每行只有一个值，即导演ID
+
         selected_directors_json = json.dumps(selected_directors)
         # 获取所有电影类型
         with connection.cursor() as cursor:
@@ -463,15 +488,16 @@ def update_movie(request, movie_id):
             movie_genres = cursor.fetchall()
             movie_genres_ids = [genre[0] for genre in movie_genres]
 
-        return render(request, 'update_movie.html', {  
-            'form': form,  
-            'selected_directors_json': selected_directors_json,  
-            'genres': genres, 
+        return render(request, 'update_movie.html', {
+            'form': form,
+            'selected_directors_json': selected_directors_json,
+            'genres': genres,
             'movie_genres_ids': movie_genres_ids
         })
 
-@login_required        
-@transaction.atomic   
+
+@login_required
+@transaction.atomic
 def delete_video_file(file_path):
     # 从文件路径中提取文件名
     filename = os.path.basename(file_path)
@@ -480,6 +506,7 @@ def delete_video_file(file_path):
     # 如果文件存在，删除它
     if os.path.exists(file_path):
         os.remove(file_path)
+
 
 @login_required
 @admin_required
@@ -495,6 +522,7 @@ def delete_movie(request, movie_id):
             cursor.callproc('delete_movie_and_directormovie_and_genre', [movie_id])
         return redirect('list_movies')
     return render(request, 'delete_movie_confirmation.html', {'movie': movie})
+
 
 @login_required
 @admin_required
@@ -514,6 +542,7 @@ def add_person(request):
         form = PersonForm()
     return render(request, 'add_person.html', {'form': form})
 
+
 @login_required
 @transaction.atomic
 def list_persons(request):
@@ -521,7 +550,8 @@ def list_persons(request):
         cursor.callproc('get_all_persons')
         persons = cursor.fetchall()
     persons_list = [
-        {'personID': person[0], 'name': person[1], 'birth_date': person[2], 'gender': person[3], 'marital_status': person[4]} 
+        {'personID': person[0], 'name': person[1], 'birth_date': person[2], 'gender': person[3],
+         'marital_status': person[4]}
         for person in persons
     ]
     gender_map = {'M': 'Male', 'F': 'Female', 'U': 'Unknown'}
@@ -530,6 +560,7 @@ def list_persons(request):
         person['gender'] = gender_map.get(person['gender'], 'Unknown')
         person['marital_status'] = marital_status_map.get(person['marital_status'], 'Unknown')
     return render(request, 'list_persons.html', {'persons': persons_list})
+
 
 @login_required
 @admin_required
@@ -549,7 +580,8 @@ def update_person(request, person_id):
     else:
         return JsonResponse({'error': 'Invalid request method'})
 
-@login_required    
+
+@login_required
 @admin_required
 @csrf_exempt
 @transaction.atomic
@@ -562,7 +594,8 @@ def delete_person(request, person_id):
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=405)
 
-@login_required    
+
+@login_required
 @transaction.atomic
 def search_persons(request):
     name = request.GET.get('name', '')
@@ -585,7 +618,8 @@ def search_persons(request):
         cursor.callproc('search_persons', [name, start_birth_date, end_birth_date, gender, marital_status])
         persons = cursor.fetchall()
     persons_list = [
-        {'personID': person[0], 'name': person[1], 'birth_date': person[2], 'gender': person[3], 'marital_status': person[4]} 
+        {'personID': person[0], 'name': person[1], 'birth_date': person[2], 'gender': person[3],
+         'marital_status': person[4]}
         for person in persons
     ]
     gender_map = {'M': 'Male', 'F': 'Female', 'U': 'Unknown'}
@@ -595,10 +629,10 @@ def search_persons(request):
         person['marital_status'] = marital_status_map.get(person['marital_status'], 'Unknown')
     return render(request, 'list_persons.html', {'persons': persons_list})
 
+
 @login_required
 @transaction.atomic
 def all_directors(request):
-
     search_director = request.GET.get('search_director', '')
     search_movie = request.GET.get('search_movie', '')
     with connection.cursor() as cursor:
@@ -624,10 +658,10 @@ def all_directors(request):
     for director in all_directors_map.values():
         director_name_lower = director['name'].lower()
         matches_director = search_director.lower() in director_name_lower if search_director else True
-        matches_movie = any(search_movie.lower() in movie['name'].lower() for movie in director['movies']) if search_movie else True
+        matches_movie = any(
+            search_movie.lower() in movie['name'].lower() for movie in director['movies']) if search_movie else True
         if matches_director and matches_movie:
             filtered_directors.append(director)
-            
 
     # 准备要传递给模板的导演及其电影
     for director in filtered_directors:
@@ -643,6 +677,7 @@ def all_directors(request):
         'search_movie': search_movie
     })
 
+
 @login_required
 @admin_required
 @transaction.atomic
@@ -651,11 +686,11 @@ def manage_genres(request):
         action = request.POST.get('action')
         genre_name = request.POST.get('genre_name', '')
         genre_id = request.POST.get('genre_id', None)
-        
+
         if action == 'add' and genre_name:
             with connection.cursor() as cursor:
                 cursor.callproc('add_movie_genre', [genre_name])
-        
+
         elif action == 'delete' and genre_id:
             with connection.cursor() as cursor:
                 cursor.callproc('delete_movie_genre', [genre_id])
@@ -665,8 +700,9 @@ def manage_genres(request):
     with connection.cursor() as cursor:
         cursor.callproc('select_all_genre')
         genres = cursor.fetchall()
-    
+
     return render(request, 'manage_genres.html', {'genres': genres})
+
 
 @csrf_exempt
 def register_view(request):
@@ -687,6 +723,7 @@ def register_view(request):
 
     return render(request, 'register.html', {'form': form})
 
+
 def login_view(request):
     if request.method == 'POST':
         username = request.POST['username']
@@ -701,10 +738,12 @@ def login_view(request):
 
     return render(request, 'login.html')
 
+
 @login_required
 def logout_view(request):
     logout(request)
     return redirect('login')
+
 
 @login_required
 @super_required
@@ -721,6 +760,7 @@ def manage_admins(request):
     }
     return render(request, 'manage_admins.html', context)
 
+
 @login_required
 @super_required
 def add_admin(request, user_id):
@@ -728,6 +768,7 @@ def add_admin(request, user_id):
     user.is_staff = True
     user.save()
     return redirect('manage_admins')
+
 
 @login_required
 @super_required
@@ -738,6 +779,7 @@ def toggle_staff_status(request, user_id):
         user.save()
     return redirect('manage_admins')
 
+
 @login_required
 def delete_account(request):
     user = request.user
@@ -745,6 +787,7 @@ def delete_account(request):
     user.delete()
     messages.success(request, "你的账号已被删除")
     return redirect('home')
+
 
 @login_required
 @admin_required
@@ -757,4 +800,35 @@ def admin_delete_user(request, user_id):
         messages.success(request, "用户已被删除")
     return redirect('manage_admins')
 
+def list_actors(request):
+    with connection.cursor() as cursor:
+        cursor.callproc('get_all_actors')
+        actors = cursor.fetchall()
+    actors_list = [
+        {'personID': actor[0], 'name': actor[1], 'birth_date': actor[2], 'gender': actor[3],
+         'marital_status': actor[4]}
+        for actor in actors
+    ]
+    gender_map = {'M': 'Male', 'F': 'Female', 'U': 'Unknown'}
+    marital_status_map = {'S': 'Single', 'M': 'Married', 'W': 'Widowed', 'U': 'Unknown'}
+    for actor in actors_list:
+        actor['gender'] = gender_map.get(actor['gender'], 'Unknown')
+        actor['marital_status'] = marital_status_map.get(actor['marital_status'], 'Unknown')
+    return render(request, 'list_actors.html', {'actors': actors_list})
 
+@login_required
+def movie_actors(request, movie_id):
+    movie = get_object_or_404(Movie, pk=movie_id)
+    actors = movie.actors.all()
+    return render(request, 'movie_actors.html', {'movie': movie, 'actors': actors})
+
+@login_required
+def person_movies(request, person_id):
+    person = get_object_or_404(Person, pk=person_id)
+    movies_as_actor = person.movies_acted.all()
+    movies_as_narrator = person.narrated_movies.all()
+    return render(request, 'person_movies.html', {
+        'person': person,
+        'movies_as_actor': movies_as_actor,
+        'movies_as_narrator': movies_as_narrator,
+    })

@@ -49,6 +49,10 @@ urlpatterns = [
     path('add_admin/<int:user_id>/', views.add_admin, name='add_admin'), #添加管理员
     path('toggle_staff_status/<int:user_id>/', views.toggle_staff_status, name='toggle_staff_status'), #用户状态显示
     path('delete_account/', views.delete_account, name='delete_account'), #删除自己的账户
+    path('actors/', views.list_actors, name='list_actors'),#列举演员
+    path('movie/<int:movie_id>/actors/', views.movie_actors, name='movie_actors'),
+    path('person/<int:person_id>/movies/', views.person_movies, name='person_movies'),
+
 ]
 
 if settings.DEBUG:

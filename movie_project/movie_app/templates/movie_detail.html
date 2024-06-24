@@ -1,29 +1,47 @@
-<!-- movie_detail.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ movie.moviename }} - Details</title>
+    <title>{{ movie.moviename }}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    <div class="movie-detail">
+        <h1>{{ movie.moviename }}</h1>
+        <p><strong>片长:</strong> {{ movie.length }} 分钟</p>
+        <p><strong>上映年份:</strong> {{ movie.releaseyear }}</p>
+        <p><strong>简介:</strong> {{ movie.plot_summary }}</p>
+        <p><strong>资源链接:</strong> <a href="{{ movie.resource_link }}">{{ movie.resource_link }}</a></p>
+        <p><strong>制作公司:</strong> {{ movie.production_company.name }}</p>
+        
+        <h2>导演</h2>
+        <ul>
+            {% for director in movie.directors.all %}
+                <li>{{ director.person.name }}</li>
             {% endfor %}
         </ul>
-    {% endif %}
-    <p><a href="{% url 'list_movies' %}">all movies</a>.</p>
-    <p><a href="{% url 'home' %}">home</a>.</p>
-    <h1>{{ movie.moviename }} - Details</h1>
-    <p>Length: {{ movie.length }}</p>
-    <p>Release Year: {{ movie.releaseyear }}</p>
-    <p>Plot Summary: {{ movie.plot_summary }}</p>
-    <p>Production Company: {{ movie.production_company_id }}</p>
-    <video controls>
-        <source src="{{ movie.resource_link }}" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
+        
+        <h2>演员</h2>
+        <ul>
+            {% for actor in movie.actors.all %}
+                <li><a href="{% url 'person_movies' actor.personID %}">{{ actor.name }}</a></li>
+            {% endfor %}
+        </ul>
+
+        <h2>旁白</h2>
+        {% if narration %}
+            <p>{{ narration.content }}</p>
+            <p><strong>旁白演员:</strong> <a href="{% url 'person_movies' narration.actor.personID %}">{{ narration.actor.name }}</a></p>
+        {% else %}
+            <p>暂无旁白信息。</p>
+        {% endif %}
+
+        <h2>电影类型</h2>
+        <ul>
+            {% for genre in movie.genres.all %}
+                <li>{{ genre.genre_name }}</li>
+            {% endfor %}
+        </ul>
+    </div>
 </body>
 </html>

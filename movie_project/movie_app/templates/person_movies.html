@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ person.name }} 的电影</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="movie-list">
+        <h1>{{ person.name }} 的电影</h1>
+        
+        <h2>作为演员的电影</h2>
+        <ul>
+            {% for movie in movies_as_actor %}
+                <li><a href="{% url 'movie_detail' movie.movie_id %}">{{ movie.moviename }}</a></li>
+            {% endfor %}
+        </ul>
+
+        <h2>作为旁白的电影</h2>
+        <ul>
+            {% for movie in movies_as_narrator %}
+                <li><a href="{% url 'movie_detail' movie.movie_id %}">{{ movie.moviename }}</a></li>
+            {% endfor %}
+        </ul>
+
+        {% if is_director %}
+            <h2><a href="{% url 'director_movies' person.personID %}">查看导演电影</a></h2>
+        {% endif %}
+    </div>
+</body>
+</html>
