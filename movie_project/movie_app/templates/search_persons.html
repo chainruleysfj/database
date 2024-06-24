@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Persons</title>
+</head>
+<body>
+    <h1>Search Persons</h1>
+    <form method="get" action="{% url 'search_persons' %}">
+        <input type="text" name="q" value="{{ query }}" placeholder="Search for persons...">
+        <button type="submit">Search</button>
+    </form>
+    <ul>
+        {% for person in persons %}
+            <li>
+                <a href="#" onclick="window.opener.document.getElementById('person_search').value = '{{ person.name }}'; window.opener.document.getElementById('person_id').value = '{{ person.personID }}'; window.close();">{{ person.name }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

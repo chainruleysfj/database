@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Movies</title>
+</head>
+<body>
+    <h1>Search Movies</h1>
+    <form method="get" action="{% url 'search_movies' %}">
+        <input type="text" name="q" value="{{ query }}" placeholder="Search for movies...">
+        <button type="submit">Search</button>
+    </form>
+    <ul>
+        {% for movie in movies %}
+            <li>
+                <a href="#" onclick="window.opener.document.getElementById('movie_search').value = '{{ movie.moviename }}'; window.opener.document.getElementById('movie_id').value = '{{ movie.movie_id }}'; window.close();">{{ movie.moviename }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

@@ -1306,8 +1306,8 @@ def reset_password(request):
 @admin_required
 def add_role(request):
     if request.method == 'POST':
-        movie_id = request.POST.get('movie')
-        person_id = request.POST.get('person')
+        movie_id = request.POST.get('movie_id')
+        person_id = request.POST.get('person_id')
         role_name = request.POST.get('role_name')
         role_description = request.POST.get('role_description', '')
 
@@ -1326,12 +1326,17 @@ def add_role(request):
 
         return redirect('success')  # You can change 'success' to the name of your success page
 
-    else:
-        movies = Movie.objects.all()
-        persons = Person.objects.all()
-        roles = Role.objects.all()
+    return render(request, 'add_role.html')
 
-        return render(request, 'add_role.html', {'movies': movies, 'persons': persons, 'roles': roles})
+def search_movies(request):
+    query = request.GET.get('q', '')
+    movies = Movie.objects.filter(moviename__icontains=query) if query else []
+    return render(request, 'search_movies.html', {'query': query, 'movies': movies})
+
+def search_persons(request):
+    query = request.GET.get('q', '')
+    persons = Person.objects.filter(name__icontains=query) if query else []
+    return render(request, 'search_persons.html', {'query': query, 'persons': persons})
 
 
 @login_required

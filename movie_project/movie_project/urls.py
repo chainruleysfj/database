@@ -71,6 +71,8 @@ urlpatterns = [
     path('search_roles_by_actor/', views.search_roles_by_actor, name='search_roles_by_actor'),
     path('search_roles_by_movie/', views.search_roles_by_movie, name='search_roles_by_movie'),
     path('search_role/', views.search_role, name='search_role'),  # 新增的搜索选择页面
+    path('search_movies/', views.search_movies, name='search_movies'),
+    path('search_persons/', views.search_persons, name='search_persons'),
 ]
 
 if settings.DEBUG:

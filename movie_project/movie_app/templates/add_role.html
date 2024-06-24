@@ -8,21 +8,19 @@
     <form method="post">
         {% csrf_token %}
         <div>
-            <label for="movie">Select Movie:</label>
-            <select id="movie" name="movie">
-                {% for movie in movies %}
-                    <option value="{{ movie.movie_id }}">{{ movie.moviename }}</option>
-                {% endfor %}
-            </select>
+            <label for="movie_search">Search Movie:</label>
+            <input type="text" id="movie_search" name="movie_search" readonly>
+            <input type="hidden" id="movie_id" name="movie_id">
+            <button type="button" onclick="window.open('{% url 'search_movies' %}', 'Search Movies', 'width=600,height=400')">Search</button>
         </div>
+
         <div>
-            <label for="person">Select Person:</label>
-            <select id="person" name="person">
-                {% for person in persons %}
-                    <option value="{{ person.personID }}">{{ person.name }}</option>
-                {% endfor %}
-            </select>
+            <label for="person_search">Search Person:</label>
+            <input type="text" id="person_search" name="person_search" readonly>
+            <input type="hidden" id="person_id" name="person_id">
+            <button type="button" onclick="window.open('{% url 'search_persons' %}', 'Search Persons', 'width=600,height=400')">Search</button>
         </div>
+
         <div>
             <label for="role_name">Role Name:</label>
             <input type="text" id="role_name" name="role_name" required>
@@ -37,3 +35,4 @@
     </form>
 </body>
 </html>
+
