@@ -46,14 +46,14 @@
         <h2>导演</h2>
         <ul>
             {% for director in movie.directors %}
-                <li>{{ director }}</li>
+            <li><a href="{% url 'all_directors' %}?search_director={{ director|urlencode }}">{{ director }}</a></li>
             {% endfor %}
         </ul>
         
         <h2>演员</h2>
         <ul>
             {% for actor in movie.actors %}
-                <li>{{ actor }}</li>
+            <li><a href="{% url 'list_actors' %}?search_name={{ actor|urlencode }}">{{ actor }}</a></li>
             {% endfor %}
         </ul>
         
