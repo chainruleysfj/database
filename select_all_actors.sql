@@ -31,17 +31,38 @@ DROP PROCEDURE IF EXISTS get_actor_movies_with_id;
 DELIMITER //
 CREATE PROCEDURE get_actor_movies_with_id(IN p_person_id INT)
 BEGIN
-    SELECT DISTINCT m.movie_id,m.moviename
-    FROM movie_app_movie m
-    JOIN movie_app_roleactormovie ram ON m.movie_id = ram.movie_id
-    WHERE ram.person_id = p_person_id
+    SELECT DISTINCT 
+        m.movie_id,
+        m.moviename,
+        IFNULL(AVG(r.rating), 0) AS average_rating
+    FROM 
+        movie_app_movie m
+    LEFT JOIN 
+        movie_app_roleactormovie ram ON m.movie_id = ram.movie_id
+    LEFT JOIN 
+        movie_app_rating r ON m.movie_id = r.movie_id
+    WHERE 
+        ram.person_id = p_person_id
+    GROUP BY 
+        m.movie_id
     UNION
-    SELECT DISTINCT m.movie_id,m.moviename
-    FROM movie_app_movie m
-    JOIN movie_app_narration nr ON m.movie_id = nr.movie_id
-    WHERE nr.actor_id = p_person_id;
+    SELECT DISTINCT 
+        m.movie_id,
+        m.moviename,
+        IFNULL(AVG(r.rating), 0) AS average_rating
+    FROM 
+        movie_app_movie m
+    LEFT JOIN 
+        movie_app_narration nr ON m.movie_id = nr.movie_id
+    LEFT JOIN 
+        movie_app_rating r ON m.movie_id = r.movie_id
+    WHERE 
+        nr.actor_id = p_person_id
+    GROUP BY 
+        m.movie_id;
 END //
 DELIMITER ;
+
 
 DROP PROCEDURE IF EXISTS get_role_detail;
 DELIMITER //
