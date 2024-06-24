@@ -1457,6 +1457,10 @@ def search_movies(request):
     movies = Movie.objects.filter(moviename__icontains=query) if query else []
     return render(request, 'search_movies.html', {'query': query, 'movies': movies})
 
+def search_persons_role(request):
+    query = request.GET.get('q', '')
+    persons = Person.objects.filter(name__icontains=query) if query else []
+    return render(request, 'search_persons_role.html', {'query': query, 'persons': persons})
 
 
 @login_required

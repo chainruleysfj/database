@@ -72,7 +72,7 @@
         <header>
             <h1>Search Persons</h1>
         </header>
-        <form method="get" action="{% url 'search_persons' %}">
+        <form method="get" action="{% url 'search_persons_role' %}">
             <input type="text" name="q" value="{{ query }}" placeholder="Search for persons...">
             <button type="submit">Search</button>
         </form>

@@ -72,6 +72,7 @@ urlpatterns = [
     path('search_roles_by_movie/', views.search_roles_by_movie, name='search_roles_by_movie'),
     path('search_role/', views.search_role, name='search_role'),  # 新增的搜索选择页面
     path('search_movies/', views.search_movies, name='search_movies'),
+    path('search_persons_role/', views.search_persons_role, name='search_persons_role'),
     path('actors/', views.list_actors, name='list_actors'),#列举演员
     path('movie/<int:movie_id>/actors/', views.movie_actors, name='movie_actors'),
     path('person/<int:person_id>/movies/', views.person_movies, name='person_movies'),
