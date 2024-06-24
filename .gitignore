@@ -1,4 +1,5 @@
 /movie_project/media/videos
 /movie_project/movie_app/__pycache__
 /movie_project/movie_app/migrations
-/movie_project/movie_project/__pycache__
+/movie_project/movie_project/__pycache____pycache__
+*.pyc
