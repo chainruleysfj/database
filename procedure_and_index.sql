@@ -99,32 +99,8 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS get_all_movies;
-DELIMITER $$
-CREATE PROCEDURE get_all_movies()
-BEGIN
-    SELECT * FROM movie_app_movie;
-END$$
-DELIMITER ;
 
-DROP PROCEDURE IF EXISTS search_movies;
-DELIMITER $$
-CREATE PROCEDURE search_movies(
-    IN movie_name VARCHAR(255),
-    IN city VARCHAR(255)
-)
-BEGIN
-    SELECT * FROM movie_app_movie
-    WHERE moviename LIKE CONCAT('%', movie_name, '%')
-    AND production_company_id IN (
-        SELECT company_id FROM movie_app_productioncompany WHERE city LIKE CONCAT('%', city, '%')
-    );
-END$$
-DELIMITER ;
 
-DROP PROCEDURE IF EXISTS get_movie_detail;
-
-DELIMITER //
 
 DROP PROCEDURE IF EXISTS get_movie_detail;
 DELIMITER //
@@ -246,32 +222,8 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS delete_movie;
-DELIMITER //
-CREATE PROCEDURE delete_movie(IN p_movie_id INT)
-BEGIN
-    DELETE FROM movie_app_movie WHERE movie_id = p_movie_id;
-END //
-DELIMITER ;
 
-DROP PROCEDURE IF EXISTS search_movies;
-DELIMITER //
-CREATE PROCEDURE search_movies(
-    IN p_keyword VARCHAR(255),
-    IN p_min_length INT,
-    IN p_max_length INT,
-    IN p_min_releaseyear INT,
-    IN p_max_releaseyear INT,
-    IN p_production_company_id INT
-)
-BEGIN
-    SELECT * FROM movie_app_movie
-    WHERE (moviename LIKE CONCAT('%', p_keyword, '%') OR plot_summary LIKE CONCAT('%', p_keyword, '%'))
-    AND (length BETWEEN p_min_length AND p_max_length)
-    AND (releaseyear BETWEEN p_min_releaseyear AND p_max_releaseyear)
-    AND (production_company_id = p_production_company_id OR p_production_company_id IS NULL);
-END //
-DELIMITER ;
+
 
 DROP PROCEDURE IF EXISTS add_person;
 DELIMITER //
@@ -317,15 +269,6 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS delete_person;
-DELIMITER //
-CREATE PROCEDURE delete_person(
-    IN p_person_id INT
-)
-BEGIN
-    DELETE FROM movie_app_person WHERE personID = p_person_id;
-END //
-DELIMITER ;
 
 DROP PROCEDURE IF EXISTS search_persons;
 DELIMITER //
@@ -348,15 +291,6 @@ END //
 DELIMITER ;
 
 
-DROP PROCEDURE IF EXISTS get_person_by_id;
-DELIMITER //
-CREATE PROCEDURE get_person_by_id(
-    IN p_person_id INT
-)
-BEGIN
-    SELECT * FROM movie_app_person WHERE personID = p_person_id;
-END //
-DELIMITER ;
 
 DROP PROCEDURE IF EXISTS add_director_movie;
 DELIMITER //
@@ -370,9 +304,9 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS get_all_movies_with_directors_and_companies;
+DROP PROCEDURE IF EXISTS get_all_movies;
 DELIMITER //
-CREATE PROCEDURE get_all_movies_with_directors_and_companies()
+CREATE PROCEDURE get_all_movies()
 BEGIN
     SELECT m.Movie_ID, m.moviename, m.length, m.releaseyear, m.plot_summary, m.resource_link, pc.name AS production_company_name,
            GROUP_CONCAT(p.name) AS directors
@@ -384,30 +318,6 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS search_movies_with_directors_and_companies;
-DELIMITER //
-CREATE PROCEDURE search_movies_with_directors_and_companies(
-    IN p_keyword VARCHAR(100),
-    IN p_min_length INT,
-    IN p_max_length INT,
-    IN p_min_releaseyear INT,
-    IN p_max_releaseyear INT,
-    IN p_production_company_id INT
-)
-BEGIN
-    SELECT m.Movie_ID, m.moviename, m.length, m.releaseyear, m.plot_summary, m.resource_link, pc.name AS production_company_name,
-           GROUP_CONCAT(p.name) AS directors
-    FROM movie_app_movie m
-    LEFT JOIN movie_app_directormovie dm ON m.Movie_ID = dm.Movie_ID
-    LEFT JOIN movie_app_person p ON dm.person_ID = p.personID
-    LEFT JOIN movie_app_productioncompany pc ON m.production_company_id = pc.company_id
-    WHERE (p_keyword IS NULL OR m.moviename LIKE CONCAT('%', p_keyword, '%'))
-    AND m.length BETWEEN p_min_length AND p_max_length
-    AND ((m.releaseyear BETWEEN p_min_releaseyear AND p_max_releaseyear) OR m.releaseyear is null)
-    AND (p_production_company_id IS NULL OR m.production_company_id = p_production_company_id)
-    GROUP BY m.Movie_ID;
-END //
-DELIMITER ;
 
 DROP PROCEDURE IF EXISTS get_last_insert_movie_id;
 DELIMITER //
@@ -450,14 +360,7 @@ BEGIN
 END //  
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS delete_movie_and_directormovie;
-DELIMITER //
-CREATE PROCEDURE delete_movie_and_directormovie(IN p_movie_id INT)
-BEGIN
-	DELETE FROM movie_app_directormovie dm WHERE dm.movie_id = p_movie_id;
-    DELETE FROM movie_app_movie m WHERE m.movie_id = p_movie_id;
-END //
-DELIMITER ;
+
 
 DROP PROCEDURE IF EXISTS get_all_directors_and_directmovie;
 DELIMITER //
@@ -472,9 +375,9 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS delete_person_and_directormovie;
+DROP PROCEDURE IF EXISTS delete_person;
 DELIMITER //
-CREATE PROCEDURE delete_person_and_directormovie(
+CREATE PROCEDURE delete_person(
     IN p_person_id INT
 )
 BEGIN
@@ -524,21 +427,8 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS add_movie_genre_association;
-DELIMITER //
-CREATE PROCEDURE add_movie_genre_association(IN p_movie_id INT, IN p_genre_id SMALLINT UNSIGNED)
-BEGIN
-    INSERT INTO movie_app_MovieGenreAssociation (Movie_ID, Genre_ID) VALUES (p_movie_id, p_genre_id);
-END //
-DELIMITER ;
 
-DROP PROCEDURE IF EXISTS delete_movie_genre_association;
-DELIMITER //
-CREATE PROCEDURE delete_movie_genre_association(IN p_movie_id INT, IN p_genre_id SMALLINT UNSIGNED)
-BEGIN
-    DELETE FROM movie_app_MovieGenreAssociation WHERE Movie_ID = p_movie_id AND Genre_ID = p_genre_id;
-END //
-DELIMITER ;
+
 
 DROP PROCEDURE IF EXISTS get_movie_genre_association;
 DELIMITER //
@@ -548,9 +438,9 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS delete_movie_and_directormovie_and_genre;
+DROP PROCEDURE IF EXISTS delete_movie;
 DELIMITER //
-CREATE PROCEDURE delete_movie_and_directormovie_and_genre(IN p_movie_id INT)
+CREATE PROCEDURE delete_movie(IN p_movie_id INT)
 BEGIN
 	DELETE FROM movie_app_MovieGenreAssociation mga WHERE mga.movie_id = p_movie_id;
 	DELETE FROM movie_app_directormovie dm WHERE dm.movie_id = p_movie_id;
@@ -572,9 +462,9 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS search_movies_with_directors_and_companies_and_genres;
+DROP PROCEDURE IF EXISTS search_movies;
 DELIMITER //
-CREATE PROCEDURE search_movies_with_directors_and_companies_and_genres(
+CREATE PROCEDURE search_movies(
     IN p_keyword VARCHAR(255),
     IN p_min_length INT,
     IN p_max_length INT,
@@ -601,13 +491,6 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS delete_production_company;
-DELIMITER $$
-CREATE PROCEDURE delete_production_company(IN p_company_id INT)
-BEGIN
-    DELETE FROM movie_app_productioncompany WHERE company_id = p_company_id;
-END$$
-DELIMITER ;
 
 DROP PROCEDURE IF EXISTS get_movie_production_company;
 DELIMITER //
@@ -619,39 +502,6 @@ BEGIN
 END //
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS delete_production_company;
-DELIMITER //
-CREATE PROCEDURE delete_production_company(IN p_company_id INT)
-BEGIN
-    DECLARE done INT DEFAULT 0;
-    DECLARE v_movie_id INT;
-
-    -- Declare a cursor to select all movie_ids associated with the production company
-    DECLARE movie_cursor CURSOR FOR
-        SELECT m.movie_id FROM movie_app_movie m WHERE m.production_company_id = p_company_id;
-
-    -- Declare continue handler to handle cursor end
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
-
-    -- Open the cursor
-    OPEN movie_cursor;
-
-    -- Loop through all movie_ids and delete them
-    read_loop: LOOP
-        FETCH movie_cursor INTO v_movie_id;
-        IF done THEN
-            LEAVE read_loop;
-        END IF;
-        CALL delete_movie_and_directormovie_and_genre(v_movie_id);
-    END LOOP;
-
-    -- Close the cursor
-    CLOSE movie_cursor;
-
-    -- Delete the production company
-    DELETE FROM movie_app_productioncompany pc WHERE pc.company_id = p_company_id;
-END //
-DELIMITER ;
 
 DROP PROCEDURE IF EXISTS get_movies_by_company;
 DELIMITER //
@@ -920,7 +770,7 @@ END //
 
 DELIMITER ;
 
-DROP PROCEDURE IF EXISTS get_movies_by_production_company()；
+DROP PROCEDURE IF EXISTS get_movies_by_production_company;
 DELIMITER $$
 
 CREATE PROCEDURE get_movies_by_production_company(

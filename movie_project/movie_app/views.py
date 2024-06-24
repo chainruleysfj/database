@@ -214,7 +214,7 @@ def delete_production_company(request, company_id):
                     movie_instance = Movie.objects.get(pk=movie_id)
                     delete_video_file(movie_instance.resource_link)
                     # 调用存储过程删除电影及其关联数据
-                    cursor.callproc('delete_movie_and_directormovie_and_genre', [movie_id])
+                    cursor.callproc('delete_movie', [movie_id])
             with connection.cursor() as cursor:
                 # 删除出品公司
                 cursor.callproc('delete_production_company', [company_id])
@@ -285,18 +285,21 @@ def add_movie(request):
                     cursor.callproc('get_last_insert_movie_id')
                     movie_id = cursor.fetchone()[0]
                 # 获取选中的导演
+                print(1)
                 director_ids = request.POST.get('directors', '')
                 # 插入导演数据
                 if director_ids:
                     director_ids_list = director_ids.split(',')
-                    with connection.cursor() as cursor:
-                        for director_id in director_ids_list:
+                    for director_id in director_ids_list:
+                        with connection.cursor() as cursor:
                             cursor.callproc('add_director_movie', [movie_id, int(director_id)])
                 # 添加类型关联
+                print(2)
                 genre_ids = request.POST.getlist('genres')
                 for genre_id in genre_ids:
                     with connection.cursor() as cursor:
                         cursor.callproc('add_movie_genre_association', [movie_id, genre_id])
+                print(3)
         except Exception as e:
             # Handle any exceptions or errors
             messages.error(request,f"Error : {e}")
@@ -425,7 +428,7 @@ def list_movies(request):
             max_rating = get_float_or_default(request.GET.get('max_rating'), 10)
 
             with connection.cursor() as cursor:
-                cursor.callproc('search_movies_with_directors_and_companies_and_genres', [
+                cursor.callproc('search_movies', [
                     keyword, 
                     min_length, 
                     max_length, 
@@ -437,7 +440,7 @@ def list_movies(request):
                 movies = cursor.fetchall()
         else:
             with connection.cursor() as cursor:
-                cursor.callproc('get_all_movies_with_directors_and_companies')
+                cursor.callproc('get_all_movies')
                 movies = cursor.fetchall()
 
         movies_list = []
@@ -683,6 +686,7 @@ def update_movie(request, movie_id):
             with connection.cursor() as cursor:
                 for genre_id in movie_genres_ids:
                     cursor.callproc('delete_movie_genre_association', [movie_id, genre_id])  # 删除所有现有关联
+            with connection.cursor() as cursor:
                 for genre_id in genre_ids:
                     cursor.callproc('add_movie_genre_association', [movie_id, genre_id])
         except Exception as e:
@@ -773,7 +777,7 @@ def delete_movie(request, movie_id):
             delete_video_file(movie.resource_link)
             # 调用存储过程删除电影
             with connection.cursor() as cursor:
-                cursor.callproc('delete_movie_and_directormovie_and_genre', [movie_id])
+                cursor.callproc('delete_movie', [movie_id])
         except Exception as e:
             # Handle any exceptions or errors
             messages.error(request,f"Error : {e}")
@@ -868,7 +872,7 @@ def delete_person(request, person_id):
     if request.method == 'POST':
         try:
             with connection.cursor() as cursor:
-                cursor.callproc('delete_person_and_directormovie', [person_id])
+                cursor.callproc('delete_person', [person_id])
         except Exception as e:
             # Handle any exceptions or errors
             messages.error(request,f"Error : {e}")
