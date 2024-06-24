@@ -1,5 +1,3 @@
-<!-- all_directors.html -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -31,6 +29,11 @@
                 {% for movie in director.movies_page %}
                 <li>
                     <a href="{% url 'movie_detail' movie.id %}">{{ movie.name }}</a>
+                    {% if movie.average_rating is not None %}
+                        - {{ movie.average_rating }}
+                    {% else %}
+                        - No ratings yet
+                    {% endif %}
                 </li>
                 {% endfor %}
             </ul>

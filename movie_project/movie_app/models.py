@@ -1,5 +1,7 @@
 from django.db import models
 from django.core.validators import MaxValueValidator
+from django.contrib.auth.models import AbstractUser,User
+
 
 # Create your models here.
 
@@ -75,16 +77,45 @@ class MovieGenreAssociation(models.Model):
     class Meta:
         unique_together = ('movie', 'genre')
 
+class Comment(models.Model):
+    comment_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    content = models.TextField()
+    comment_time = models.DateTimeField(auto_now_add=True)
+    is_approved = models.BooleanField(default=False)
+    is_denied = models.BooleanField(default=False)  # New field to track denied commentspython manage.py makemigrations
+    def __str__(self):
 
-class Users(models.Model):
-    UserID = models.AutoField(primary_key=True)
-    Username = models.CharField(max_length=50, unique=True)
-    UserPassword = models.CharField(max_length=150) #注意使用hash值，不能只有50
+        return f'Comment by {self.user.username} on {self.movie.title}'
+    
+class Rating(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
+    rating = models.PositiveSmallIntegerField()  # Should be between 1 and 5
+
+    class Meta:
+        unique_together = ('user', 'movie')
+
+class LoginRecord(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    session_key = models.CharField(max_length=100)
+    login_time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Login Record"
+        verbose_name_plural = "Login Records"
 
     def __str__(self):
-        return self.Username
+        return f"{self.user.username} - {self.login_time}"
 
-
+class SecurityQA(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    security_question = models.CharField(max_length=255)
+    security_answer = models.CharField(max_length=255)
+    def __str__(self):
+        return f"{self.user.username}'s Security Question"
+    
 class Role(models.Model):
     role_id = models.AutoField(primary_key=True)
     role_name = models.CharField(max_length=50)

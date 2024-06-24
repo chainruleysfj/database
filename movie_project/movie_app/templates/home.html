@@ -11,7 +11,7 @@
     {% if messages %}
         <ul class="messages">
             {% for message in messages %}
-                <li>{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
             {% endfor %}
         </ul>
     {% endif %}
@@ -27,9 +27,15 @@
     <p><a href="{% url 'all_directors' %}">see all directors</a>.</p>
     <p><a href="{% url 'manage_genres' %}">manage movie genres</a>.</p>
     <p><a href="{% url 'manage_admins' %}">manage admins</a>.</p>
-    <!-- 添加登出按钮 -->
+    <p><a href="{% url 'manage_users' %}">manage users</a>.</p>
+    <p><a href="{% url 'search_users' %}">search users</a>.</p> <!-- Add this line for the search users link -->
+    <!-- 账号操作 -->
+    <p><a href="{% url 'change_password' %}">change password</a>.</p>
+    <p><a href="{% url 'set_security_question' %}">set security question</a>.</p>
     <p><a href="{% url 'logout' %}">Logout</a></p>
+    <p><a href="{% url 'approve_comments' %}"> approve comments</a>.</p>
     <a href="{% url 'delete_account' %}">Delete Account</a>
+
+   
 </body>
 </html>
-

@@ -118,6 +118,7 @@
                                 window.location.reload();
                             } else {
                                 console.error("Error deleting company:", response.error);
+                                window.location.reload();
                             }
                         } else if (xhr.status === 403) {
                             var response = JSON.parse(xhr.responseText);
