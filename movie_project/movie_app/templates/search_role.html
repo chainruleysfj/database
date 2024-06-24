@@ -3,22 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <title>Search Role</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        ul.search-options {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul.search-options li {
+            display: inline-block;
+            margin-right: 10px;
+            background: #ddd;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        a {
+            text-decoration: none;
+            color: #337ab7;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .back-link, .home-link {
+            text-align: center;
+            display: block;
+            margin-top: 20px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Search Role</h1>
-    {% if messages %}
-    <ul>
-        {% for message in messages %}
-            <li>{{ message }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-    <ul>
-        <li><a href="{% url 'search_roles_by_name' %}">Search by Name</a></li>
-        <li><a href="{% url 'search_roles_by_actor' %}">Search by Actor</a></li>
-        <li><a href="{% url 'search_roles_by_movie' %}">Search by Movie</a></li>
-    </ul>
-    <a href="{% url 'role_list' %}">Back to Role List</a>
-    <p><a href="{% url 'home' %}">home</a>.</p>
+    <div class="container">
+        <header>
+            <h1>Search Role</h1>
+        </header>
+        {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        <ul class="search-options">
+            <li><a href="{% url 'search_roles_by_name' %}">Search by Name</a></li>
+            <li><a href="{% url 'search_roles_by_actor' %}">Search by Actor</a></li>
+            <li><a href="{% url 'search_roles_by_movie' %}">Search by Movie</a></li>
+        </ul>
+        <div class="back-link">
+            <a href="{% url 'role_list' %}">Back to Role List</a>
+        </div>
+        <div class="footer">
+            <p><a href="{% url 'home' %}">home</a>.</p>
+        </div>
+    </div>
 </body>
 </html>

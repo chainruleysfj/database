@@ -4,29 +4,105 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Users</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        form input[type="text"] {
+            padding: 8px;
+            margin-right: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        form button {
+            padding: 8px 15px;
+            background: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background: #4cae4c;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        ul li:first-child {
+            border-top: 1px solid #ddd;
+        }
+        ul li:last-child {
+            border-bottom: none;
+        }
+        a {
+            text-decoration: none;
+            color: #337ab7;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .no-users {
+            text-align: center;
+            color: #a94442;
+            margin-top: 20px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Search Users</h1>
-    
-    <!-- Show the search query and form -->
-    <form method="GET" action="{% url 'search_users' %}">
-        <input type="text" name="q" placeholder="Search users by username" value="{{ query }}">
-        <button type="submit">Search</button>
-    </form>
-    
-    <!-- Display search results -->
-    {% if users %}
-        <ul>
-            {% for user in users %}
+    <div class="container">
+        <header>
+            <h1>Search Users</h1>
+        </header>
+        <form method="GET" action="{% url 'search_users' %}">
+            <input type="text" name="q" placeholder="Search users by username" value="{{ query }}">
+            <button type="submit">Search</button>
+        </form>
+        {% if users %}
+            <ul>
+                {% for user in users %}
                 <li>
                     <a href="{% url 'user_homepage' user.username %}">{{ user.username }}</a>
                 </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No users found.</p>
-    {% endif %}
-    
-    <p><a href="{% url 'home' %}">Home</a></p>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="no-users">No users found.</p>
+        {% endif %}
+        <div class="footer">
+            <p><a href="{% url 'home' %}">Home</a></p>
+        </div>
+    </div>
 </body>
 </html>

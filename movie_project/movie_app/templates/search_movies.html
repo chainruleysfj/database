@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search Roles</title>
+    <title>Search Movies</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -53,11 +53,10 @@
             padding: 0;
         }
         ul li {
+            background: #ddd;
+            margin-bottom: 8px;
             padding: 10px;
-            border-bottom: 1px solid #ddd;
-        }
-        ul li:last-child {
-            border-bottom: none;
+            border-radius: 4px;
         }
         a {
             text-decoration: none;
@@ -66,49 +65,24 @@
         a:hover {
             text-decoration: underline;
         }
-        .no-roles {
-            color: #a94442;
-        }
-        .back-link, .home-link {
-            text-align: center;
-            display: block;
-            margin-top: 20px;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Search Roles by {{ search_type|title }}</h1>
+            <h1>Search Movies</h1>
         </header>
-        {% if messages %}
-        <ul>
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-        <form method="get" action="{% url 'search_roles_by_'|add:search_type %}">
-            <input type="text" name="query" value="{{ query }}" placeholder="Enter {{ search_type }}">
+        <form method="get" action="{% url 'search_movies' %}">
+            <input type="text" name="q" value="{{ query }}" placeholder="Search for movies...">
             <button type="submit">Search</button>
         </form>
-        {% if roles %}
-            <ul>
-                {% for role in roles %}
+        <ul>
+            {% for movie in movies %}
                 <li>
-                    <a href="{% url 'role_detail' role_id=role.role_id %}">{{ role.role_name }}</a>
+                    <a href="#" onclick="window.opener.document.getElementById('movie_search').value = '{{ movie.moviename|escapejs }}'; window.opener.document.getElementById('movie_id').value = '{{ movie.movie_id|escapejs }}'; window.close();">{{ movie.moviename }}</a>
                 </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="no-roles">No roles found.</p>
-        {% endif %}
-        <div class="back-link">
-            <a href="{% url 'role_list' %}">Back to Role List</a>
-        </div>
-        <div class="home-link">
-            <p><a href="{% url 'home' %}">home</a>.</p>
-        </div>
+            {% endfor %}
+        </ul>
     </div>
 </body>
 </html>

@@ -4,36 +4,132 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Genres</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 90%;
+            margin: auto;
+            overflow: hidden;
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            margin-top: 0;
+        }
+        .messages {
+            list-style-type: none;
+            padding: 0;
+        }
+        .messages li {
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 3px;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        form input[type="text"] {
+            padding: 8px;
+            margin-right: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        form button {
+            padding: 8px 15px;
+            background: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background: #4cae4c;
+        }
+        .genres-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .genres-list li {
+            background: #fff;
+            margin-bottom: 5px;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+        }
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .pagination a {
+            margin: 0 5px;
+            text-decoration: none;
+        }
+        footer {
+            background: #333;
+            color: #fff;
+            text-align: center;
+            padding: 10px 20px;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
-    <h1>Manage Genres</h1>
-    {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    <div class="container">
+        <header>
+            <h1>Manage Genres</h1>
+        </header>
+
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="genre_name" placeholder="New Genre Name" required>
+            <button type="submit" name="action" value="add">Add Genre</button>
+        </form>
+
+        <ul class="genres-list">
+            {% for genre in genres %}
+                <li>
+                    <span>{{ genre.1 }}</span>
+                    <form method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="genre_id" value="{{ genre.0 }}">
+                        <button type="submit" name="action" value="delete">Delete</button>
+                    </form>
+                </li>
             {% endfor %}
         </ul>
-    {% endif %}
-    <form method="post">
-        {% csrf_token %}
-        <input type="text" name="genre_name" placeholder="New Genre Name">
-        <button type="submit" name="action" value="add">Add Genre</button>
-    </form>
-    <ul>
-        {% for genre in genres %}
-            <li>
-                {{ genre.1 }} <!-- genre_name -->
-                <form method="post" style="display:inline;">
-                    {% csrf_token %}
-                    <input type="hidden" name="genre_id" value="{{ genre.0 }}"> <!-- genre_id -->
-                    <button type="submit" name="action" value="delete">Delete</button>
-                </form>
-            </li>
-        {% endfor %}
-    </ul>
 
-    <div class="pagination">
-        <span class="step-links">
+        <div class="pagination">
+            <span class="step-links">
             {% if genres.has_previous %}
                 <a href="?page=1">&laquo; first</a>
                 <a href="?page={{ genres.previous_page_number }}">previous</a>
@@ -47,8 +143,12 @@
                 <a href="?page={{ genres.next_page_number }}">next</a>
                 <a href="?page={{ genres.paginator.num_pages }}">last &raquo;</a>
             {% endif %}
-        </span>
+            </span>
+        </div>
+
+        <footer>
+            <p><a href="{% url 'home' %}">Home</a></p>
+        </footer>
     </div>
-    <p><a href="{% url 'home' %}">home</a>.</p>
 </body>
 </html>

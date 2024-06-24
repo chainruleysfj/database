@@ -5,61 +5,97 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>List of Movies</title>
     <style>
-        /* Add CSS styles */
-        .search-form label,
-        .search-form input,
-        .search-form select,
-        .search-form button {
-            display: inline-block;
-            margin-right: 5px; /* Spacing between elements */
-            margin-bottom: 5px; /* Vertical spacing */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
         }
-        .search-form label {
-            margin-bottom: 0; /* No vertical spacing for labels */
+        header, footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1em 0;
         }
-        /* Adjust widths as needed */
-        .search-form input[type="text"],
-        .search-form input[type="number"],
-        .search-form select {
-            width: 150px; /* Adjust this width to suit your layout */
+        nav {
+            background-color: #444;
+            padding: 1em;
+            text-align: center;
         }
-        /* Ensure buttons have enough space */
-        .search-form button {
-            margin-left: 10px;
+        nav a {
+            color: #fff;
+            margin: 0 1em;
+            text-decoration: none;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        .search-form {
+            margin: 2em 0;
+            padding: 1em;
+            background-color: #ddd;
+            border-radius: 8px;
+        }
+        .search-form div {
+            margin-bottom: 1em;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul li {
+            background-color: #eee;
+            border: 1px solid #ccc;
+            margin: 0.5em 0;
+            padding: 0.5em;
+        }
+        .pagination {
+            margin-top: 2em;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-    <h1>List of Movies</h1>
-    {% if messages %}
+    <header>
+        <h1>List of Movies</h1>
+    </header>
+
+    <nav>
+        <!-- Add navigation links here -->
+        <a href="{% url 'home' %}">Home</a>
+        <a href="{% url 'add_movie' %}">Add Movie</a>
+        <!-- Other links as needed -->
+    </nav>
+
+        {% if messages %}
         <ul class="messages">
             {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                <li>{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
             {% endfor %}
         </ul>
-    {% endif %}
-    <!-- Search Form -->
+        {% endif %}
+<!-- Search Form -->
     <form method="get" action="{% url 'list_movies' %}" class="search-form">
         <div>
             <label for="keyword">Keyword:</label>
             <input type="text" id="keyword" name="keyword">
         </div>
-        
+
         <div>
             <label for="min_length">Minimum Length:</label>
             <input type="number" id="min_length" name="min_length" min="0">
         </div>
-        
+
         <div>
             <label for="max_length">Maximum Length:</label>
             <input type="number" id="max_length" name="max_length" min="0">
         </div>
-        
+
         <div>
             <label for="min_releaseyear">Minimum Release Year:</label>
             <input type="number" id="min_releaseyear" name="min_releaseyear" min="0">
         </div>
-        
+
         <div>
             <label for="max_releaseyear">Maximum Release Year:</label>
             <input type="number" id="max_releaseyear" name="max_releaseyear" min="0">
@@ -74,7 +110,7 @@
             <label for="max_rating">Maximum Rating:</label>
             <input type="number" step="0.1" id="max_rating" name="max_rating" min="0" max="10">
         </div>
-        
+
         <div>
             <label for="production_company">Production Company:</label>
             <select id="production_company" name="production_company">
@@ -84,7 +120,7 @@
                 {% endfor %}
             </select>
         </div>
-        
+
         <div>
             <label for="genre">Genre:</label>
             <select id="genre" name="genre">
@@ -94,7 +130,7 @@
                 {% endfor %}
             </select>
         </div>
-        
+
         <button type="submit">Search</button>
     </form>
 
@@ -113,7 +149,7 @@
                 {% else %}
                     N/A
                 {% endif %}<br>
-                Genres: 
+                Genres:
                 {% if movie.genres %}
                     {% for genre in movie.genres %}
                         {{ genre }}
@@ -147,8 +183,9 @@
             {% endif %}
         </span>
     </div>
-    
-    <p><a href="{% url 'add_movie' %}">add a new movie</a>.</p>
-    <p><a href="{% url 'home' %}">home</a>.</p>
+
+    <footer>
+        <p><a href="{% url 'home' %}">home</a>.</p>
+    </footer>
 </body>
 </html>

@@ -1,40 +1,120 @@
-<!-- approve_comments.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Approve Comments</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 1em 0;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2em auto;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1em 0;
+        }
+
+        footer a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        button {
+            background-color: #5cb85c;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button[name="deny"] {
+            background-color: #d9534f;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+    </style>
 </head>
 <body>
-    <h1>Approve Comments</h1>
-    
-    <!-- Home button -->
-    <p><a href="{% url 'home' %}">Home</a></p>
-    
-    <form method="post">
-        {% csrf_token %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Comment</th>
-                    <th>User</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for comment in comments %}
-                <tr>
-                    <td>{{ comment.content }}</td>
-                    <td>{{ comment.user.username }}</td>
-                    <td>
-                        <button type="submit" name="approve" value="{{ comment.comment_id }}">Approve</button>
-                        <button type="submit" name="deny" value="{{ comment.comment_id }}">Deny</button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </form>
+    <header>
+        <h1>Approve Comments</h1>
+    </header>
+
+    <div class="container">
+        <!-- Home button -->
+        <p><a href="{% url 'home' %}">Home</a></p>
+
+        <form method="post">
+            {% csrf_token %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Comment</th>
+                        <th>User</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for comment in comments %}
+                    <tr>
+                        <td>{{ comment.content }}</td>
+                        <td>{{ comment.user.username }}</td>
+                        <td>
+                            <button type="submit" name="approve" value="{{ comment.comment_id }}">Approve</button>
+                            <button type="submit" name="deny" value="{{ comment.comment_id }}">Deny</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </form>
+    </div>
+
+    <footer>
+        <p><a href="{% url 'home' %}">home</a>.</p>
+    </footer>
 </body>
 </html>

@@ -5,7 +5,7 @@ from django.http import JsonResponse,HttpResponse,HttpResponseRedirect,Http404,H
 from django.views.decorators.csrf import csrf_exempt
 from django import forms
 from django.urls import reverse
-from django.db import connection, transaction
+from django.db import connection, transaction,IntegrityError
 from django.conf import settings
 from django.template.defaultfilters import urlencode
 from django.contrib.auth.hashers import make_password, check_password
@@ -860,6 +860,7 @@ def delete_person(request, person_id):
 
 @login_required
 @transaction.atomic
+@csrf_exempt
 def search_persons(request):
     name = request.GET.get('name', '')
     start_birth_date = request.GET.get('start_birth_date', None)
@@ -876,6 +877,7 @@ def search_persons(request):
         gender = None
     if marital_status == '':
         marital_status = None
+    print([name, start_birth_date, end_birth_date, gender, marital_status])
     try:
         with connection.cursor() as cursor:
             cursor.callproc('search_persons', [name, start_birth_date, end_birth_date, gender, marital_status])
@@ -892,7 +894,16 @@ def search_persons(request):
     except Exception as e:
         # Handle any exceptions or errors
         messages.error(request,f"Error : {e}")
-    return render(request, 'list_persons.html', {'persons': persons_list})
+    page = request.GET.get('page', 1)
+    limit = 10 # # 每页显示的人物数量
+    paginator = Paginator( persons_list, limit)  
+    try:
+        person_page = paginator.page(page)
+    except PageNotAnInteger:
+        person_page = paginator.page(1)
+    except EmptyPage:
+        person_page = paginator.page(paginator.num_pages)
+    return render(request, 'list_persons.html', {'persons': person_page})
 
 @login_required
 @transaction.atomic
@@ -995,15 +1006,17 @@ def manage_genres(request):
         action = request.POST.get('action')
         genre_name = request.POST.get('genre_name', '')
         genre_id = request.POST.get('genre_id', None)
-        
         try:
             if action == 'add' and genre_name:
                 with connection.cursor() as cursor:
                     cursor.callproc('add_movie_genre', [genre_name])
             
             elif action == 'delete' and genre_id:
+                print('del in')
                 with connection.cursor() as cursor:
                     cursor.callproc('delete_movie_genre', [genre_id])
+        except IntegrityError as e:
+            messages.error(request, 'Error: Already have this genre.')
         except Exception as e:
             messages.error(request, f'Error: {str(e)}')
 
@@ -1389,27 +1402,46 @@ def reset_password(request):
         'security_question': request.session.get('security_question', None)
     })
 
-
+@login_required
+@admin_required
 def add_role(request):
     if request.method == 'POST':
-        role_form = RoleForm(request.POST)
-        role_actor_movie_form = RoleActorMovieForm(request.POST)
+        movie_id = request.POST.get('movie_id')
+        person_id = request.POST.get('person_id')
+        role_name = request.POST.get('role_name')
+        role_description = request.POST.get('role_description', '')
 
-        if role_form.is_valid() and role_actor_movie_form.is_valid():
-            role = role_form.save()
-            role_actor_movie = role_actor_movie_form.save(commit=False)
-            role_actor_movie.role = role
-            role_actor_movie.save()
-            return redirect('role_list')  # 假设有一个角色列表视图
-    else:
-        role_form = RoleForm()
-        role_actor_movie_form = RoleActorMovieForm()
+        # Create or get the role
+        role, created = Role.objects.get_or_create(role_name=role_name, defaults={'role_description': role_description})
 
-    return render(request, 'add_role.html', {'role_form': role_form, 'role_actor_movie_form': role_actor_movie_form})
+        # Get the movie and person instances
+        try:
+            movie = Movie.objects.get(movie_id=movie_id)
+            person = Person.objects.get(personID=person_id)
+        except (Movie.DoesNotExist, Person.DoesNotExist):
+            return HttpResponse("Movie or Person not found", status=404)
+
+        # Create the RoleActorMovie instance
+        RoleActorMovie.objects.create(movie=movie, person=person, role=role)
+
+        return redirect('success')  # You can change 'success' to the name of your success page
+
+    return render(request, 'add_role.html')
+
+def search_movies(request):
+    query = request.GET.get('q', '')
+    movies = Movie.objects.filter(moviename__icontains=query) if query else []
+    return render(request, 'search_movies.html', {'query': query, 'movies': movies})
+
+
+
+@login_required
 
 def role_list(request):
     roles = Role.objects.all()
     return render(request, 'role_list.html', {'roles': roles})
+
+@login_required
 
 def role_detail(request, role_id):
     try:
@@ -1445,6 +1477,9 @@ def role_detail(request, role_id):
         print(role,'role',e)
     return render(request, 'role_detail.html', {'role': role, 'role_actor_movies': role_actor_movies})
 
+
+@login_required
+@admin_required
 def edit_role(request, role_id):
     role = get_object_or_404(Role, pk=role_id)
     if request.method == 'POST':
@@ -1457,23 +1492,29 @@ def edit_role(request, role_id):
     return render(request, 'edit_role.html', {'form': form, 'role': role})
 
 
+@login_required
 
 def search_roles_by_name(request):
     query = request.GET.get('query', '')
     roles = Role.objects.filter(role_name__icontains=query)
     return render(request, 'search_roles.html', {'roles': roles, 'query': query, 'search_type': 'name'})
 
+
+@login_required
+
 def search_roles_by_actor(request):
     query = request.GET.get('query', '')
     roles = Role.objects.filter(roleactormovie__person__name__icontains=query).distinct()
     return render(request, 'search_roles.html', {'roles': roles, 'query': query, 'search_type': 'actor'})
 
+@login_required
 def search_roles_by_movie(request):
     query = request.GET.get('query', '')
     roles = Role.objects.filter(roleactormovie__movie__movie_id__icontains=query).distinct()
     return render(request, 'search_roles.html', {'roles': roles, 'query': query, 'search_type': 'movie'})
 
-
+@login_required
+@admin_required
 def delete_role(request, role_id):
     role = get_object_or_404(Role, pk=role_id)
     if request.method == 'POST':
@@ -1481,6 +1522,8 @@ def delete_role(request, role_id):
         return redirect('role_list')
     return render(request, 'delete_role.html', {'role': role})
 
+@login_required
+@admin_required
 def edit_role_actor_movie(request, role_id):
     role = get_object_or_404(Role, pk=role_id)
     role_actor_movie = get_object_or_404(RoleActorMovie, role=role)
@@ -1492,7 +1535,7 @@ def edit_role_actor_movie(request, role_id):
     else:
         form = RoleActorMovieForm(instance=role_actor_movie)
     return render(request, 'edit_role_actor_movie.html', {'form': form, 'role': role})
-
+@login_required
 def search_role(request):
     return render(request, 'search_role.html')
 

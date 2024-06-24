@@ -4,40 +4,136 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Users</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 90%;
+            margin: auto;
+            overflow: hidden;
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            margin-top: 0;
+        }
+        .messages {
+            list-style-type: none;
+            padding: 0;
+        }
+        .messages li {
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 3px;
+        }
+        .search-form {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .search-form input[type="text"] {
+            padding: 5px;
+            margin-right: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .search-form button {
+            padding: 5px 10px;
+            background: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .search-form button:hover {
+            background: #4cae4c;
+        }
+        .user-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .user-list li {
+            background: #fff;
+            margin-bottom: 5px;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+        }
+        .user-list a {
+            text-decoration: none;
+            color: #337ab7;
+        }
+        .user-list .user-actions {
+            display: inline-block;
+        }
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .pagination a {
+            margin: 0 5px;
+            text-decoration: none;
+            color: #337ab7;
+        }
+        footer {
+            background: #333;
+            color: #fff;
+            text-align: center;
+            padding: 10px 20px;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
 </head>
 <body>
-    <h1>Manage Users</h1>
-    {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    <div class="container">
+        <header>
+            <h1>Manage Users</h1>
+        </header>
+
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <form class="search-form" method="GET" action="{% url 'manage_users' %}">
+            <input type="text" name="q" placeholder="Search users" value="{{ query }}">
+            <button type="submit">Search</button>
+        </form>
+
+        <ul class="user-list">
+            {% for user in users_page %}
+                <li>
+                    <a href="{% url 'user_homepage' user.1 %}">{{ user.1 }}</a>
+                    {% if user.2 %}
+                        <span style="color: green;">(Staff)</span>
+                    {% endif %}
+                    {% if not user.2 %}
+                        <form method="post" action="{% url 'admin_delete_user' user.0 %}" class="user-actions">
+                            {% csrf_token %}
+                            <button type="submit">Delete User</button>
+                        </form>
+                    {% endif %}
+                </li>
             {% endfor %}
         </ul>
-    {% endif %}
-    <form method="GET" action="{% url 'manage_users' %}">
-        <input type="text" name="q" placeholder="Search users" value="{{ query }}">
-        <button type="submit">Search</button>
-    </form>
-    <ul>
-        {% for user in users_page %}
-            <li>
-                <a href="{% url 'user_homepage' user.1 %}">{{ user.1 }}</a> <!-- Link to user's homepage -->
-                {% if user.2 %}
-                    <span style="color: green;">(Staff)</span>
-                {% endif %}
-                {% if not user.2 %}
-                    <form method="post" action="{% url 'admin_delete_user' user.0 %}">
-                        {% csrf_token %}
-                        <button type="submit">Delete User</button>
-                    </form>
-                {% endif %}
-            </li>
-        {% endfor %}
-    </ul>
 
-    <!-- Pagination navigation -->
-    <div class="pagination">
-        <span class="step-links">
+        <div class="pagination">
+            <span class="step-links">
             {% if users_page.has_previous %}
                 <a href="?page=1{% if query %}&q={{ query }}{% endif %}">&laquo; first</a>
                 <a href="?page={{ users_page.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">previous</a>
@@ -51,9 +147,12 @@
                 <a href="?page={{ users_page.next_page_number }}{% if query %}&q={{ query }}{% endif %}">next</a>
                 <a href="?page={{ users_page.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">last &raquo;</a>
             {% endif %}
-        </span>
-    </div>
+            </span>
+        </div>
 
-    <p><a href="{% url 'home' %}">Home</a></p>
+        <footer>
+            <p><a href="{% url 'home' %}">Home</a></p>
+        </footer>
+    </div>
 </body>
 </html>

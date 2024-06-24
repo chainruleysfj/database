@@ -1,4 +1,3 @@
-<!-- list_production_companies.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,33 +5,119 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Production Companies</title>
     <style>
-        .editable input {
-            display: none;
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
         }
-        .editable.editing input {
-            display: inline-block;
+        .container {
+            width: 90%;
+            margin: auto;
+            overflow: hidden;
         }
-        .editing .submit-button {
-            display: none;
+        header {
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            margin-top: 0;
+        }
+        .messages {
+            list-style-type: none;
+            padding: 0;
+        }
+        .messages li {
+            background: #f2dede;
+            color: #a94442;
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 3px;
+        }
+        .search-form, .editable-form {
+            margin-bottom: 20px;
+            background: #ddd;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .editable-form input[type="text"], .editable-form input[type="submit"] {
+            margin: 5px 0;
+        }
+        ul.companies {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul.companies li {
+            background: #fff;
+            margin-bottom: 5px;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .pagination a {
+            margin: 0 5px;
+            text-decoration: none;
+        }
+        button {
+            background: #5cb85c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin-right: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #4cae4c;
+        }
+        button.delete {
+            background: #d9534f;
+        }
+        button.delete:hover {
+            background: #c9302c;
+        }
+        footer {
+            background: #333;
+            color: #fff;
+            text-align: center;
+            padding: 10px 20px;
+            position: relative;
+            bottom: 0;
+            width: 100%;
         }
     </style>
 </head>
 <body>
-    <h1>Production Companies</h1>
-    {% if messages %}
+    <div class="container">
+        <header>
+            <h1>Production Companies</h1>
+        </header>
+
+        <div class="search-form">
+ <!-- Search Form -->
+    <form method="GET" action="{% url 'search_production_companies' %}">
+        <input type="text" name="name" placeholder="Company Name">
+        <input type="text" name="city" placeholder="City">
+        <button type="submit">Search</button>
+        </form>
+        </div>
+        {% if messages %}
         <ul class="messages">
             {% for message in messages %}
                 <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
             {% endfor %}
         </ul>
-    {% endif %}
-    <!-- Search Form -->
-    <form method="GET" action="{% url 'search_production_companies' %}">
-        <input type="text" name="name" placeholder="Company Name">
-        <input type="text" name="city" placeholder="City">
-        <button type="submit">Search</button>
-    </form>
-    <ul>
+        {% endif %}
+
+
+        <ul class="companies">
         {% for company in companies %}
             <li class="editable" id="company-{{ company.company_id }}">
                 <span>{{ company.name }} - {{ company.city }} - {{ company.company_description }}</span>
@@ -55,8 +140,8 @@
                 </ul>
             </li>
         {% endfor %}
-    </ul>
-    
+        </ul>
+
     <div class="pagination">
         <span class="step-links">
             {% if companies.has_previous %}
@@ -74,8 +159,15 @@
             {% endif %}
         </span>
     </div>
-    <a href="{% url 'add_production_company' %}">Add New Production Company</a>
-    <p><a href="{% url 'home' %}">home</a>.</p>
+
+        <div>
+            <a href="{% url 'add_production_company' %}" class="button">Add New Production Company</a>
+        </div>
+
+        <footer>
+            <p><a href="{% url 'home' %}">home</a>.</p>
+        </footer>
+    </div>
 
     <script>
         function toggleEdit(companyId) {
