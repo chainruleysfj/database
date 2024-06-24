@@ -732,18 +732,22 @@ def add_person(request):
 @login_required
 @transaction.atomic
 def list_persons(request):
-    with connection.cursor() as cursor:
-        cursor.callproc('get_all_persons')
-        persons = cursor.fetchall()
-    persons_list = [
-        {'personID': person[0], 'name': person[1], 'birth_date': person[2], 'gender': person[3], 'marital_status': person[4]} 
-        for person in persons
-    ]
-    gender_map = {'M': 'Male', 'F': 'Female', 'U': 'Unknown'}
-    marital_status_map = {'S': 'Single', 'M': 'Married', 'W': 'Widowed', 'U': 'Unknown'}
-    for person in persons_list:
-        person['gender'] = gender_map.get(person['gender'], 'Unknown')
-        person['marital_status'] = marital_status_map.get(person['marital_status'], 'Unknown')
+    try:
+        with connection.cursor() as cursor:
+            cursor.callproc('get_all_persons')
+            persons = cursor.fetchall()
+        persons_list = [
+            {'personID': person[0], 'name': person[1], 'birth_date': person[2], 'gender': person[3], 'marital_status': person[4]} 
+            for person in persons
+        ]
+        gender_map = {'M': 'Male', 'F': 'Female', 'U': 'Unknown'}
+        marital_status_map = {'S': 'Single', 'M': 'Married', 'W': 'Widowed', 'U': 'Unknown'}
+        for person in persons_list:
+            person['gender'] = gender_map.get(person['gender'], 'Unknown')
+            person['marital_status'] = marital_status_map.get(person['marital_status'], 'Unknown')
+    except Exception as e:
+        # Handle any exceptions or errors
+        messages.error(request,f"Error : {e}")
     # 实现分页
     page = request.GET.get('page', 1)
     limit = 10 # # 每页显示的人物数量
@@ -768,8 +772,12 @@ def update_person(request, person_id):
         marital_status = request.POST.get('marital_status')
         if not birth_date:
             birth_date = None
-        with connection.cursor() as cursor:
-            cursor.callproc('update_person', [person_id, name, birth_date, gender, marital_status])
+        try:
+            with connection.cursor() as cursor:
+                cursor.callproc('update_person', [person_id, name, birth_date, gender, marital_status])
+        except Exception as e:
+            # Handle any exceptions or errors
+            messages.error(request,f"Error : {e}")
 
         return JsonResponse({'success': True, 'error': '无错误'}, status=200)
     else:
@@ -781,8 +789,12 @@ def update_person(request, person_id):
 @transaction.atomic
 def delete_person(request, person_id):
     if request.method == 'POST':
-        with connection.cursor() as cursor:
-            cursor.callproc('delete_person_and_directormovie', [person_id])
+        try:
+            with connection.cursor() as cursor:
+                cursor.callproc('delete_person_and_directormovie', [person_id])
+        except Exception as e:
+            # Handle any exceptions or errors
+            messages.error(request,f"Error : {e}")
 
         return JsonResponse({'success': True, 'error': '无错误'}, status=200)
     else:
@@ -806,19 +818,22 @@ def search_persons(request):
         gender = None
     if marital_status == '':
         marital_status = None
-
-    with connection.cursor() as cursor:
-        cursor.callproc('search_persons', [name, start_birth_date, end_birth_date, gender, marital_status])
-        persons = cursor.fetchall()
-    persons_list = [
-        {'personID': person[0], 'name': person[1], 'birth_date': person[2], 'gender': person[3], 'marital_status': person[4]} 
-        for person in persons
-    ]
-    gender_map = {'M': 'Male', 'F': 'Female', 'U': 'Unknown'}
-    marital_status_map = {'S': 'Single', 'M': 'Married', 'W': 'Widowed', 'U': 'Unknown'}
-    for person in persons_list:
-        person['gender'] = gender_map.get(person['gender'], 'Unknown')
-        person['marital_status'] = marital_status_map.get(person['marital_status'], 'Unknown')
+    try:
+        with connection.cursor() as cursor:
+            cursor.callproc('search_persons', [name, start_birth_date, end_birth_date, gender, marital_status])
+            persons = cursor.fetchall()
+        persons_list = [
+            {'personID': person[0], 'name': person[1], 'birth_date': person[2], 'gender': person[3], 'marital_status': person[4]} 
+            for person in persons
+        ]
+        gender_map = {'M': 'Male', 'F': 'Female', 'U': 'Unknown'}
+        marital_status_map = {'S': 'Single', 'M': 'Married', 'W': 'Widowed', 'U': 'Unknown'}
+        for person in persons_list:
+            person['gender'] = gender_map.get(person['gender'], 'Unknown')
+            person['marital_status'] = marital_status_map.get(person['marital_status'], 'Unknown')
+    except Exception as e:
+        # Handle any exceptions or errors
+        messages.error(request,f"Error : {e}")
     return render(request, 'list_persons.html', {'persons': persons_list})
 
 
@@ -828,9 +843,13 @@ def search_persons(request):
 def all_directors(request):
     search_director = request.GET.get('search_director', '')
     search_movie = request.GET.get('search_movie', '')
-    with connection.cursor() as cursor:
-        cursor.callproc('get_all_directors_and_directmovie')
-        results = cursor.fetchall()
+    try:
+        with connection.cursor() as cursor:
+            cursor.callproc('get_all_directors_and_directmovie')
+            results = cursor.fetchall()
+    except Exception as e:
+        # Handle any exceptions or errors
+        messages.error(request,f"Error : {e}")
 
     directors_with_movies = []
     all_directors_map = {}
@@ -854,7 +873,6 @@ def all_directors(request):
         matches_movie = any(search_movie.lower() in movie['name'].lower() for movie in director['movies']) if search_movie else True
         if matches_director and matches_movie:
             filtered_directors.append(director)
-    print(filtered_directors,"A")
     # Prepare directors and their movies to pass to the template
     for director in filtered_directors:
         director_movies = []
@@ -882,7 +900,6 @@ def all_directors(request):
             'name': director['name'],
             'movies': director_movies
         })
-        print(directors_with_movies)
 
     # Paginate the list of directors
     page = request.GET.get('page', 1)
@@ -894,7 +911,6 @@ def all_directors(request):
         directors_page = paginator.page(1)
     except EmptyPage:
         directors_page = paginator.page(paginator.num_pages)
-    print(director_movies,"dp")
     # Create pagination for each director's movies
     for director in directors_page:
         m_limit = 5  # Number of movies per page
@@ -934,10 +950,13 @@ def manage_genres(request):
             messages.error(request, f'Error: {str(e)}')
 
         return redirect('manage_genres')
-
-    with connection.cursor() as cursor:
-        cursor.callproc('select_all_genre')
-        genres = cursor.fetchall()
+    try:
+        with connection.cursor() as cursor:
+            cursor.callproc('select_all_genre')
+            genres = cursor.fetchall()
+    except Exception as e:
+        # Handle any exceptions or errors
+        messages.error(request,f"Error : {e}")
     
     page = request.GET.get('page', 1)
     limit = 10 # 每页显示电影类型数
@@ -1210,14 +1229,18 @@ def change_password(request):
 
             # Verify current password
             if user.check_password(old_password):
-                # Call a stored procedure to update password
-                with connection.cursor() as cursor:
-                    cursor.callproc('update_password_procedure', [user.id, hashed_password])
+                try:
+                    # Call a stored procedure to update password
+                    with connection.cursor() as cursor:
+                        cursor.callproc('update_password_procedure', [user.id, hashed_password])
 
-                # Update session authentication hash
-                update_session_auth_hash(request, user)
+                    # Update session authentication hash
+                    update_session_auth_hash(request, user)
 
-                messages.success(request, 'Your password was successfully updated!')
+                    messages.success(request, 'Your password was successfully updated!')
+                except Exception as e:
+                    # Handle any exceptions or errors
+                    messages.error(request,f"Error : {e}")
                 return redirect('home')
             else:
                 messages.error(request, 'Please enter your current password correctly.')
@@ -1382,16 +1405,19 @@ def search_role(request):
 @login_required
 def user_homepage(request, username):
     user = get_object_or_404(User, username=username)
-    
-    with connection.cursor() as cursor:
-        cursor.callproc('get_user_activity', [user.id])
-        
-        # Fetch ratings
-        ratings = cursor.fetchall()
-        cursor.nextset()  # Move to the next result set
-        
-        # Fetch comments
-        comments = cursor.fetchall()
+    try:
+        with connection.cursor() as cursor:
+            cursor.callproc('get_user_activity', [user.id])
+            
+            # Fetch ratings
+            ratings = cursor.fetchall()
+            cursor.nextset()  # Move to the next result set
+            
+            # Fetch comments
+            comments = cursor.fetchall()
+    except Exception as e:
+        # Handle any exceptions or errors
+        messages.error(request,f"Error : {e}")
 
     ratings_list = []
     for rating in ratings:
