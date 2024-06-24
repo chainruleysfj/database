@@ -98,6 +98,8 @@
                 <div class="person-info">
                     {{ person.name }} - {{ person.birth_date|date:"Y-m-d" }} - {{ person.gender|title }} - {{ person.marital_status|title }}
                 </div>
+                <a href="{% url 'all_directors' %}?search_director={{ person.name }}">Director</a>
+                <a href="{% url 'list_actors' %}?search_name={{ person.name }}">Actor</a>
                 <div class="person-actions">
                     <button onclick="toggleEdit('{{ person.personID }}')">Edit</button>
                     <button class="save-button" onclick="saveChanges('{{ person.personID }}')" style="display:none;">Save</button>

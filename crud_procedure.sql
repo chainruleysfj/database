@@ -142,7 +142,7 @@ BEGIN
         m.movie_id = p_movie_id;
 
     -- Get actors list with their roles (including those who narrated)
-    SELECT GROUP_CONCAT(CONCAT(p.name, ' (', r.role_name, ')') SEPARATOR '; ')
+    SELECT GROUP_CONCAT(CONCAT(p.name, ':', r.role_name) SEPARATOR '; ')
     INTO actors_list
     FROM movie_app_person p
     JOIN movie_app_roleactormovie pm ON p.personID = pm.person_id

@@ -120,7 +120,7 @@
         <h2>演员</h2>
         <ul>
             {% for actor in movie.actors %}
-            <li><a href="{% url 'list_actors' %}?search_name={{ actor|urlencode }}">{{ actor }}</a></li>
+                <li><a href="{% url 'list_actors' %}?search_name={{ actor.name }}">{{ actor.name }}</a>: <a href="{% url 'search_roles_by_name' %}?query={{ actor.role }}">{{ actor.role }}</a></li>
             {% endfor %}
         </ul>
         

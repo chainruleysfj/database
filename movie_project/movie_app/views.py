@@ -503,7 +503,15 @@ def movie_detail(request, movie_id):
             cursor.callproc('get_movie_detail', [movie_id])
             movie_data = cursor.fetchone()
             if  movie_data[7]:
-                actors=movie_data[7].split(";")
+                actors_role=movie_data[7].split(";")
+                actors=[]
+                for actor in actors_role:
+                    actor=actor.split(":")
+                    actors.append({
+                        'name':actor[0],
+                        'role':actor[1]
+                    })
+
             else:
                 actors=None
             if  movie_data[8]:
@@ -1599,7 +1607,6 @@ def search_users(request):
 
 def list_actors(request):
     search_name = request.GET.get('search_name', '')
-
     with connection.cursor() as cursor:
         cursor.callproc('get_all_actors', [search_name])
         actors = cursor.fetchall()
