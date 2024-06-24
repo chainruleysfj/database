@@ -110,7 +110,7 @@ def list_production_companies(request):
     page = request.GET.get('page', 1)
     limit = 10  # 每页显示的公司数量
 
-    companies = []
+    
     with connection.cursor() as cursor:
         
         if name:
@@ -119,9 +119,9 @@ def list_production_companies(request):
         else:
             cursor.callproc('get_all_production_companies')
         results = cursor.fetchall()
-        print(results)
         company_id = None
         company = {}
+        get_company = []
         for result in results:
             company_id = result[0]
             company = {
@@ -131,10 +131,16 @@ def list_production_companies(request):
                 'company_description': result[3],
                 'movies': []
             }
-            
-    with connection.cursor() as cursor:
+            get_company.append(company)
+
+    companies = []
+
+    
             # Fetch movies produced by this company
-            cursor.callproc('get_movies_by_production_company', [company_id])
+    
+    for company in get_company:
+        with connection.cursor() as cursor:
+            cursor.callproc('get_movies_by_production_company', [company['company_id']])
             for movie in cursor.fetchall():
                 company['movies'].append({
                     'movie_id': movie[0],
@@ -764,7 +770,7 @@ def delete_movie(request, movie_id):
     if request.method == 'POST':
         try:
             # 删除视频文件
-            delete_video_file(request,movie.resource_link)
+            delete_video_file(movie.resource_link)
             # 调用存储过程删除电影
             with connection.cursor() as cursor:
                 cursor.callproc('delete_movie_and_directormovie_and_genre', [movie_id])
