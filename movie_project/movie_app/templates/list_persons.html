@@ -94,7 +94,7 @@
     </form>
     <ul>
         {% for person in persons %}
-            <li>
+            <li id="person-{{ person.personID }}"> 
                 <div class="person-info">
                     {{ person.name }} - {{ person.birth_date|date:"Y-m-d" }} - {{ person.gender|title }} - {{ person.marital_status|title }}
                 </div>
