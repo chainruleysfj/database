@@ -99,7 +99,13 @@
     <header>
         <h1>Approve Comments</h1>
     </header>
-
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
     <div class="container">
         <!-- Home button -->
         <p><a href="{% url 'home' %}">Home</a></p>

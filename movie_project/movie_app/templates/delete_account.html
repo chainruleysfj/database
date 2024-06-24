@@ -106,6 +106,13 @@
     </header>
 
     <div class="container">
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
         <form method="post" action="{% url 'delete_account' %}">
             {% csrf_token %}
             <p>Are you sure you want to delete your account? This action cannot be undone.</p>
