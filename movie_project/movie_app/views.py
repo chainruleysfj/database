@@ -401,10 +401,10 @@ def list_movies(request):
         'max_rating' in request.GET
     ):
         keyword = request.GET.get('keyword', '')
-        min_length = get_int_or_default(request.GET.get('min_length'), 0)
-        max_length = get_int_or_default(request.GET.get('max_length'), 9999)
-        min_releaseyear = get_int_or_default(request.GET.get('min_releaseyear'), 0)
-        max_releaseyear = get_int_or_default(request.GET.get('max_releaseyear'), 9999)
+        min_length = min(get_int_or_default(request.GET.get('min_length'), 0),9999)
+        max_length = min(get_int_or_default(request.GET.get('max_length'), 9999),9999)
+        min_releaseyear = min(get_int_or_default(request.GET.get('min_releaseyear'), 0),9999)
+        max_releaseyear = min(get_int_or_default(request.GET.get('max_releaseyear'), 9999),9999)
         production_company_id = get_int_or_default(request.GET.get('production_company'), None)
         genre_id = get_int_or_default(request.GET.get('genre'), None)
         min_rating = get_float_or_default(request.GET.get('min_rating'), 0)
