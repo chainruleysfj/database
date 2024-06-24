@@ -17,6 +17,9 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import user_passes_test,login_required
 from django.core.cache import cache
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
+from django.core.files.uploadedfile import UploadedFile
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 from django.db.models import Q,Avg
@@ -274,10 +277,17 @@ def add_movie(request):
                 releaseyear = form.cleaned_data['releaseyear']
                 plot_summary = form.cleaned_data['plot_summary']
                 production_company_id = form.cleaned_data['production_company'].company_id
-                # 如果上传了视频文件，保存文件并获取文件路径
+                # 如果上传了视频文件，验证文件格式是否为mp4
                 resource_link = None
                 if 'video_file' in request.FILES:
                     video_file = request.FILES['video_file']
+                    if not video_file.name.endswith('.mp4'):
+                        raise ValidationError("Only MP4 files are allowed.")
+                    
+                    # Optionally, you can also check the MIME type
+                    if video_file.content_type != 'video/mp4':
+                        raise ValidationError("The uploaded file is not a valid MP4 video.")
+                    
                     resource_link = save_video_file(video_file)
                 # 调用存储过程插入电影数据
                 with connection.cursor() as cursor:
@@ -285,7 +295,6 @@ def add_movie(request):
                     cursor.callproc('get_last_insert_movie_id')
                     movie_id = cursor.fetchone()[0]
                 # 获取选中的导演
-                print(1)
                 director_ids = request.POST.get('directors', '')
                 # 插入导演数据
                 if director_ids:
@@ -294,12 +303,10 @@ def add_movie(request):
                         with connection.cursor() as cursor:
                             cursor.callproc('add_director_movie', [movie_id, int(director_id)])
                 # 添加类型关联
-                print(2)
                 genre_ids = request.POST.getlist('genres')
                 for genre_id in genre_ids:
                     with connection.cursor() as cursor:
                         cursor.callproc('add_movie_genre_association', [movie_id, genre_id])
-                print(3)
         except Exception as e:
             # Handle any exceptions or errors
             messages.error(request,f"Error : {e}")

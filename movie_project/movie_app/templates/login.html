@@ -52,16 +52,24 @@
         button:hover {
             background-color: #4cae4c;
         }
-        .message-list {
-            margin-bottom: 20px;
+        .messages {
+            list-style-type: none;
+            padding: 0;
         }
-        .message-list li {
-            color: #a94442;
-            background-color: #f2dede;
-            border-left: 5px solid #ebccd1;
-            padding: 10px;
-            margin-bottom: 5px;
-            border-radius: 3px;
+
+        .messages li {
+            background-color: #eee;
+            border: 1px solid #ccc;
+            margin: 0.5em 0;
+            padding: 0.5em;
+        }
+
+        .error {
+            border-color: red;
+        }
+
+        .success {
+            border-color: green;
         }
         .footer {
             text-align: center;
