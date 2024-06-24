@@ -45,6 +45,14 @@
                     <input type="text" name="company_description" value="{{ company.company_description }}">
                     <button type="submit" class="submit-button">Submit Changes</button>
                 </form>
+                <!-- Display produced movies -->
+                <ul class="movies-list">
+                    {% for movie in company.movies %}
+                        <li>
+                            <a href="{% url 'movie_detail' movie.movie_id %}">{{ movie.moviename }}</a> ({{ movie.releaseyear }}, {{ movie.length }} minutes, Rating: {{ movie.average_rating }})
+                        </li>
+                    {% endfor %}
+                </ul>
             </li>
         {% endfor %}
     </ul>

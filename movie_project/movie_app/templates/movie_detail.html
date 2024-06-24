@@ -41,7 +41,7 @@
         <p><strong>片长:</strong> {{ movie.length }} 分钟</p>
         <p><strong>上映年份:</strong> {{ movie.releaseyear }}</p>
         <p><strong>简介:</strong> {{ movie.plot_summary }}</p>
-        <p><strong>制作公司:</strong> {{ movie.production_company_name }}</p>
+        <p><strong>制作公司:</strong> <a href="{% url 'list_production_companies' %}?name={{ movie.production_company_name|urlencode }}">{{ movie.production_company_name }}</a></p>
         
         <h2>导演</h2>
         <ul>

@@ -104,7 +104,7 @@
                 <strong>{{ movie.moviename }}</strong><br>
                 Length: {{ movie.length }} minutes<br>
                 Release Year: {{ movie.releaseyear }}<br>
-                Production Company: {{ movie.production_company_name }}<br>
+                Production Company: <a href="{% url 'list_production_companies' %}?name={{ movie.production_company_name|urlencode }}">{{ movie.production_company_name }}</a><br>
                 Directors: 
                 {% if movie.directors_list %}
                     {% for director in movie.directors_list %}

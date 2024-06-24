@@ -106,23 +106,38 @@ def add_production_company(request):
 @login_required
 @transaction.atomic
 def list_production_companies(request):
+    name = request.GET.get('name', '')
     page = request.GET.get('page', 1)
     limit = 10  # 每页显示的公司数量
 
     companies = []
-    try:
-        with connection.cursor() as cursor:
+    with connection.cursor() as cursor:
+        if name:
+            cursor.callproc('search_production_companies', [name,""])
+        else:
             cursor.callproc('get_all_production_companies')
-            for result in cursor.fetchall():
-                companies.append({
-                    'company_id': result[0],
-                    'name': result[1],
-                    'city': result[2],
-                    'company_description': result[3],
+        for result in cursor.fetchall():
+            company_id = result[0]
+            company = {
+                'company_id': company_id,
+                'name': result[1],
+                'city': result[2],
+                'company_description': result[3],
+                'movies': []
+            }
+    with connection.cursor() as cursor:
+            # Fetch movies produced by this company
+            cursor.callproc('get_movies_by_production_company', [company_id])
+            for movie in cursor.fetchall():
+                company['movies'].append({
+                    'movie_id': movie[0],
+                    'moviename': movie[1],
+                    'length': movie[2],
+                    'releaseyear': movie[3],
+                    'average_rating': round(2*movie[4],1)
                 })
-    except Exception as e:
-        # Handle any exceptions or errors
-        messages.error(request,f"Error : {e}")
+            
+            companies.append(company)
     paginator = Paginator(companies, limit)
     try:
         companies_page = paginator.page(page)
