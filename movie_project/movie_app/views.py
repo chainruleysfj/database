@@ -811,7 +811,7 @@ def search_roles_by_actor(request):
 
 def search_roles_by_movie(request):
     query = request.GET.get('query', '')
-    roles = Role.objects.filter(roleactormovie__movie__title__icontains(query)).distinct()
+    roles = Role.objects.filter(roleactormovie__movie__title__icontains=query).distinct()
     return render(request, 'search_roles.html', {'roles': roles, 'query': query, 'search_type': 'movie'})
 
 
