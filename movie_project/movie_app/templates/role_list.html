@@ -6,6 +6,13 @@
 </head>
 <body>
     <h1>Role List</h1>
+    {% if messages %}
+    <ul>
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
     <ul>
         {% for role in roles %}
         <li>

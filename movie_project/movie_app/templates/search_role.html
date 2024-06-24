@@ -6,6 +6,13 @@
 </head>
 <body>
     <h1>Search Role</h1>
+    {% if messages %}
+    <ul>
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
     <ul>
         <li><a href="{% url 'search_roles_by_name' %}">Search by Name</a></li>
         <li><a href="{% url 'search_roles_by_actor' %}">Search by Actor</a></li>

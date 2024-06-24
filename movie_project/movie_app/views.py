@@ -1397,8 +1397,37 @@ def role_list(request):
     return render(request, 'role_list.html', {'roles': roles})
 
 def role_detail(request, role_id):
-    role = get_object_or_404(Role, pk=role_id)
-    role_actor_movies = RoleActorMovie.objects.filter(role=role)
+    try:
+        with connection.cursor() as cursor:
+            cursor.callproc('get_role_detail', [role_id])
+            role_data = cursor.fetchone()
+            cursor.nextset()
+            role_actor_movies_data = cursor.fetchall()
+            
+            role = {
+                'role_name': role_data[0],
+                'role_description': role_data[1],
+                'role_id':role_id
+            }
+            role_actor_movies = [
+                {
+                    'movie': {
+                        'title': row[1],
+                        'movie_id': row[0]
+                    },
+                    'person': {
+                        'name': row[3]
+                    }
+                }
+                for row in role_actor_movies_data
+            ]
+
+    except Exception as e:
+        # Handle any exceptions or errors
+        messages.error(request, f"Error: {e}")
+        role = None
+        role_actor_movies = []
+        print(role,'role',e)
     return render(request, 'role_detail.html', {'role': role, 'role_actor_movies': role_actor_movies})
 
 def edit_role(request, role_id):
@@ -1426,7 +1455,7 @@ def search_roles_by_actor(request):
 
 def search_roles_by_movie(request):
     query = request.GET.get('query', '')
-    roles = Role.objects.filter(roleactormovie__movie__title__icontains=query).distinct()
+    roles = Role.objects.filter(roleactormovie__movie__movie_id__icontains=query).distinct()
     return render(request, 'search_roles.html', {'roles': roles, 'query': query, 'search_type': 'movie'})
 
 

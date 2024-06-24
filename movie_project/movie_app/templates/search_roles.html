@@ -6,6 +6,13 @@
 </head>
 <body>
     <h1>Search Roles by {{ search_type|title }}</h1>
+    {% if messages %}
+    <ul>
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
     <form method="get" action="">
         <input type="text" name="query" value="{{ query }}" placeholder="Enter {{ search_type }}">
         <button type="submit">Search</button>

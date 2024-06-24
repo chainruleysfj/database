@@ -42,3 +42,51 @@ BEGIN
     WHERE nr.actor_id = p_person_id;
 END //
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS get_role_detail;
+DELIMITER //
+DROP PROCEDURE IF EXISTS get_role_detail;
+
+DELIMITER //
+
+CREATE PROCEDURE get_role_detail(IN p_role_id INT)
+BEGIN
+    -- Declare variables for role details
+    DECLARE v_role_name VARCHAR(50);
+    DECLARE v_role_description TEXT;
+
+    -- Retrieve role details
+    SELECT
+        role_name,
+        role_description
+    INTO
+        v_role_name,
+        v_role_description
+    FROM
+        movie_app_role
+    WHERE
+        role_id = p_role_id;
+
+    -- Return role details
+    SELECT
+        v_role_name AS role_name,
+        v_role_description AS role_description;
+
+    -- Retrieve actor and movie details for the role
+    SELECT
+        ram.movie_id,
+        m.moviename AS movie_title,
+        ram.person_id,
+        p.name AS person_name
+    FROM
+        movie_app_roleactormovie ram
+    JOIN
+        movie_app_movie m ON ram.movie_id = m.movie_id
+    JOIN
+        movie_app_person p ON ram.person_id = p.personID
+    WHERE
+        ram.role_id = p_role_id;
+END //
+
+DELIMITER ;
+
