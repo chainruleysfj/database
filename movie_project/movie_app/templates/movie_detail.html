@@ -59,6 +59,9 @@
         
         <h2>旁白</h2>
         {% if movie.narration %}
+            {% for actor in movie.actors %}
+                <li>{{ actor }}</li>
+            {% endfor %}
             <p>{{ movie.narration }}</p>
         {% else %}
             <p>暂无旁白信息。</p>

@@ -487,12 +487,25 @@ def movie_detail(request, movie_id):
         with connection.cursor() as cursor:
             cursor.callproc('get_movie_detail', [movie_id])
             movie_data = cursor.fetchone()
-            if movie_data[9]:
-                movie_data[9]=movie_data[9].split('; ')
-            if movie_data[7]:
-                movie_data[7]=movie_data[7].split('; ')
-            if movie_data[8]:
-                movie_data[8]=movie_data[8].split('; ')
+            print(type(movie_data[7]),7)
+            print(type(movie_data[7].split(";")),7)
+            if  movie_data[7]:
+                actors=movie_data[7].split(";")
+            else:
+                actors=None
+            if  movie_data[8]:
+                directors=movie_data[8].split(";")
+            else:
+                directors=None
+            if  movie_data[9]:
+                genres=movie_data[9].split(";")
+            else:
+                genres=None
+            if  movie_data[10]:
+                narration=movie_data[10].split(";")
+            else:
+                narration=None
+           
             movie = {
                 'movie_id': movie_data[0],
                 'moviename': movie_data[1],
@@ -501,10 +514,10 @@ def movie_detail(request, movie_id):
                 'plot_summary': movie_data[4],
                 'resource_link': movie_data[5],  
                 'production_company_name': movie_data[6],
-                'actors': movie_data[7],
-                'directors': movie_data[8],
-                'genres': movie_data[9],
-                'narration': movie_data[10],
+                'actors': actors,
+                'directors': directors,
+                'genres': genres,
+                'narration': narration,
             }
             
     except Exception as e:
