@@ -661,7 +661,9 @@ def update_movie(request, movie_id):
         # 解析表单数据
         moviename = request.POST['moviename']
         length = request.POST['length']
+        length = min(9999,int(length))
         releaseyear = get_int_or_default(request.POST['releaseyear'], None)
+        releaseyear = min(9999,int(releaseyear))
         plot_summary = request.POST['plot_summary']
 
         # 捕获缺少 production_company 字段的异常
